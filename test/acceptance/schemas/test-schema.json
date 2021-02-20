@@ -1,0 +1,28 @@
+{
+    "title": "Schema for testing",
+    "type": "object",
+    "additionalProperties": true,
+    "required": [
+        "method",
+        "url"
+    ],
+    "properties": {
+        "headers": {
+            "type": "object"
+        },
+        "method": {
+            "type": "string",
+            "enum": [
+                "GET",
+                "POST",
+                "PUT",
+                "DELETE",
+                "PATCH",
+                "HEAD"
+            ]
+        },
+        "url": {
+            "type": "string"
+        }
+    }
+}

@@ -1,0 +1,11 @@
+# VSCode
+.vscode
+debug
+debug.test
+
+# Log files
+*.log
+
+# Mac
+.DS_Store
+
