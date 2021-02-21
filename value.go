@@ -47,6 +47,9 @@ func Value(ctx context.Context, s string) interface{} {
 			m := GetEnvironment()
 			return fmt.Sprintf("%s", m.Get(tagName))
 		})
+		s = processTag(s, "CTXT", func(tagName string) string {
+			return fmt.Sprintf("%s", GetContext(ctx).Get(tagName))
+		})
 		return s
 	}
 }

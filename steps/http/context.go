@@ -16,62 +16,22 @@ package http
 
 import (
 	"context"
-	"fmt"
-	"net/http"
-	"net/url"
-	"path"
 )
 
-// ClientContextKey defines a type to store the ClientContext in context.Context.
-type ClientContextKey string
+// ContextKey defines a type to store the HTTP session in context.Context.
+type ContextKey string
 
-var clientContextKey ClientContextKey = "clientContextKey"
+var contextKey ContextKey = "httpSession"
 
-// ClientContext contains the context for the HTTP client steps (e.g. to validate the response).
-type ClientContext struct {
-	Request struct {
-		// Endpoint of the HTTP server. It might include a base path.
-		Endpoint string
-		// Path of the API endpoint. This path is considered with the endpoint to invoke the HTTP server.
-		Path string
-		// Query parameters
-		QueryParams map[string][]string
-		// Request headers
-		Headers map[string][]string
-		// HTTP method
-		Method string
-		// Request body as slice of bytes
-		RequestBody []byte
-	}
-	Response struct {
-		// HTTP response
-		Response *http.Response
-		// Response body as slice of bytes
-		ResponseBody []byte
-	}
-}
-
-// InitializeClientContext adds the ClientContext to the context.
+// InitializeContext adds the HTTP session to the context.
 // The new context is returned because context is immutable.
-func InitializeClientContext(ctx context.Context) context.Context {
-	var clientContext ClientContext
-	return context.WithValue(ctx, clientContextKey, &clientContext)
+func InitializeContext(ctx context.Context) context.Context {
+	var session Session
+	return context.WithValue(ctx, contextKey, &session)
 }
 
-// GetClientContext returns the ClientContext stored in context.
-// Note that the context should be previously initialized with InitializeClientContext function.
-func GetClientContext(ctx context.Context) *ClientContext {
-	return ctx.Value(clientContextKey).(*ClientContext)
-}
-
-// URL composes the endpoint, the resource, and query parameters to build a URL.
-func (cc ClientContext) URL() (*url.URL, error) {
-	u, err := url.Parse(cc.Request.Endpoint)
-	if err != nil {
-		return nil, fmt.Errorf("Invalid endpoint URL: %s. %s", cc.Request.Endpoint, err)
-	}
-	u.Path = path.Join(u.Path, cc.Request.Path)
-	params := url.Values(cc.Request.QueryParams)
-	u.RawQuery = params.Encode()
-	return u, nil
+// GetSession returns the HTTP session stored in context.
+// Note that the context should be previously initialized with InitializeContext function.
+func GetSession(ctx context.Context) *Session {
+	return ctx.Value(contextKey).(*Session)
 }
