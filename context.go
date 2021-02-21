@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package dns
+package golium
 
 import (
 	"context"
@@ -21,17 +21,36 @@ import (
 // ContextKey defines a type to store the Context in context.Context.
 type ContextKey string
 
-var contextKey ContextKey = "dnsSession"
+var contextKey ContextKey = "contextKey"
 
-// InitializeContext adds the DNS Session to the context.
-// The new context is returned because context is immutable.
-func InitializeContext(ctx context.Context) context.Context {
-	session := Session{}
-	return context.WithValue(ctx, contextKey, &session)
+// Context contains the context required for common utilities.
+// It contains a map[string]interface{} to store global values and find them with [CTXT:xxx] tag.
+type Context struct {
+	m map[string]interface{}
 }
 
-// GetSession returns the DNS session stored in context.
+// InitializeContext adds the Context to the context.
+// The new context is returned because context is immutable.
+func InitializeContext(ctx context.Context) context.Context {
+	commonCtx := Context{
+		m: make(map[string]interface{}),
+	}
+	return context.WithValue(ctx, contextKey, &commonCtx)
+}
+
+// GetContext returns the Context stored in context.
 // Note that the context should be previously initialized with InitializeContext function.
-func GetSession(ctx context.Context) *Session {
-	return ctx.Value(contextKey).(*Session)
+func GetContext(ctx context.Context) *Context {
+	return ctx.Value(contextKey).(*Context)
+}
+
+// Get returns an element from Context.Ctx.
+// If the value does not exist, it returns nil.
+func (c *Context) Get(key string) interface{} {
+	return c.m[key]
+}
+
+// Put writes an element in the context.
+func (c *Context) Put(key string, value interface{}) {
+	c.m[key] = value
 }

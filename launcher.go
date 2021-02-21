@@ -76,12 +76,12 @@ func (l *Launcher) Launch(testSuiteInitializer func(context.Context, *godog.Test
 	status := godog.TestSuite{
 		Name: conf.Suite,
 		TestSuiteInitializer: func(suiteContext *godog.TestSuiteContext) {
-			ctx := context.Background()
+			ctx := l.initContext()
 			testSuiteInitializer(ctx, suiteContext)
 		},
 		ScenarioInitializer: func(scenarioContext *godog.ScenarioContext) {
 			l.configScenarioContext(scenarioContext)
-			ctx := context.Background()
+			ctx := l.initContext()
 			scenarioInitializer(ctx, scenarioContext)
 		},
 		Options: &godogOpts,
@@ -95,6 +95,12 @@ func (l *Launcher) Launch(testSuiteInitializer func(context.Context, *godog.Test
 		logRecord.Error("Suite failed")
 	}
 	os.Exit(status)
+}
+
+func (l *Launcher) initContext() context.Context {
+	ctx := context.Background()
+	ctx = InitializeContext(ctx)
+	return ctx
 }
 
 func (l *Launcher) configLogger() {
