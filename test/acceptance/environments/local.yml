@@ -1,2 +1,6 @@
+# HTTP settings
 url: https://httpbin.org
 host: httpbin.org
+
+# DNS settings
+dns: 8.8.8.8:53

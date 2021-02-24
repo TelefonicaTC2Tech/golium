@@ -1,7 +1,7 @@
 Feature: DNS client
 
   Scenario: Query domain inspecting answer records
-    Given I configure the DNS server at "8.8.8.8:53"
+    Given I configure the DNS server at "[CONF:dns]"
      When I send a DNS query of type "A" for "www.elevenpaths.com"
      Then the DNS response must have the code "NOERROR"
       And the DNS response must contain the following answer records
@@ -12,7 +12,7 @@ Feature: DNS client
           | legacy-web-pro-1067844838.eu-west-1.elb.amazonaws.com. | IN    | A     | 54.194.165.93                                          |
 
   Scenario Outline: Query domain with recursion
-    Given I configure the DNS server at "8.8.8.8:53"
+    Given I configure the DNS server at "[CONF:dns]"
      When I send a DNS query of type "<type>" for "<domain>"
      Then the DNS response must have the code "<code>"
       And the DNS response must have "<answer>" answer record
@@ -31,7 +31,7 @@ Feature: DNS client
           | w.invalid.dsfsd.     | NS   | NXDOMAIN | 0      | 1         | 0          |
 
   Scenario Outline: Query domain without recursion
-    Given I configure the DNS server at "8.8.8.8:53"
+    Given I configure the DNS server at "[CONF:dns]"
     When I send a DNS query of type "<type>" for "<domain>" without recursion
     Then the DNS response must have one of the following codes: "<code>"
 

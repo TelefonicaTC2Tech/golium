@@ -38,10 +38,12 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 
 	// Initialize the steps
 	scenCtx.Step(`^I configure the DNS server at "([^"]*)"$`, func(svr string) error {
-		return session.ConfigureServer(ctx, svr)
+		return session.ConfigureServer(ctx, golium.ValueAsString(ctx, svr))
 	})
 	scenCtx.Step(`^I send a DNS query of type "([^"]*)" for "([^"]*)"(\s\bwithout recursion\b)?$`, func(qtype, qname, recursion string) error {
 		recursive := recursion == ""
+		qtype = golium.ValueAsString(ctx, qtype)
+		qname = golium.ValueAsString(ctx, qname)
 		qt, ok := QueryTypes[qtype]
 		if !ok {
 			return fmt.Errorf("Invalid qtype: %s. Permitted values: %s", qtype, reflect.ValueOf(QueryTypes).MapKeys())
@@ -49,16 +51,17 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 		return session.SendQuery(ctx, qt, qname, recursive)
 	})
 	scenCtx.Step(`the DNS response must have the code "([^"]*)"$`, func(code string) error {
-		return session.ValidateResponseWithCode(ctx, code)
+		return session.ValidateResponseWithCode(ctx, golium.ValueAsString(ctx, code))
 	})
 	scenCtx.Step(`the DNS response must have one of the following codes: "([^"]*)"$`, func(list string) error {
 		codes := strings.Split(list, ",")
 		for i := range codes {
-			codes[i] = strings.TrimSpace(codes[i])
+			codes[i] = strings.TrimSpace(golium.ValueAsString(ctx, codes[i]))
 		}
 		return session.ValidateResponseWithOneOfCodes(ctx, codes)
 	})
 	scenCtx.Step(`the DNS response must have "(\d+)" ((\banswer\b)|(\bauthority\b)|(\badditional\b)) records?$`, func(n int, recordType string) error {
+		recordType = golium.ValueAsString(ctx, recordType)
 		return session.ValidateResponseWithNumberOfRecords(ctx, n, RecordType(recordType))
 	})
 	scenCtx.Step(`the DNS response must contain the following answer records?$`, func(t *godog.Table) error {
@@ -78,5 +81,5 @@ func validateResponseWithRecords(ctx context.Context, session *Session, recordTy
 	if err := golium.ConvertTableWithHeaderToStructSlice(ctx, t, &expectedRecords); err != nil {
 		return fmt.Errorf("Error processing the table with the expected records. %s", err)
 	}
-	return session.ValidateResponseWithRecords(ctx, RecordType(recordType), expectedRecords)
+	return session.ValidateResponseWithRecords(ctx, recordType, expectedRecords)
 }
