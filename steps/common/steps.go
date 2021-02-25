@@ -30,7 +30,7 @@ type Steps struct {
 // InitializeSteps initializes all the steps.
 func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioContext) context.Context {
 	scenCtx.Step(`^I store "([^"]*)" in context "([^"]*)"$`, func(value, name string) error {
-		return StoreInContext(ctx, name, value)
+		return StoreValueInContext(ctx, name, value)
 	})
 	scenCtx.Step(`^I generate a UUID and store it in context "([^"]*)"$`, func(name string) error {
 		return GenerateUUIDInContext(ctx, golium.ValueAsString(ctx, name))
@@ -38,8 +38,8 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 	return ctx
 }
 
-// StoreInContext stores a value in golium.Context using the key name.
-func StoreInContext(ctx context.Context, name, value string) error {
+// StoreValueInContext stores a value in golium.Context using the key name.
+func StoreValueInContext(ctx context.Context, name, value string) error {
 	golium.GetContext(ctx).Put(name, value)
 	return nil
 }
@@ -50,6 +50,5 @@ func GenerateUUIDInContext(ctx context.Context, name string) error {
 	if err != nil {
 		return fmt.Errorf("Error generating UUID. %s", err)
 	}
-	golium.GetContext(ctx).Put(name, guid.String())
-	return nil
+	return StoreValueInContext(ctx, name, guid.String())
 }

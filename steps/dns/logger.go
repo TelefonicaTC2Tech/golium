@@ -60,10 +60,10 @@ func NewLogger(path string) (*Logger, error) {
 
 // LogRequest logs a DNS request in the configured log file.
 func (l Logger) LogRequest(request *dns.Msg, corr string) {
-	l.log.Printf("Request [%s]:\n%+v", corr, request)
+	l.log.Printf("Request [%s]:\n%+v\n\n", corr, request)
 }
 
 // LogResponse logs a DNS response in the configured log file.
 func (l Logger) LogResponse(response *dns.Msg, corr string) {
-	l.log.Printf("Response [%s]:\n%+v", corr, response)
+	l.log.Printf("Response [%s]:\n%+v\n\n", corr, response)
 }
