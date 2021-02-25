@@ -62,20 +62,20 @@ func NewLogger(path string) (*Logger, error) {
 
 // LogRequest logs an HTTP request in the configured log file.
 func (l Logger) LogRequest(req *http.Request, body []byte, corr string) {
-	l.log.Println(fmt.Sprintf("Request [%s]:\n%s\n%s\n%s\n",
+	l.log.Printf("Request [%s]:\n%s\n%s\n%s\n",
 		corr,
 		getRequestFirstLine(req),
 		getHeaders(req.Header),
-		getBody(body)))
+		getBody(body))
 }
 
 // LogResponse logs an HTTP response in the configured log file.
 func (l Logger) LogResponse(resp *http.Response, body []byte, corr string) {
-	l.log.Println(fmt.Sprintf("Response [%s]:\n%s\n%s\n%s\n",
+	l.log.Printf("Response [%s]:\n%s\n%s\n%s\n",
 		corr,
 		getResponseFirstLine(resp),
 		getHeaders(resp.Header),
-		getBody(body)))
+		getBody(body))
 }
 
 func getRequestFirstLine(req *http.Request) string {

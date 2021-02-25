@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/miekg/dns"
 )
 
@@ -26,6 +27,8 @@ import (
 type Session struct {
 	// Server is the address to the DNS server, including the server port (e.g. 8.8.8.8:53).
 	Server string
+	// DNS query options (EDNS0)
+	Options []dns.EDNS0
 	// Query contains the DNS request message.
 	Query *dns.Msg
 	// Response contains the DNS response message.
@@ -40,17 +43,38 @@ func (s *Session) ConfigureServer(ctx context.Context, svr string) error {
 	return nil
 }
 
+// ConfigureOptions adds EDNS0 options to be added in the DNS query.
+func (s *Session) ConfigureOptions(ctx context.Context, options []dns.EDNS0) error {
+	s.Options = append(s.Options, options...)
+	return nil
+}
+
 // SendQuery sends a DNS query to resolve a domain.
 func (s *Session) SendQuery(ctx context.Context, qtype uint16, qdomain string, recursive bool) error {
+	logger := GetLogger()
+	corr := uuid.New().String()
 	c := dns.Client{}
-	m := dns.Msg{}
+	m := &dns.Msg{}
 	m.SetQuestion(dns.Fqdn(qdomain), qtype)
 	m.RecursionDesired = recursive
-	s.Query = &m
-	r, rtt, err := c.ExchangeContext(ctx, &m, s.Server)
+	// Add EDNS0 options (if registered in s.Options)
+	if len(s.Options) > 0 {
+		opt := &dns.OPT{
+			Hdr: dns.RR_Header{
+				Name:   ".",
+				Rrtype: dns.TypeOPT,
+			},
+			Option: s.Options,
+		}
+		m.Extra = append(m.Extra, opt)
+	}
+	s.Query = m
+	logger.LogRequest(m, corr)
+	r, rtt, err := c.ExchangeContext(ctx, m, s.Server)
 	if err != nil {
 		return fmt.Errorf("Error in DNS query to %s. %s", s.Server, err)
 	}
+	logger.LogResponse(m, corr)
 	s.Response = r
 	s.RTT = rtt
 	return nil

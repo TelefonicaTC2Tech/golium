@@ -16,6 +16,7 @@ package golium
 
 import (
 	"context"
+	"crypto/sha256"
 	"fmt"
 	"strings"
 )
@@ -49,6 +50,9 @@ func Value(ctx context.Context, s string) interface{} {
 		})
 		s = processTag(s, "CTXT", func(tagName string) string {
 			return fmt.Sprintf("%s", GetContext(ctx).Get(tagName))
+		})
+		s = processTag(s, "SHA256", func(tagName string) string {
+			return fmt.Sprintf("%x", sha256.Sum256([]byte(tagName)))
 		})
 		return s
 	}
