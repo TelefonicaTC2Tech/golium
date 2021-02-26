@@ -4,6 +4,7 @@ go 1.15
 
 require (
 	github.com/cucumber/godog v0.11.0
+	github.com/go-redis/redis/v8 v8.6.0
 	github.com/google/uuid v1.2.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/miekg/dns v1.1.38

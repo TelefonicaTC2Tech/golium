@@ -17,6 +17,7 @@ package common
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/Telefonica/golium"
 	"github.com/cucumber/godog"
@@ -34,6 +35,14 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 	})
 	scenCtx.Step(`^I generate a UUID and store it in context "([^"]*)"$`, func(name string) error {
 		return GenerateUUIDInContext(ctx, golium.ValueAsString(ctx, name))
+	})
+	scenCtx.Step(`^I wait for "(\d+)" seconds$`, func(d int) error {
+		time.Sleep(time.Duration(d) * time.Second)
+		return nil
+	})
+	scenCtx.Step(`^I wait for "(\d+)" millis$`, func(d int) error {
+		time.Sleep(time.Duration(d) * time.Millisecond)
+		return nil
 	})
 	return ctx
 }
