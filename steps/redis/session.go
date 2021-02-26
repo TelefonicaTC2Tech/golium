@@ -114,23 +114,24 @@ func (s *Session) WaitForJSONMessageWithProperties(ctx context.Context, timeout 
 	return waitUpTo(timeout, func() error {
 		for _, msg := range s.Messages {
 			logrus.Debugf("Checking message: %s", msg)
-			m := golium.NewMapFromJSONBytes([]byte(msg))
-			found := func() bool {
-				for key, expectedValue := range props {
-					value := m.Get(key)
-					if value != expectedValue {
-						logrus.Debugf("Invalid value: %+v. Expected: %+v", value, expectedValue)
-						return false
-					}
-				}
-				return true
-			}()
-			if found {
+			if matchMessage(msg, props) {
 				return nil
 			}
 		}
 		return fmt.Errorf("Not received message with JSON properties: %+v", props)
 	})
+}
+
+func matchMessage(msg string, expectedProps map[string]interface{}) bool {
+	m := golium.NewMapFromJSONBytes([]byte(msg))
+	for key, expectedValue := range expectedProps {
+		value := m.Get(key)
+		if value != expectedValue {
+			logrus.Debugf("Invalid value: %+v. Expected: %+v", value, expectedValue)
+			return false
+		}
+	}
+	return true
 }
 
 func waitUpTo(timeout time.Duration, f func() error) error {
