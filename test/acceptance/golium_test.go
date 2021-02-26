@@ -22,6 +22,7 @@ import (
 	"github.com/Telefonica/golium/steps/common"
 	"github.com/Telefonica/golium/steps/dns"
 	"github.com/Telefonica/golium/steps/http"
+	"github.com/Telefonica/golium/steps/redis"
 	"github.com/cucumber/godog"
 )
 
@@ -38,6 +39,7 @@ func InitializeScenario(ctx context.Context, scenarioCtx *godog.ScenarioContext)
 		common.Steps{},
 		http.Steps{},
 		dns.Steps{},
+		redis.Steps{},
 	}
 	for _, stepsInitializer := range stepsInitializers {
 		ctx = stepsInitializer.InitializeSteps(ctx, scenarioCtx)

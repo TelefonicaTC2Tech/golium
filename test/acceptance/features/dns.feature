@@ -1,6 +1,5 @@
 Feature: DNS client
 
-  @wip
   Scenario: Query domain inspecting answer records
     Given the DNS server "[CONF:dns]"
      When I send a DNS query of type "A" for "www.elevenpaths.com"
