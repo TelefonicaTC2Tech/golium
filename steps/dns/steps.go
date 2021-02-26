@@ -16,12 +16,14 @@ package dns
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"reflect"
 	"strings"
 
 	"github.com/Telefonica/golium"
 	"github.com/cucumber/godog"
+	"github.com/miekg/dns"
 )
 
 // Steps type is responsible to initialize the DNS client steps in godog framework.
@@ -37,8 +39,15 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 	session := GetSession(ctx)
 
 	// Initialize the steps
-	scenCtx.Step(`^I configure the DNS server at "([^"]*)"$`, func(svr string) error {
+	scenCtx.Step(`^the DNS server "([^"]*)"$`, func(svr string) error {
 		return session.ConfigureServer(ctx, golium.ValueAsString(ctx, svr))
+	})
+	scenCtx.Step(`^the DNS query options$`, func(t *godog.Table) error {
+		options, err := parseOptionsTable(ctx, t)
+		if err != nil {
+			return fmt.Errorf("Error parsing DNS query options. %s", err)
+		}
+		return session.ConfigureOptions(ctx, options)
 	})
 	scenCtx.Step(`^I send a DNS query of type "([^"]*)" for "([^"]*)"(\s\bwithout recursion\b)?$`, func(qtype, qname, recursion string) error {
 		recursive := recursion == ""
@@ -74,6 +83,29 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 		return validateResponseWithRecords(ctx, session, Additional, t)
 	})
 	return ctx
+}
+
+func parseOptionsTable(ctx context.Context, t *godog.Table) ([]dns.EDNS0, error) {
+	type option struct {
+		Code uint16
+		Data string // Hexadecimal string
+	}
+	var options []option
+	if err := golium.ConvertTableWithHeaderToStructSlice(ctx, t, &options); err != nil {
+		return nil, fmt.Errorf("Error mapping table with option struct. %s", err)
+	}
+	dnsOptions := make([]dns.EDNS0, len(options))
+	for i, o := range options {
+		data, err := hex.DecodeString(o.Data)
+		if err != nil {
+			return nil, fmt.Errorf("Error converting to byte array: %s. %s", o.Data, err)
+		}
+		dnsOptions[i] = &dns.EDNS0_LOCAL{
+			Code: o.Code,
+			Data: data,
+		}
+	}
+	return dnsOptions, nil
 }
 
 func validateResponseWithRecords(ctx context.Context, session *Session, recordType RecordType, t *godog.Table) error {

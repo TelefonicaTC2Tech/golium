@@ -1,7 +1,23 @@
 Feature: DNS client
 
+  @wip
   Scenario: Query domain inspecting answer records
-    Given I configure the DNS server at "[CONF:dns]"
+    Given the DNS server "[CONF:dns]"
+     When I send a DNS query of type "A" for "www.elevenpaths.com"
+     Then the DNS response must have the code "NOERROR"
+      And the DNS response must contain the following answer records
+          | name                                                   | class | type  | data                                                   |
+          | www.elevenpaths.com.                                   | IN    | CNAME | legacy-web-pro-1067844838.eu-west-1.elb.amazonaws.com. |
+          | legacy-web-pro-1067844838.eu-west-1.elb.amazonaws.com. | IN    | A     | 52.16.121.202                                          |
+          | legacy-web-pro-1067844838.eu-west-1.elb.amazonaws.com. | IN    | A     | 52.30.171.81                                           |
+          | legacy-web-pro-1067844838.eu-west-1.elb.amazonaws.com. | IN    | A     | 54.194.165.93                                          |
+
+  Scenario: Query domain with eDNS0 options
+    Given the DNS server "[CONF:dns]"
+      And the DNS query options
+          | code | data               |
+          | 1001 | [SHA256:test-1001] |
+          | 1002 | [SHA256:test-1002] |
      When I send a DNS query of type "A" for "www.elevenpaths.com"
      Then the DNS response must have the code "NOERROR"
       And the DNS response must contain the following answer records
@@ -12,7 +28,7 @@ Feature: DNS client
           | legacy-web-pro-1067844838.eu-west-1.elb.amazonaws.com. | IN    | A     | 54.194.165.93                                          |
 
   Scenario Outline: Query domain with recursion
-    Given I configure the DNS server at "[CONF:dns]"
+    Given the DNS server "[CONF:dns]"
      When I send a DNS query of type "<type>" for "<domain>"
      Then the DNS response must have the code "<code>"
       And the DNS response must have "<answer>" answer record
@@ -31,7 +47,7 @@ Feature: DNS client
           | w.invalid.dsfsd.     | NS   | NXDOMAIN | 0      | 1         | 0          |
 
   Scenario Outline: Query domain without recursion
-    Given I configure the DNS server at "[CONF:dns]"
+    Given the DNS server "[CONF:dns]"
     When I send a DNS query of type "<type>" for "<domain>" without recursion
     Then the DNS response must have one of the following codes: "<code>"
 
