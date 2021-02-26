@@ -43,7 +43,7 @@ func (s *Session) ConfigureServer(ctx context.Context, svr string) error {
 	return nil
 }
 
-// ConfigureOptions adds EDNS0 options to be added in the DNS query.
+// ConfigureOptions adds EDNS0 options to be included in the DNS query.
 func (s *Session) ConfigureOptions(ctx context.Context, options []dns.EDNS0) error {
 	s.Options = append(s.Options, options...)
 	return nil

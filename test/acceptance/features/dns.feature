@@ -3,10 +3,6 @@ Feature: DNS client
   @wip
   Scenario: Query domain inspecting answer records
     Given the DNS server "[CONF:dns]"
-      And the DNS query options
-          | code | data               |
-          | 1001 | [SHA256:test-6001] |
-          | 1002 | [SHA256:test-1002] |
      When I send a DNS query of type "A" for "www.elevenpaths.com"
      Then the DNS response must have the code "NOERROR"
       And the DNS response must contain the following answer records
@@ -18,6 +14,10 @@ Feature: DNS client
 
   Scenario: Query domain with eDNS0 options
     Given the DNS server "[CONF:dns]"
+      And the DNS query options
+          | code | data               |
+          | 1001 | [SHA256:test-1001] |
+          | 1002 | [SHA256:test-1002] |
      When I send a DNS query of type "A" for "www.elevenpaths.com"
      Then the DNS response must have the code "NOERROR"
       And the DNS response must contain the following answer records
