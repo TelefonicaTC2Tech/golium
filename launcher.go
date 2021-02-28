@@ -59,9 +59,7 @@ func (l *Launcher) Launch(testSuiteInitializer func(context.Context, *godog.Test
 	scenarioInitializer func(context.Context, *godog.ScenarioContext)) {
 	conf := GetConfig()
 	godogOpts := godog.Options{
-		Format:      conf.Godog.Format,
-		Output:      colors.Colored(os.Stdout),
-		Concurrency: conf.Godog.Concurrency,
+		Output: colors.Colored(os.Stdout),
 	}
 	godog.BindFlags("godog.", flag.CommandLine, &godogOpts)
 	flag.Parse()

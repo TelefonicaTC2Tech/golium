@@ -16,17 +16,10 @@ package cfg
 
 // Config contains the configuration for golium project.
 type Config struct {
-	Suite       string      `yaml:"suite" envconfig:"SUITE"`
-	Environment string      `yaml:"environment" envconfig:"ENVIRONMENT"`
-	Godog       GodogConfig `yaml:"godog"`
-	Dir         DirConfig   `yaml:"dir"`
-	Log         LogConfig   `yaml:"log"`
-}
-
-// GodogConfig to configure godog
-type GodogConfig struct {
-	Format      string `yaml:"format" envconfig:"GODOG_FORMAT"`
-	Concurrency int    `yaml:"concurrency" envconfig:"GODOG_CONCURRENCY"`
+	Suite       string    `yaml:"suite" envconfig:"SUITE"`
+	Environment string    `yaml:"environment" envconfig:"ENVIRONMENT"`
+	Dir         DirConfig `yaml:"dir"`
+	Log         LogConfig `yaml:"log"`
 }
 
 // DirConfig to configure some configuration directories.

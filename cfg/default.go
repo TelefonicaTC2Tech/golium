@@ -19,10 +19,6 @@ package cfg
 var DefaultConfig = Config{
 	Suite:       "golium",
 	Environment: "local",
-	Godog: GodogConfig{
-		Format:      "pretty",
-		Concurrency: 1,
-	},
 	Dir: DirConfig{
 		Config:       "./",
 		Schemas:      "./schemas",
