@@ -61,6 +61,10 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 		}
 		return session.ConfigureRequestBodyJSONProperties(ctx, props)
 	})
+	scenCtx.Step(`^the HTTP request body based in the JSON$`, func(message *godog.DocString) error {
+		return session.ConfigureRequestBodyJSONText(ctx, golium.ValueAsString(ctx, message.Content))
+	})
+
 	scenCtx.Step(`^I send a HTTP "([^"]*)" request$`, func(method string) error {
 		return session.SendHTTPRequest(ctx, golium.ValueAsString(ctx, method))
 	})
@@ -79,6 +83,9 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 	})
 	scenCtx.Step(`^the HTTP response body must be empty$`, func() error {
 		return session.ValidateResponseBodyEmpty(ctx)
+	})
+	scenCtx.Step(`^I store the field value of the json HTTP response "([^"]*)" in the context storage key "([^"]*)"$`, func(key string, ctxtKey string) error {
+		return session.StoreResponseBodyJSONPropertyValue(ctx, golium.ValueAsString(ctx, key), golium.ValueAsString(ctx, ctxtKey))
 	})
 	return ctx
 }

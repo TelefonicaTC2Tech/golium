@@ -43,3 +43,29 @@ Feature: HTTP client
           | json.inactive         | [FALSE]                   |
           | json.empty            | [EMPTY]                   |
           | json.null             | [NULL]                    |
+
+  Scenario: Send a POST request defined by a json string
+    Given the HTTP endpoint "[CONF:url]/anything"
+      And the HTTP path "/test3"
+      And the HTTP request headers
+          | Authorization | Bearer access-token |
+      And the HTTP request body based in the JSON
+      """
+      {
+        "list": [
+          { "attribute": "attribute0", "value": "value0"},
+          { "attribute": "attribute1", "value": "value1"},
+          { "attribute": "attribute2", "value": "value2"}
+        ]
+      }
+      """
+     When I send a HTTP "POST" request
+     Then the HTTP status code must be "200"
+      And the HTTP response body must comply with the JSON schema "test-schema"
+      And the HTTP response body must have the JSON properties
+          | json.list.0.attribute | attribute0 |
+          | json.list.0.value     | value0     |
+          | json.list.1.attribute | attribute1 |
+          | json.list.1.value     | value1     |
+          | json.list.2.attribute | attribute2 |
+          | json.list.2.value     | value2     |
