@@ -43,7 +43,7 @@ Feature: HTTP client
           | json.inactive         | [FALSE]                   |
           | json.empty            | [EMPTY]                   |
           | json.null             | [NULL]                    |
-
+  
   Scenario: Send a POST request defined by a json string
     Given the HTTP endpoint "[CONF:url]/anything"
       And the HTTP path "/test3"
@@ -62,10 +62,12 @@ Feature: HTTP client
      When I send a HTTP "POST" request
      Then the HTTP status code must be "200"
       And the HTTP response body must comply with the JSON schema "test-schema"
+      And I store the field value of the json HTTP response "json.list.2.attribute" in the context storage key "key"
+      And I store the field value of the json HTTP response "json.list.2.value" in the context storage key "value"
       And the HTTP response body must have the JSON properties
-          | json.list.0.attribute | attribute0 |
-          | json.list.0.value     | value0     |
-          | json.list.1.attribute | attribute1 |
-          | json.list.1.value     | value1     |
-          | json.list.2.attribute | attribute2 |
-          | json.list.2.value     | value2     |
+          | json.list.0.attribute | attribute0   |
+          | json.list.0.value     | value0       |
+          | json.list.1.attribute | attribute1   |
+          | json.list.1.value     | value1       |
+          | json.list.2.attribute | [CTXT:key]   |
+          | json.list.2.value     | [CTXT:value] |
