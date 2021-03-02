@@ -106,7 +106,16 @@ func (s *Session) ConfigureRequestBodyJSONProperties(ctx context.Context, props 
 			return fmt.Errorf("Error setting property '%s' with value '%s' in the request body. %s", key, value, err)
 		}
 	}
-	s.Request.RequestBody = []byte(json)
+	return s.ConfigureRequestBodyJSONText(ctx, json)
+}
+
+// ConfigureRequestBodyJSONText writes the body in the HTTP request as a JSON from text.
+func (s *Session) ConfigureRequestBodyJSONText(ctx context.Context, message string) error {
+	s.Request.RequestBody = []byte(message)
+	if s.Request.Headers == nil {
+		s.Request.Headers = make(map[string][]string)
+	}
+	s.Request.Headers["Content-Type"] = []string{"application/json"}
 	return nil
 }
 
@@ -186,4 +195,12 @@ func (s *Session) ValidateResponseBodyEmpty(ctx context.Context) error {
 		return nil
 	}
 	return fmt.Errorf("The response body is not empty")
+}
+
+// StoreResponseBodyJSONPropertyInContext extracts a JSON property from the HTTP response body and stores it in the context.
+func (s *Session) StoreResponseBodyJSONPropertyInContext(ctx context.Context, key string, ctxtKey string) error {
+	m := golium.NewMapFromJSONBytes(s.Response.ResponseBody)
+	value := m.Get(key)
+	golium.GetContext(ctx).Put(ctxtKey, value)
+	return nil
 }
