@@ -71,7 +71,7 @@ Feature: HTTP client
           | json.list.2.value     | value2     |
       And I store the element "json.list.0.attribute" from the JSON HTTP response body in context "attr"
       And I store the element "json.list.0.value" from the JSON HTTP response body in context "val"
-    Then  the HTTP endpoint "[CONF:url]/anything"
+     Then the HTTP endpoint "[CONF:url]/anything"
       And the HTTP path "/test3-2"
       And the HTTP request headers
           | Content-Type | application/json |

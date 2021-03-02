@@ -114,8 +114,8 @@ func (s *Session) ConfigureRequestBodyJSONText(ctx context.Context, message stri
 	s.Request.RequestBody = []byte(message)
 	if s.Request.Headers == nil {
 		s.Request.Headers = make(map[string][]string)
-		s.Request.Headers["Content-Type"] = append(s.Request.Headers["Content-Type"], "application/json")
 	}
+	s.Request.Headers["Content-Type"] = []string{"application/json"}
 	return nil
 }
 
