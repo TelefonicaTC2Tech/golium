@@ -18,6 +18,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -44,6 +45,7 @@ func Value(ctx context.Context, s string) interface{} {
 	case "[EMPTY]":
 		return ""
 	default:
+		orig := s
 		s = processTag(s, "CONF", func(tagName string) string {
 			m := GetEnvironment()
 			return fmt.Sprintf("%s", m.Get(tagName))
@@ -54,6 +56,15 @@ func Value(ctx context.Context, s string) interface{} {
 		s = processTag(s, "SHA256", func(tagName string) string {
 			return fmt.Sprintf("%x", sha256.Sum256([]byte(tagName)))
 		})
+		s = processTag(s, "NUMBER", func(tagName string) string {
+			return tagName
+		})
+		// If there is only a NUMBER tag, without any surrounding text, then return a float number
+		if orig == fmt.Sprintf("[NUMBER:%s]", s) {
+			if v, err := strconv.ParseFloat(s, 64); err == nil {
+				return v
+			}
+		}
 		return s
 	}
 }

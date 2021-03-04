@@ -33,6 +33,8 @@ type Session struct {
 	Messages []string
 	// Correlator is used to correlate the messages for a specific session
 	Correlator string
+	// Time to live (in milliseconds). If 0, there is no TTL configured for new records
+	TTL int
 	// Redis PubSub.
 	// It is stored after subscription to close the subscription.
 	pubsub *redis.PubSub
@@ -46,6 +48,72 @@ func (s *Session) ConfigureClient(ctx context.Context, options *redis.Options) e
 	}
 	s.Correlator = uuid.New().String()
 	return nil
+}
+
+// ConfigureTTL saves TTL (in milliseconds) to apply when setting a value in redis.
+func (s *Session) ConfigureTTL(ctx context.Context, ttl int) error {
+	s.TTL = ttl
+	return nil
+}
+
+// SetTextValue sets a redis key with a text value.
+// It uses session TTL to establish an expiration time (no expiration if TTL is 0).
+func (s *Session) SetTextValue(ctx context.Context, key, value string) error {
+	expiration := time.Duration(s.TTL * int(time.Millisecond))
+	return s.Client.Set(context.Background(), key, value, expiration).Err()
+}
+
+// SetJSONValue sets a redis key with a JSON document extracted from a table of properties.
+func (s *Session) SetJSONValue(ctx context.Context, key string, props map[string]interface{}) error {
+	var json string
+	var err error
+	for key, value := range props {
+		if json, err = sjson.Set(json, key, value); err != nil {
+			return fmt.Errorf("Error setting property '%s' with value '%s' in the request body. %s", key, value, err)
+		}
+	}
+	return s.SetTextValue(ctx, key, json)
+}
+
+// ValidateTextValue checks if the text value for a redis key equals the expected value.
+// It uses session TTL to establish an expiration time (no expiration if TTL is 0).
+func (s *Session) ValidateTextValue(ctx context.Context, key, expectedValue string) error {
+	value, err := s.Client.Get(context.Background(), key).Result()
+	if err != nil {
+		return err
+	}
+	if expectedValue != value {
+		return fmt.Errorf("Mismatch value for key '%s'. Expected value: %s, Actual value: %s", key, expectedValue, value)
+	}
+	return nil
+}
+
+// ValidateJSONValue checks if the JSON value for a redis key complies with the table of properties.
+func (s *Session) ValidateJSONValue(ctx context.Context, key string, props map[string]interface{}) error {
+	value, err := s.Client.Get(context.Background(), key).Result()
+	if err != nil {
+		return err
+	}
+	m := golium.NewMapFromJSONBytes([]byte(value))
+	for key, expectedValue := range props {
+		value := m.Get(key)
+		if value != expectedValue {
+			return fmt.Errorf("Mismatch of json property '%s'. Expected: '%s', actual: '%s'", key, expectedValue, value)
+		}
+	}
+	return nil
+}
+
+// ValidateEmptyValue checks if the redis key has not value.
+func (s *Session) ValidateEmptyValue(ctx context.Context, key string) error {
+	_, err := s.Client.Get(context.Background(), key).Result()
+	if err != nil {
+		if err == redis.Nil {
+			return nil
+		}
+		return err
+	}
+	return fmt.Errorf("Redis key '%s' is not empty", key)
 }
 
 // SubscribeTopic subscribes to a redis topic to receive messages via a channel.
