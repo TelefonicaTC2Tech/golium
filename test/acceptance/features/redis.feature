@@ -1,5 +1,6 @@
 Feature: Redis client
 
+  @redis
   Scenario: Set and get a text message
     Given the redis endpoint
           | addr     | localhost:6379 |
@@ -13,6 +14,7 @@ Feature: Redis client
           This is a test value
           """
 
+  @redis
   Scenario: Set and get a JSON message
     Given the redis endpoint
           | addr     | localhost:6379 |
@@ -26,6 +28,7 @@ Feature: Redis client
           | golium.string  | test       |
           | golium.bool    | [TRUE]     |
 
+  @redis
   Scenario: Set and get a JSON message with TTL
     Given the redis endpoint
           | addr     | localhost:6379 |
@@ -48,6 +51,7 @@ Feature: Redis client
      When I wait for "600" millis
      Then the redis key "golium:key:ttl" must be empty
 
+  @redis
   Scenario: Publish and subscribe a text message
     Given the redis endpoint
           | addr     | localhost:6379 |
@@ -63,6 +67,7 @@ Feature: Redis client
           """
      And I unsubscribe from the redis topic "test-topic"
 
+  @redis
   Scenario: Publish and subscribe a JSON message
     Given the redis endpoint
           | addr     | localhost:6379 |

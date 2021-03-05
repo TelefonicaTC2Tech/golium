@@ -32,8 +32,14 @@ func ValueAsString(ctx context.Context, s string) string {
 // - Booleans: [TRUE] or [FALSE]
 // - Null value: [NULL]
 // - Empty value: [EMPTY]
+// - Number: [NUMBER:1234] or [NUMBER:1234.67]
 // - Configuration parameters: [CONF:test.parameter]
 // - Context values: [CTXT:test.context]
+// - SHA256: [SHA256:text.to.be.hashed]
+//
+// Most cases, the return value is a string except for the following cases:
+// - [TRUE] and [FALSE] return a bool type.
+// - [NUMBER:1234] returns a float64 if s only contains this tag and there is no surrounding text.
 func Value(ctx context.Context, s string) interface{} {
 	switch s {
 	case "[TRUE]":

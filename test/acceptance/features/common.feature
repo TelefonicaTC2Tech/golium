@@ -1,5 +1,6 @@
 Feature: Common
 
+  @common
   Scenario: Store a UUID in the context
     Given I generate a UUID and store it in context "test.uuid"
       And I store "[SHA256:test.value]" in context "test.value"
@@ -10,6 +11,7 @@ Feature: Common
           | method | GET                                                      |
           | url    | [CONF:url]/anything/[CTXT:test.uuid]/[SHA256:test.value] |
 
+  @common
   Scenario: Wait
     Given I wait for "2" millis
     Given I wait for "1" seconds

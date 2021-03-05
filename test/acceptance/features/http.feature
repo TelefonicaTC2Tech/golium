@@ -1,5 +1,6 @@
 Feature: HTTP client
 
+  @http
   Scenario: Send a GET request
     Given the HTTP endpoint "[CONF:url]/anything"
       And the HTTP path "/test1"
@@ -19,17 +20,20 @@ Feature: HTTP client
           | method                | GET                                             |
           | url                   | [CONF:url]/anything/test1?exists=true&sort=name |
   
+  @http
   Scenario: Send a POST request
     Given the HTTP endpoint "[CONF:url]/anything"
       And the HTTP path "/test2"
       And the HTTP request headers
           | Authorization | Bearer access-token |
       And the JSON properties in the HTTP request body
-          | name     | golium  |
-          | active   | [TRUE]  |
-          | inactive | [FALSE] |
-          | empty    | [EMPTY] |
-          | null     | [NULL]  |
+          | name     | golium         |
+          | active   | [TRUE]         |
+          | inactive | [FALSE]        |
+          | empty    | [EMPTY]        |
+          | null     | [NULL]         |
+          | integer  | [NUMBER:1234]  |
+          | float    | [NUMBER:-34.6] |
      When I send a HTTP "POST" request
      Then the HTTP status code must be "200"
       And the HTTP response body must comply with the JSON schema "test-schema"
@@ -43,7 +47,10 @@ Feature: HTTP client
           | json.inactive         | [FALSE]                   |
           | json.empty            | [EMPTY]                   |
           | json.null             | [NULL]                    |
+          | json.integer          | [NUMBER:1234]             |
+          | json.float            | [NUMBER:-34.6]            |
   
+  @http
   Scenario: Send a POST request defined by a json string using the context storage
     Given the HTTP endpoint "[CONF:url]/anything"
       And the HTTP path "/test3-1"
