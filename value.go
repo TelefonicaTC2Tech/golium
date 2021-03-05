@@ -18,6 +18,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -31,8 +32,14 @@ func ValueAsString(ctx context.Context, s string) string {
 // - Booleans: [TRUE] or [FALSE]
 // - Null value: [NULL]
 // - Empty value: [EMPTY]
+// - Number: [NUMBER:1234] or [NUMBER:1234.67]
 // - Configuration parameters: [CONF:test.parameter]
 // - Context values: [CTXT:test.context]
+// - SHA256: [SHA256:text.to.be.hashed]
+//
+// Most cases, the return value is a string except for the following cases:
+// - [TRUE] and [FALSE] return a bool type.
+// - [NUMBER:1234] returns a float64 if s only contains this tag and there is no surrounding text.
 func Value(ctx context.Context, s string) interface{} {
 	switch s {
 	case "[TRUE]":
@@ -44,6 +51,7 @@ func Value(ctx context.Context, s string) interface{} {
 	case "[EMPTY]":
 		return ""
 	default:
+		orig := s
 		s = processTag(s, "CONF", func(tagName string) string {
 			m := GetEnvironment()
 			return fmt.Sprintf("%s", m.Get(tagName))
@@ -54,6 +62,15 @@ func Value(ctx context.Context, s string) interface{} {
 		s = processTag(s, "SHA256", func(tagName string) string {
 			return fmt.Sprintf("%x", sha256.Sum256([]byte(tagName)))
 		})
+		s = processTag(s, "NUMBER", func(tagName string) string {
+			return tagName
+		})
+		// If there is only a NUMBER tag, without any surrounding text, then return a float number
+		if orig == fmt.Sprintf("[NUMBER:%s]", s) {
+			if v, err := strconv.ParseFloat(s, 64); err == nil {
+				return v
+			}
+		}
 		return s
 	}
 }

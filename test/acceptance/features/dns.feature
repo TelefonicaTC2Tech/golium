@@ -1,5 +1,6 @@
 Feature: DNS client
 
+  @dns
   Scenario: Query domain inspecting answer records
     Given the DNS server "[CONF:dns]"
      When I send a DNS query of type "A" for "www.elevenpaths.com"
@@ -11,6 +12,7 @@ Feature: DNS client
           | legacy-web-pro-1067844838.eu-west-1.elb.amazonaws.com. | IN    | A     | 52.30.171.81                                           |
           | legacy-web-pro-1067844838.eu-west-1.elb.amazonaws.com. | IN    | A     | 54.194.165.93                                          |
 
+  @dns
   Scenario: Query domain with eDNS0 options
     Given the DNS server "[CONF:dns]"
       And the DNS query options
@@ -26,6 +28,7 @@ Feature: DNS client
           | legacy-web-pro-1067844838.eu-west-1.elb.amazonaws.com. | IN    | A     | 52.30.171.81                                           |
           | legacy-web-pro-1067844838.eu-west-1.elb.amazonaws.com. | IN    | A     | 54.194.165.93                                          |
 
+  @dns
   Scenario Outline: Query domain with recursion
     Given the DNS server "[CONF:dns]"
      When I send a DNS query of type "<type>" for "<domain>"
@@ -45,6 +48,7 @@ Feature: DNS client
           | w.invalid.dsfsd.     | MX   | NXDOMAIN | 0      | 1         | 0          |
           | w.invalid.dsfsd.     | NS   | NXDOMAIN | 0      | 1         | 0          |
 
+  @dns
   Scenario Outline: Query domain without recursion
     Given the DNS server "[CONF:dns]"
     When I send a DNS query of type "<type>" for "<domain>" without recursion
