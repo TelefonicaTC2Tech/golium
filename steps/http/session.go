@@ -55,8 +55,9 @@ type Response struct {
 
 // Session contains the information of a HTTP session (request and response).
 type Session struct {
-	Request  Request
-	Response Response
+	Request    Request
+	Response   Response
+	NoRedirect bool
 }
 
 // URL composes the endpoint, the resource, and query parameters to build a URL.
@@ -119,6 +120,12 @@ func (s *Session) ConfigureRequestBodyJSONText(ctx context.Context, message stri
 	return nil
 }
 
+// ConfigureNoRedirection configures no redirection for the HTTP client.
+func (s *Session) ConfigureNoRedirection(ctx context.Context) error {
+	s.NoRedirect = true
+	return nil
+}
+
 // SendHTTPRequest sends a HTTP request using the configuration in the application context.
 func (s *Session) SendHTTPRequest(ctx context.Context, method string) error {
 	logger := GetLogger()
@@ -136,6 +143,11 @@ func (s *Session) SendHTTPRequest(ctx context.Context, method string) error {
 	req.Header = s.Request.Headers
 	logger.LogRequest(req, s.Request.RequestBody, corr)
 	client := http.Client{}
+	if s.NoRedirect {
+		client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		}
+	}
 	resp, err := client.Do(req)
 	if err != nil {
 		return fmt.Errorf("Error with the HTTP request. %s", err)
@@ -157,6 +169,25 @@ func (s *Session) SendHTTPRequest(ctx context.Context, method string) error {
 func (s *Session) ValidateStatusCode(ctx context.Context, expectedCode int) error {
 	if expectedCode != s.Response.Response.StatusCode {
 		return fmt.Errorf("Status code mismatch. Expected: %d, actual: %d", expectedCode, s.Response.Response.StatusCode)
+	}
+	return nil
+}
+
+// ValidateResponseHeaders checks a set of response headers.
+func (s *Session) ValidateResponseHeaders(ctx context.Context, expectedHeaders map[string][]string) error {
+	for expectedHeader, expectedHeaderValues := range expectedHeaders {
+		for _, expectedHeaderValue := range expectedHeaderValues {
+			found := false
+			for _, headerValue := range s.Response.Response.Header.Values(expectedHeader) {
+				if headerValue == expectedHeaderValue {
+					found = true
+					break
+				}
+			}
+			if !found {
+				return fmt.Errorf("HTTP response does not have the header '%s' with value '%s'", expectedHeader, expectedHeaderValue)
+			}
+		}
 	}
 	return nil
 }

@@ -64,12 +64,21 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 	scenCtx.Step(`^the HTTP request body with the JSON$`, func(message *godog.DocString) error {
 		return session.ConfigureRequestBodyJSONText(ctx, golium.ValueAsString(ctx, message.Content))
 	})
-
+	scenCtx.Step(`^the HTTP client does not follow any redirection$`, func() error {
+		return session.ConfigureNoRedirection(ctx)
+	})
 	scenCtx.Step(`^I send a HTTP "([^"]*)" request$`, func(method string) error {
 		return session.SendHTTPRequest(ctx, golium.ValueAsString(ctx, method))
 	})
 	scenCtx.Step(`^the HTTP status code must be "(\d+)"$`, func(code int) error {
 		return session.ValidateStatusCode(ctx, code)
+	})
+	scenCtx.Step(`^the HTTP response must contain the headers$`, func(t *godog.Table) error {
+		headers, err := golium.ConvertTableToMultiMap(t)
+		if err != nil {
+			return fmt.Errorf("Error processing HTTP headers from table. %s", err)
+		}
+		return session.ValidateResponseHeaders(ctx, headers)
 	})
 	scenCtx.Step(`^the HTTP response body must comply with the JSON schema "([^"]*)"$`, func(schema string) error {
 		return session.ValidateResponseBodyJSONSchema(ctx, golium.ValueAsString(ctx, schema))
