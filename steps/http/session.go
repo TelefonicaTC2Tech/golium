@@ -177,14 +177,7 @@ func (s *Session) ValidateStatusCode(ctx context.Context, expectedCode int) erro
 func (s *Session) ValidateResponseHeaders(ctx context.Context, expectedHeaders map[string][]string) error {
 	for expectedHeader, expectedHeaderValues := range expectedHeaders {
 		for _, expectedHeaderValue := range expectedHeaderValues {
-			found := false
-			for _, headerValue := range s.Response.Response.Header.Values(expectedHeader) {
-				if headerValue == expectedHeaderValue {
-					found = true
-					break
-				}
-			}
-			if !found {
+			if !golium.ContainsString(expectedHeaderValue, s.Response.Response.Header.Values(expectedHeader)) {
 				return fmt.Errorf("HTTP response does not have the header '%s' with value '%s'", expectedHeader, expectedHeaderValue)
 			}
 		}
