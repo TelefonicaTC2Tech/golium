@@ -120,7 +120,7 @@ func (s *Session) ConfigureJSONPayload(ctx context.Context, props map[string]int
 	var err error
 	for key, value := range props {
 		if json, err = sjson.Set(json, key, value); err != nil {
-			return errors.Wrapf(err, "failed setting property '%s' with value '%s' in the request body. %s", key, value)
+			return errors.Wrapf(err, "failed setting property '%s' with value '%s' in the request body", key, value)
 		}
 	}
 	return s.ConfigurePayloadWithContentType(ctx, json, "JSON")
