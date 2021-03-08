@@ -109,7 +109,8 @@ func parseOptionsTable(ctx context.Context, t *godog.Table) ([]dns.EDNS0, error)
 	for i, o := range options {
 		data, err := hex.DecodeString(o.Data)
 		if err != nil {
-			return nil, fmt.Errorf("Error converting to byte array: %s. %s", o.Data, err)
+			//return nil, fmt.Errorf("Error converting to byte array: %s. %s", o.Data, err)
+			data = []byte(o.Data)
 		}
 		dnsOptions[i] = &dns.EDNS0_LOCAL{
 			Code: o.Code,
