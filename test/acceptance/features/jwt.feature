@@ -7,7 +7,7 @@ Feature: JWT
           | sub           | golium           |
           | iss           | issuer           |
           | iat           | [NOW]            |
-          | exp           | [NOW:+24h:unix]   |
+          | exp           | [NOW:+24h:unix]  |
           | object.string | test with golium |
           | object.bool   | [TRUE]           |
           | object.number | [NUMBER:123.4]   |
@@ -82,7 +82,7 @@ Feature: JWT
           | sub           | golium           |
           | iss           | issuer           |
           | iat           | [NOW]            |
-          | exp           | [NOW:+24h:unix]   |
+          | exp           | [NOW:+24h:unix]  |
           | object.string | test with golium |
           | object.bool   | [TRUE]           |
           | object.number | [NUMBER:123.4]   |
@@ -115,7 +115,7 @@ Feature: JWT
           | sub           | golium           |
           | iss           | issuer           |
           | iat           | [NOW]            |
-          | exp           | [NOW:+24h:unix]   |
+          | exp           | [NOW:+24h:unix]  |
           | object.string | test with golium |
           | object.bool   | [TRUE]           |
           | object.number | [NUMBER:123.4]   |
