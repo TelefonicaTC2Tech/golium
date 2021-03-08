@@ -108,5 +108,5 @@ Feature: HTTP client
       And the HTTP client does not follow any redirection
      When I send a HTTP "GET" request
       And the HTTP status code must be "301"
-      And the HTTP request headers
+      And the HTTP response must contain the headers
           | Location | https://www.elevenpaths.com/ |
