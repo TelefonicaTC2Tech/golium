@@ -19,7 +19,9 @@ import (
 	"encoding/hex"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Telefonica/golium"
 	"github.com/cucumber/godog"
@@ -38,8 +40,17 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 	ctx = InitializeContext(ctx)
 	session := GetSession(ctx)
 
+	// Set the DNS responses timeout
+	// Set if indicated in environment parameter: CONF:timeout
+	// If not indicated, the default value is kept in 2 seconds (mikeg library)
+
+	if timeout, err := strconv.ParseInt(golium.ValueAsString(ctx, "[CONF:timeout]"), 10, 64); err == nil {
+		session.Timeout = time.Duration(timeout) * time.Millisecond
+	}
+
 	// Initialize the steps
 	scenCtx.Step(`^the DNS server "([^"]*)"$`, func(svr string) error {
+
 		return session.ConfigureServer(ctx, golium.ValueAsString(ctx, svr))
 	})
 	scenCtx.Step(`^the DNS query options$`, func(t *godog.Table) error {
