@@ -11,6 +11,8 @@ Feature: HTTP client
           | Authorization | Bearer access-token |
      When I send a HTTP "GET" request
      Then the HTTP status code must be "200"
+      And the HTTP response must contain the headers
+          | Content-Type | application/json |
       And the HTTP response body must comply with the JSON schema "test-schema"
       And the HTTP response body must have the JSON properties
           | args.exists           | true                                            |
@@ -36,6 +38,8 @@ Feature: HTTP client
           | float    | [NUMBER:-34.6] |
      When I send a HTTP "POST" request
      Then the HTTP status code must be "200"
+      And the HTTP response must contain the headers
+          | Content-Type | application/json |
       And the HTTP response body must comply with the JSON schema "test-schema"
       And the HTTP response body must have the JSON properties
           | headers.Authorization | Bearer access-token       |
@@ -91,3 +95,18 @@ Feature: HTTP client
       And the HTTP response body must have the JSON properties
           | json.attribute | attribute0 |
           | json.value     | value0     |    
+
+  @http
+  Scenario: Follow redirection
+    Given the HTTP endpoint "http://www.elevenpaths.com"
+     When I send a HTTP "GET" request
+      And the HTTP status code must be "200"
+
+  @http
+  Scenario: Follow no redirection
+    Given the HTTP endpoint "http://www.elevenpaths.com"
+      And the HTTP client does not follow any redirection
+     When I send a HTTP "GET" request
+      And the HTTP status code must be "301"
+      And the HTTP response must contain the headers
+          | Location | https://www.elevenpaths.com/ |
