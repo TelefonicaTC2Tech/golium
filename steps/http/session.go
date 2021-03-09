@@ -228,3 +228,12 @@ func (s *Session) StoreResponseBodyJSONPropertyInContext(ctx context.Context, ke
 	golium.GetContext(ctx).Put(ctxtKey, value)
 	return nil
 }
+
+// StoreResponseHeaderInContext stores in context a header of the HTTP response.
+// If the header does not exist, the context value is empty.
+// This method does not support multiple headers with the same name. It just stores one of them.
+func (s *Session) StoreResponseHeaderInContext(ctx context.Context, header string, ctxtKey string) error {
+	h := s.Response.Response.Header.Get(header)
+	golium.GetContext(ctx).Put(ctxtKey, h)
+	return nil
+}
