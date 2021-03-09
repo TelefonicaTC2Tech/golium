@@ -34,9 +34,6 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 	ctx = InitializeContext(ctx)
 	session := GetSession(ctx)
 	// Initialize the steps
-	scenCtx.Step(`^the HTTP host "([^"]*)"$`, func(host string) error {
-		return session.ConfigureHost(ctx, golium.ValueAsString(ctx, host))
-	})
 	scenCtx.Step(`^the HTTP endpoint "([^"]*)"$`, func(endpoint string) error {
 		return session.ConfigureEndpoint(ctx, golium.ValueAsString(ctx, endpoint))
 	})

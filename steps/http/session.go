@@ -31,8 +31,6 @@ import (
 
 // Request information of the Session.
 type Request struct {
-	// Host of the HTTP request
-	Host string
 	// Endpoint of the HTTP server. It might include a base path.
 	Endpoint string
 	// Path of the API endpoint. This path is considered with the endpoint to invoke the HTTP server.
@@ -72,12 +70,6 @@ func (s *Session) URL() (*url.URL, error) {
 	params := url.Values(s.Request.QueryParams)
 	u.RawQuery = params.Encode()
 	return u, nil
-}
-
-// ConfigureHost configures the HTTP request Host.
-func (s *Session) ConfigureHost(ctx context.Context, host string) error {
-	s.Request.Host = host
-	return nil
 }
 
 // ConfigureEndpoint configures the HTTP endpoint.
@@ -148,8 +140,11 @@ func (s *Session) SendHTTPRequest(ctx context.Context, method string) error {
 	if err != nil {
 		return fmt.Errorf("Error creating the HTTP request with method: '%s' and url: '%s'. %s", method, url, err)
 	}
-	if s.Request.Host != "" {
-		req.Host = s.Request.Host
+	if s.Request.Headers != nil {
+		hostHeaders, found := s.Request.Headers["Host"]
+		if found && len(hostHeaders) > 0 {
+			req.Host = hostHeaders[0]
+		}
 	}
 	req.Header = s.Request.Headers
 	logger.LogRequest(req, s.Request.RequestBody, corr)

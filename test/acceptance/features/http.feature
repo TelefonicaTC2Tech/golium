@@ -115,7 +115,8 @@ Feature: HTTP client
   @http
   Scenario: Set HTTP request host
     Given the HTTP endpoint "[CONF:url]/headers"
-      And the HTTP host "example.com"
+      And the HTTP request headers
+          | Host | example.com |
      When I send a HTTP "GET" request
       And the HTTP status code must be "200"
       And the HTTP response body must have the JSON properties
