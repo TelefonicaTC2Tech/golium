@@ -3,14 +3,11 @@ Feature: DNS client
   @dns
   Scenario: Query domain inspecting answer records
     Given the DNS server "[CONF:dns]"
-     When I send a DNS query of type "A" for "www.elevenpaths.com"
+     When I send a DNS query of type "A" for "www.telefonica.com"
      Then the DNS response must have the code "NOERROR"
       And the DNS response must contain the following answer records
-          | name                                                   | class | type  | data                                                   |
-          | www.elevenpaths.com.                                   | IN    | CNAME | legacy-web-pro-1067844838.eu-west-1.elb.amazonaws.com. |
-          | legacy-web-pro-1067844838.eu-west-1.elb.amazonaws.com. | IN    | A     | 52.16.121.202                                          |
-          | legacy-web-pro-1067844838.eu-west-1.elb.amazonaws.com. | IN    | A     | 52.30.171.81                                           |
-          | legacy-web-pro-1067844838.eu-west-1.elb.amazonaws.com. | IN    | A     | 54.194.165.93                                          |
+          | name                | class | type  | data          |
+          | www.telefonica.com. | IN    | A     | 212.170.36.79 |
 
   @dns
   Scenario: Query domain with eDNS0 options
@@ -19,14 +16,11 @@ Feature: DNS client
           | code | data               |
           | 1001 | [SHA256:test-1001] |
           | 1002 | [SHA256:test-1002] |
-     When I send a DNS query of type "A" for "www.elevenpaths.com"
+     When I send a DNS query of type "A" for "www.telefonica.com"
      Then the DNS response must have the code "NOERROR"
       And the DNS response must contain the following answer records
-          | name                                                   | class | type  | data                                                   |
-          | www.elevenpaths.com.                                   | IN    | CNAME | legacy-web-pro-1067844838.eu-west-1.elb.amazonaws.com. |
-          | legacy-web-pro-1067844838.eu-west-1.elb.amazonaws.com. | IN    | A     | 52.16.121.202                                          |
-          | legacy-web-pro-1067844838.eu-west-1.elb.amazonaws.com. | IN    | A     | 52.30.171.81                                           |
-          | legacy-web-pro-1067844838.eu-west-1.elb.amazonaws.com. | IN    | A     | 54.194.165.93                                          |
+          | name                | class | type  | data          |
+          | www.telefonica.com. | IN    | A     | 212.170.36.79 |
 
   @dns
   Scenario Outline: Query domain with recursion
