@@ -63,6 +63,20 @@ func (s *Session) SetTextValue(ctx context.Context, key, value string) error {
 	return s.Client.Set(context.Background(), key, value, expiration).Err()
 }
 
+// SetHashValue sets a redis key with a mapped value.
+// It uses session TTL to establish an expiration time (no expiration if TTL is 0).
+func (s *Session) SetHashValue(ctx context.Context, key string, value map[string]interface{}) error {
+	err := s.Client.HSet(context.Background(), key, value).Err()
+	if err != nil {
+		return err
+	}
+	if s.TTL == 0 {
+		return nil
+	}
+	expiration := time.Duration(s.TTL * int(time.Millisecond))
+	return s.Client.PExpire(context.Background(), key, expiration).Err()
+}
+
 // SetJSONValue sets a redis key with a JSON document extracted from a table of properties.
 func (s *Session) SetJSONValue(ctx context.Context, key string, props map[string]interface{}) error {
 	var json string
@@ -88,6 +102,25 @@ func (s *Session) ValidateTextValue(ctx context.Context, key, expectedValue stri
 	return nil
 }
 
+// ValidateHashValue checks if the mapped value for a redis key equals the expected value.
+// It uses session TTL to establish an expiration time (no expiration if TTL is 0).
+func (s *Session) ValidateHashValue(ctx context.Context, key string, props map[string]interface{}) error {
+	m, err := s.Client.HGetAll(context.Background(), key).Result()
+	if err != nil {
+		return err
+	}
+	for key, expectedValue := range props {
+		value, found := m[key]
+		if !found {
+			return fmt.Errorf("Missing property '%s'. Expected: '%s'", key, expectedValue)
+		}
+		if value != expectedValue {
+			return fmt.Errorf("Mismatch of json property '%s'. Expected: '%s', actual: '%s'", key, expectedValue, value)
+		}
+	}
+	return nil
+}
+
 // ValidateJSONValue checks if the JSON value for a redis key complies with the table of properties.
 func (s *Session) ValidateJSONValue(ctx context.Context, key string, props map[string]interface{}) error {
 	value, err := s.Client.Get(context.Background(), key).Result()
@@ -106,12 +139,15 @@ func (s *Session) ValidateJSONValue(ctx context.Context, key string, props map[s
 
 // ValidateEmptyValue checks if the redis key has not value.
 func (s *Session) ValidateEmptyValue(ctx context.Context, key string) error {
-	_, err := s.Client.Get(context.Background(), key).Result()
+	exists, err := s.Client.Exists(context.Background(), key).Result()
 	if err != nil {
 		if err == redis.Nil {
 			return nil
 		}
 		return err
+	}
+	if exists == 0 {
+		return nil
 	}
 	return fmt.Errorf("Redis key '%s' is not empty", key)
 }

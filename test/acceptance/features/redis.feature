@@ -15,6 +15,37 @@ Feature: Redis client
           """
 
   @redis
+  Scenario: Set and get a mapped message
+    Given the redis endpoint
+          | addr     | localhost:6379 |
+          | db       | 0              |
+     When I set the redis key "golium:key:mapped" with hash properties
+          | golium.number  | [NUMBER:4] |
+          | golium.string  | test       |
+          | golium.bool    | [TRUE]     |
+     Then the redis key "golium:key:mapped" must have hash properties
+          | golium.number  | 4    |
+          | golium.string  | test |
+          | golium.bool    | 1    |
+
+  @redis
+  Scenario: Set and get a mapped message with TTL
+    Given the redis endpoint
+          | addr     | localhost:6379 |
+          | db       | 0              |
+      And the redis TTL of "500" millis
+     When I set the redis key "golium:key:ttl:mapped" with hash properties
+          | golium.number  | [NUMBER:4] |
+          | golium.string  | test       |
+          | golium.bool    | [TRUE]     |
+     Then the redis key "golium:key:ttl:mapped" must have hash properties
+          | golium.number  | 4    |
+          | golium.string  | test |
+          | golium.bool    | 1    |
+     When I wait for "600" millis
+     Then the redis key "golium:key:ttl:mapped" must be empty
+
+  @redis
   Scenario: Set and get a JSON message
     Given the redis endpoint
           | addr     | localhost:6379 |
@@ -34,7 +65,7 @@ Feature: Redis client
           | addr     | localhost:6379 |
           | db       | 0              |
       And the redis TTL of "500" millis
-     When I set the redis key "golium:key:ttl" with the text
+     When I set the redis key "golium:key:ttl:json" with the text
           """
           {
                "golium": {
@@ -44,12 +75,12 @@ Feature: Redis client
                }
           }
           """
-     Then the redis key "golium:key:ttl" must have the JSON properties
+     Then the redis key "golium:key:ttl:json" must have the JSON properties
           | golium.number  | [NUMBER:4] |
           | golium.string  | test       |
           | golium.bool    | [TRUE]     |
      When I wait for "600" millis
-     Then the redis key "golium:key:ttl" must be empty
+     Then the redis key "golium:key:ttl:json" must be empty
 
   @redis
   Scenario: Publish and subscribe a text message
