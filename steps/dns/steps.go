@@ -32,7 +32,7 @@ type Steps struct {
 
 // InitializeSteps adds client DNS steps to the scenario context.
 // It implements StepInitializer interface.
-// It returns a new context (context is immutable) with the ClientContext.
+// It returns a new context (context is immutable) with the DNS Context.
 func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioContext) context.Context {
 	// Initialize the DNS session in the context
 	ctx = InitializeContext(ctx)
