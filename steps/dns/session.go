@@ -45,6 +45,12 @@ func (s *Session) ConfigureServer(ctx context.Context, svr string) error {
 	return nil
 }
 
+// SetDNSResponseTimeout configures a DNS response timeout.
+func (s *Session) SetDNSResponseTimeout(ctx context.Context, timeout int) error {
+	s.Timeout = time.Duration(timeout) * time.Millisecond
+	return nil
+}
+
 // ConfigureOptions adds EDNS0 options to be included in the DNS query.
 func (s *Session) ConfigureOptions(ctx context.Context, options []dns.EDNS0) error {
 	s.Options = append(s.Options, options...)
