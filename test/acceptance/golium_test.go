@@ -22,6 +22,7 @@ import (
 	"github.com/Telefonica/golium/steps/common"
 	"github.com/Telefonica/golium/steps/dns"
 	"github.com/Telefonica/golium/steps/http"
+	"github.com/Telefonica/golium/steps/jwt"
 	"github.com/Telefonica/golium/steps/redis"
 	"github.com/cucumber/godog"
 )
@@ -37,6 +38,7 @@ func InitializeTestSuite(ctx context.Context, suiteCtx *godog.TestSuiteContext) 
 func InitializeScenario(ctx context.Context, scenarioCtx *godog.ScenarioContext) {
 	stepsInitializers := []golium.StepsInitializer{
 		common.Steps{},
+		jwt.Steps{},
 		http.Steps{},
 		dns.Steps{},
 		redis.Steps{},
