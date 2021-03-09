@@ -110,3 +110,4 @@ Feature: HTTP client
       And the HTTP status code must be "301"
       And the HTTP response must contain the headers
           | Location | https://www.elevenpaths.com/ |
+      And I store the header "Location" from the HTTP response in context "header.location"

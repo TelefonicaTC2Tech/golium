@@ -17,11 +17,13 @@ package common
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"time"
 
 	"github.com/Telefonica/golium"
 	"github.com/cucumber/godog"
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
 )
 
 // Steps to initialize common steps.
@@ -44,6 +46,17 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 		time.Sleep(time.Duration(d) * time.Millisecond)
 		return nil
 	})
+	scenCtx.Step(`^I parse the URL "([^"]*)" in context "([^"]*)"$`, func(uri, ctxtPrefix string) error {
+		return ParseURL(ctx, golium.ValueAsString(ctx, uri), golium.ValueAsString(ctx, ctxtPrefix))
+	})
+	scenCtx.Step(`^the value "([^"]*)" must be equal to "([^"]*)"$`, func(value, expectedValue string) error {
+		v := golium.Value(ctx, value)
+		e := golium.Value(ctx, expectedValue)
+		if v == e {
+			return nil
+		}
+		return errors.Errorf("mismatch of values: expected '%s', actual '%s'", e, v)
+	})
 	return ctx
 }
 
@@ -57,7 +70,47 @@ func StoreValueInContext(ctx context.Context, name, value string) error {
 func GenerateUUIDInContext(ctx context.Context, name string) error {
 	guid, err := uuid.NewUUID()
 	if err != nil {
-		return fmt.Errorf("Error generating UUID. %s", err)
+		return errors.Wrap(err, "Error generating UUID")
 	}
 	return StoreValueInContext(ctx, name, guid.String())
+}
+
+// ParseURL parses a URL and stores its values in the context.
+// It will store a context value per element parsed from the URL under the context prefix.
+func ParseURL(ctx context.Context, uri, ctxtPrefix string) error {
+	u, err := url.Parse(uri)
+	if err != nil {
+		return errors.Wrapf(err, "failed parsing URL: %s", uri)
+	}
+	if err := StoreValueInContext(ctx, fmt.Sprintf("%s.scheme", ctxtPrefix), u.Scheme); err != nil {
+		return errors.Wrapf(err, "failed storing scheme of URL: %s", uri)
+	}
+	if err := StoreValueInContext(ctx, fmt.Sprintf("%s.host", ctxtPrefix), u.Host); err != nil {
+		return errors.Wrapf(err, "failed storing host of URL: %s", uri)
+	}
+	if err := StoreValueInContext(ctx, fmt.Sprintf("%s.hostname", ctxtPrefix), u.Hostname()); err != nil {
+		return errors.Wrapf(err, "failed storing host of URL: %s", uri)
+	}
+	if err := StoreValueInContext(ctx, fmt.Sprintf("%s.path", ctxtPrefix), u.Path); err != nil {
+		return errors.Wrapf(err, "failed storing path of URL: %s", uri)
+	}
+	if err := StoreValueInContext(ctx, fmt.Sprintf("%s.rawquery", ctxtPrefix), u.RawQuery); err != nil {
+		return errors.Wrapf(err, "failed storing raw query of URL: %s", uri)
+	}
+	return ParseQuery(ctx, u.RawQuery, fmt.Sprintf("%s.query", ctxtPrefix))
+}
+
+// ParseQuery parses a query string and stores its values in the context.
+// Note that it does not support multiple query params with the same key. It will store only one.
+func ParseQuery(ctx context.Context, query, ctxtPrefix string) error {
+	v, err := url.ParseQuery(query)
+	if err != nil {
+		return errors.Wrapf(err, "failed parsing query: %s", query)
+	}
+	for key := range v {
+		if err := StoreValueInContext(ctx, fmt.Sprintf("%s.%s", ctxtPrefix, key), v.Get(key)); err != nil {
+			return errors.Wrapf(err, "failed storing query param: %s", key)
+		}
+	}
+	return nil
 }
