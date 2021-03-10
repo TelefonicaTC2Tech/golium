@@ -137,8 +137,8 @@ func (s *Session) ValidateJSONValue(ctx context.Context, key string, props map[s
 	return nil
 }
 
-// ValidateEmptyValue checks if the redis key has not value.
-func (s *Session) ValidateEmptyValue(ctx context.Context, key string) error {
+// ValidateNonExistantKey checks if the redis key has not value.
+func (s *Session) ValidateNonExistantKey(ctx context.Context, key string) error {
 	exists, err := s.Client.Exists(context.Background(), key).Result()
 	if err != nil {
 		if err == redis.Nil {
@@ -149,7 +149,7 @@ func (s *Session) ValidateEmptyValue(ctx context.Context, key string) error {
 	if exists == 0 {
 		return nil
 	}
-	return fmt.Errorf("Redis key '%s' is not empty", key)
+	return fmt.Errorf("Redis key '%s' exists", key)
 }
 
 // SubscribeTopic subscribes to a redis topic to receive messages via a channel.

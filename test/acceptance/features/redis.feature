@@ -43,7 +43,7 @@ Feature: Redis client
           | golium.string  | test |
           | golium.bool    | 1    |
      When I wait for "600" millis
-     Then the redis key "golium:key:ttl:mapped" must be empty
+     Then the redis key "golium:key:ttl:mapped" must not exist
 
   @redis
   Scenario: Set and get a JSON message
@@ -80,7 +80,7 @@ Feature: Redis client
           | golium.string  | test       |
           | golium.bool    | [TRUE]     |
      When I wait for "600" millis
-     Then the redis key "golium:key:ttl:json" must be empty
+     Then the redis key "golium:key:ttl:json" must not exist
 
   @redis
   Scenario: Publish and subscribe a text message

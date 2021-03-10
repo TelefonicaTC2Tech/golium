@@ -78,8 +78,8 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 		}
 		return session.ValidateJSONValue(ctx, key, props)
 	})
-	scenCtx.Step(`^the redis key "([^"]*)" must be empty`, func(key string) error {
-		return session.ValidateEmptyValue(ctx, golium.ValueAsString(ctx, key))
+	scenCtx.Step(`^the redis key "([^"]*)" must not exist`, func(key string) error {
+		return session.ValidateNonExistantKey(ctx, golium.ValueAsString(ctx, key))
 	})
 	scenCtx.Step(`^I subscribe to the redis topic "([^"]*)"$`, func(topic string) error {
 		return session.SubscribeTopic(ctx, golium.ValueAsString(ctx, topic))
