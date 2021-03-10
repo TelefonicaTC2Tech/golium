@@ -110,4 +110,7 @@ Feature: Redis client
      Then I wait up to "3" seconds for a redis message with the JSON properties
           | id       | abc    |
           | name     | Golium |
+      And I wait up to "3" seconds without a redis message with the JSON properties
+          | id       | abc        |
+          | name     | unexpected |
      And I unsubscribe from the redis topic "test-topic"

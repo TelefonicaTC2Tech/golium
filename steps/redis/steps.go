@@ -109,6 +109,16 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 		}
 		return session.WaitForJSONMessageWithProperties(ctx, timeoutDuration, props)
 	})
-
+	scenCtx.Step(`^I wait up to "(\d+)" seconds? without a redis message with the JSON properties$`, func(timeout int, t *godog.Table) error {
+		timeoutDuration := time.Duration(timeout) * time.Second
+		props, err := golium.ConvertTableToMap(ctx, t)
+		if err != nil {
+			return fmt.Errorf("Error processing table to a map for the redis message. %s", err)
+		}
+		if err := session.WaitForJSONMessageWithProperties(ctx, timeoutDuration, props); err == nil {
+			return fmt.Errorf("Received a message with JSON properties: %+v", props)
+		}
+		return nil
+	})
 	return ctx
 }
