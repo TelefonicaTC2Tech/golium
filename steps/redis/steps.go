@@ -47,6 +47,13 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 	scenCtx.Step(`^I set the redis key "([^"]*)" with the text`, func(key string, value *godog.DocString) error {
 		return session.SetTextValue(ctx, golium.ValueAsString(ctx, key), golium.ValueAsString(ctx, value.Content))
 	})
+	scenCtx.Step(`^I set the redis key "([^"]*)" with hash properties`, func(key string, t *godog.Table) error {
+		props, err := golium.ConvertTableToMap(ctx, t)
+		if err != nil {
+			return fmt.Errorf("Error processing table to a map for the hashed value in redis. %s", err)
+		}
+		return session.SetHashValue(ctx, key, props)
+	})
 	scenCtx.Step(`^I set the redis key "([^"]*)" with the JSON properties`, func(key string, t *godog.Table) error {
 		props, err := golium.ConvertTableToMap(ctx, t)
 		if err != nil {
@@ -57,6 +64,13 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 	scenCtx.Step(`^the redis key "([^"]*)" must have the text`, func(key string, value *godog.DocString) error {
 		return session.ValidateTextValue(ctx, golium.ValueAsString(ctx, key), golium.ValueAsString(ctx, value.Content))
 	})
+	scenCtx.Step(`^the redis key "([^"]*)" must have hash properties`, func(key string, t *godog.Table) error {
+		props, err := golium.ConvertTableToMap(ctx, t)
+		if err != nil {
+			return fmt.Errorf("Error processing table to a map for the expected hashed value in redis. %s", err)
+		}
+		return session.ValidateHashValue(ctx, key, props)
+	})
 	scenCtx.Step(`^the redis key "([^"]*)" must have the JSON properties`, func(key string, t *godog.Table) error {
 		props, err := golium.ConvertTableToMap(ctx, t)
 		if err != nil {
@@ -64,8 +78,8 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 		}
 		return session.ValidateJSONValue(ctx, key, props)
 	})
-	scenCtx.Step(`^the redis key "([^"]*)" must be empty`, func(key string) error {
-		return session.ValidateEmptyValue(ctx, golium.ValueAsString(ctx, key))
+	scenCtx.Step(`^the redis key "([^"]*)" must not exist`, func(key string) error {
+		return session.ValidateNonExistantKey(ctx, golium.ValueAsString(ctx, key))
 	})
 	scenCtx.Step(`^I subscribe to the redis topic "([^"]*)"$`, func(topic string) error {
 		return session.SubscribeTopic(ctx, golium.ValueAsString(ctx, topic))

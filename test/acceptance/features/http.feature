@@ -21,7 +21,7 @@ Feature: HTTP client
           | headers.Host          | [CONF:host]                                     |
           | method                | GET                                             |
           | url                   | [CONF:url]/anything/test1?exists=true&sort=name |
-  
+
   @http
   Scenario: Send a POST request
     Given the HTTP endpoint "[CONF:url]/anything"
@@ -53,7 +53,7 @@ Feature: HTTP client
           | json.null             | [NULL]                    |
           | json.integer          | [NUMBER:1234]             |
           | json.float            | [NUMBER:-34.6]            |
-  
+
   @http
   Scenario: Send a POST request defined by a json string using the context storage
     Given the HTTP endpoint "[CONF:url]/anything"
@@ -94,7 +94,7 @@ Feature: HTTP client
       And the HTTP response body must comply with the JSON schema "test-schema"
       And the HTTP response body must have the JSON properties
           | json.attribute | attribute0 |
-          | json.value     | value0     |    
+          | json.value     | value0     |
 
   @http
   Scenario: Follow redirection
@@ -111,3 +111,13 @@ Feature: HTTP client
       And the HTTP response must contain the headers
           | Location | https://www.elevenpaths.com/ |
       And I store the header "Location" from the HTTP response in context "header.location"
+
+  @http
+  Scenario: Set HTTP request host
+    Given the HTTP endpoint "[CONF:url]/headers"
+      And the HTTP request headers
+          | Host | example.com |
+     When I send a HTTP "GET" request
+      And the HTTP status code must be "200"
+      And the HTTP response body must have the JSON properties
+          | headers.Host | example.com |

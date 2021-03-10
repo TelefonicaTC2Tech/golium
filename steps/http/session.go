@@ -140,6 +140,12 @@ func (s *Session) SendHTTPRequest(ctx context.Context, method string) error {
 	if err != nil {
 		return fmt.Errorf("Error creating the HTTP request with method: '%s' and url: '%s'. %s", method, url, err)
 	}
+	if s.Request.Headers != nil {
+		hostHeaders, found := s.Request.Headers["Host"]
+		if found && len(hostHeaders) > 0 {
+			req.Host = hostHeaders[0]
+		}
+	}
 	req.Header = s.Request.Headers
 	logger.LogRequest(req, s.Request.RequestBody, corr)
 	client := http.Client{}
