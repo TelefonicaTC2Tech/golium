@@ -4,6 +4,7 @@ host: httpbin.org
 
 # DNS settings
 dns: 8.8.8.8:53
+timeout: 2000
 
 # JWT settings
 encryptPrivateKey: |
@@ -85,3 +86,4 @@ signPublicKey: |
   tR5AcCFf3pG+oQ7Uq62idvjmKsCB96jkTfVidr19Rj03E1Lg+2RCuS+4Qtylnl4b
   RQIDAQAB
   -----END RSA PUBLIC KEY-----
+

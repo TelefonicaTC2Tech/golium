@@ -3,6 +3,7 @@ Feature: DNS client
   @dns
   Scenario: Query domain inspecting answer records
     Given the DNS server "[CONF:dns]"
+      And a DNS timeout of "[CONF:timeout]" milliseconds
      When I send a DNS query of type "A" for "www.telefonica.com"
      Then the DNS response must have the code "NOERROR"
       And the DNS response must contain the following answer records
@@ -12,6 +13,7 @@ Feature: DNS client
   @dns
   Scenario: Query domain with eDNS0 options
     Given the DNS server "[CONF:dns]"
+      And a DNS timeout of "[CONF:timeout]" milliseconds
       And the DNS query options
           | code | data               |
           | 1001 | [SHA256:test-1001] |
@@ -25,6 +27,7 @@ Feature: DNS client
   @dns
   Scenario Outline: Query domain with recursion
     Given the DNS server "[CONF:dns]"
+      And a DNS timeout of "[CONF:timeout]" milliseconds
      When I send a DNS query of type "<type>" for "<domain>"
      Then the DNS response must have the code "<code>"
       And the DNS response must have "<answer>" answer record

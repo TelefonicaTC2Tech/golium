@@ -19,6 +19,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/Telefonica/golium"
@@ -41,6 +42,13 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 	// Initialize the steps
 	scenCtx.Step(`^the DNS server "([^"]*)"$`, func(svr string) error {
 		return session.ConfigureServer(ctx, golium.ValueAsString(ctx, svr))
+	})
+	scenCtx.Step(`^a DNS timeout of "([^"]*)" milliseconds$`, func(time string) error {
+		timeout, err := strconv.Atoi(golium.ValueAsString(ctx, time))
+		if err != nil {
+			return fmt.Errorf("Error casting timeout parameter. %s", err)
+		}
+		return session.SetDNSResponseTimeout(ctx, timeout)
 	})
 	scenCtx.Step(`^the DNS query options$`, func(t *godog.Table) error {
 		options, err := parseOptionsTable(ctx, t)
@@ -98,7 +106,8 @@ func parseOptionsTable(ctx context.Context, t *godog.Table) ([]dns.EDNS0, error)
 	for i, o := range options {
 		data, err := hex.DecodeString(o.Data)
 		if err != nil {
-			return nil, fmt.Errorf("Error converting to byte array: %s. %s", o.Data, err)
+			// Do not raise an error if data is not hexadecimal. It converts the string to a byte slice.
+			data = []byte(o.Data)
 		}
 		dnsOptions[i] = &dns.EDNS0_LOCAL{
 			Code: o.Code,

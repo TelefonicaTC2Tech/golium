@@ -35,11 +35,19 @@ type Session struct {
 	Response *dns.Msg
 	// RTT is the response time.
 	RTT time.Duration
+	// Timeout is the maximum time to wait for a response. Expressed in Milliseconds
+	Timeout time.Duration
 }
 
 // ConfigureServer configures the DNS server location.
 func (s *Session) ConfigureServer(ctx context.Context, svr string) error {
 	s.Server = svr
+	return nil
+}
+
+// SetDNSResponseTimeout configures a DNS response timeout.
+func (s *Session) SetDNSResponseTimeout(ctx context.Context, timeout int) error {
+	s.Timeout = time.Duration(timeout) * time.Millisecond
 	return nil
 }
 
@@ -53,7 +61,7 @@ func (s *Session) ConfigureOptions(ctx context.Context, options []dns.EDNS0) err
 func (s *Session) SendQuery(ctx context.Context, qtype uint16, qdomain string, recursive bool) error {
 	logger := GetLogger()
 	corr := uuid.New().String()
-	c := dns.Client{}
+	c := dns.Client{Timeout: s.Timeout}
 	m := &dns.Msg{}
 	m.SetQuestion(dns.Fqdn(qdomain), qtype)
 	m.RecursionDesired = recursive
