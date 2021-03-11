@@ -22,12 +22,9 @@ import (
 	"net/http"
 	"net/url"
 	"path"
-	"strconv"
 
 	"github.com/Telefonica/golium"
 	"github.com/google/uuid"
-	"github.com/pkg/errors"
-	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 	"github.com/xeipuuv/gojsonschema"
 )
@@ -245,17 +242,4 @@ func (s *Session) StoreResponseHeaderInContext(ctx context.Context, header strin
 	h := s.Response.Response.Header.Get(header)
 	golium.GetContext(ctx).Put(ctxtKey, h)
 	return nil
-}
-
-// ValidateResponseBodyJSONPropertyLength compares the number of elements nested to a JSON property from the HTTP response body with an expected value.
-func (s *Session) ValidateResponseBodyJSONPropertyLength(ctx context.Context, key string, expectedLength string) error {
-	json := gjson.GetBytes(s.Response.ResponseBody, key)
-	expectedValue, err := strconv.Atoi(expectedLength)
-	if err != nil {
-		return fmt.Errorf("Error casting expectedLength parameter. %s", err)
-	}
-	if len(json.Array()) == expectedValue {
-		return nil
-	}
-	return errors.Errorf("Mismatch of values: expected '%v', current '%v'", expectedValue, len(json.Array()))
 }

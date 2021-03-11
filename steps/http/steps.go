@@ -99,8 +99,5 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 	scenCtx.Step(`^I store the header "([^"]*)" from the HTTP response in context "([^"]*)"$`, func(key string, ctxtKey string) error {
 		return session.StoreResponseHeaderInContext(ctx, golium.ValueAsString(ctx, key), golium.ValueAsString(ctx, ctxtKey))
 	})
-	scenCtx.Step(`^the length of element "([^"]*)" from the JSON HTTP response must be equal to "([^"]*)"$`, func(key, expectedLength string) error {
-		return session.ValidateResponseBodyJSONPropertyLength(ctx, golium.ValueAsString(ctx, key), golium.ValueAsString(ctx, expectedLength))
-	})
 	return ctx
 }

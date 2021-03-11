@@ -80,7 +80,6 @@ Feature: HTTP client
           | json.list.1.value     | value1     |
           | json.list.2.attribute | attribute2 |
           | json.list.2.value     | value2     |
-      And the length of element "json.list" from the JSON HTTP response must be equal to "3"    
       And I store the element "json.list.0.attribute" from the JSON HTTP response body in context "attr"
       And I store the element "json.list.0.value" from the JSON HTTP response body in context "val"
      Then the HTTP endpoint "[CONF:url]/anything"
