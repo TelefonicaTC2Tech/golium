@@ -74,6 +74,7 @@ Feature: HTTP client
       And the HTTP status code must be "200"
       And the HTTP response body must comply with the JSON schema "test-schema"
       And the HTTP response body must have the JSON properties
+          | json.list.#           | [NUMBER:3] |
           | json.list.0.attribute | attribute0 |
           | json.list.0.value     | value0     |
           | json.list.1.attribute | attribute1 |
