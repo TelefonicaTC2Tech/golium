@@ -41,14 +41,14 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 		return session.ConfigurePath(ctx, golium.ValueAsString(ctx, path))
 	})
 	scenCtx.Step(`^the HTTP query parameters$`, func(t *godog.Table) error {
-		params, err := golium.ConvertTableToMultiMap(t)
+		params, err := golium.ConvertTableToMultiMap(ctx, t)
 		if err != nil {
 			return fmt.Errorf("Error processing query parameters from table. %s", err)
 		}
 		return session.ConfigureQueryParams(ctx, params)
 	})
 	scenCtx.Step(`^the HTTP request headers$`, func(t *godog.Table) error {
-		headers, err := golium.ConvertTableToMultiMap(t)
+		headers, err := golium.ConvertTableToMultiMap(ctx, t)
 		if err != nil {
 			return fmt.Errorf("Error processing HTTP headers from table. %s", err)
 		}
@@ -74,7 +74,7 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 		return session.ValidateStatusCode(ctx, code)
 	})
 	scenCtx.Step(`^the HTTP response must contain the headers$`, func(t *godog.Table) error {
-		headers, err := golium.ConvertTableToMultiMap(t)
+		headers, err := golium.ConvertTableToMultiMap(ctx, t)
 		if err != nil {
 			return fmt.Errorf("Error processing HTTP headers from table. %s", err)
 		}
