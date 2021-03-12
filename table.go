@@ -47,7 +47,7 @@ func ConvertTableToMap(ctx context.Context, t *godog.Table) (map[string]interfac
 // The multimap is using url.Values.
 // The multimap is useful to support multiple values for the same key (e.g. for query parameters
 // or HTTP headers).
-func ConvertTableToMultiMap(t *godog.Table) (map[string][]string, error) {
+func ConvertTableToMultiMap(ctx context.Context, t *godog.Table) (map[string][]string, error) {
 	m := url.Values{}
 	if len(t.Rows) == 0 {
 		return m, nil
@@ -57,8 +57,8 @@ func ConvertTableToMultiMap(t *godog.Table) (map[string][]string, error) {
 		if len(cells) != 2 {
 			return m, fmt.Errorf("Table must have 2 columns")
 		}
-		propKey := cells[0].Value
-		propValue := cells[1].Value
+		propKey := ValueAsString(ctx, cells[0].Value)
+		propValue := ValueAsString(ctx, cells[1].Value)
 		m.Add(propKey, propValue)
 	}
 	return m, nil
