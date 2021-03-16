@@ -17,6 +17,7 @@ package golium
 import (
 	"context"
 	"crypto/sha256"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -25,7 +26,7 @@ import (
 
 // ValueAsString invokes Value and convert the return value to string.
 func ValueAsString(ctx context.Context, s string) string {
-	return fmt.Sprintf("%s", Value(ctx, s))
+	return fmt.Sprintf("%v", Value(ctx, s))
 }
 
 // Value converts a value as a string to consider some golium patterns.
@@ -48,92 +49,43 @@ func ValueAsString(ctx context.Context, s string) string {
 // - [NUMBER:1234] returns a float64 if s only contains this tag and there is no surrounding text.
 // - [NOW:{duration}:{format}] returns an int64 when {format} is "unix".
 func Value(ctx context.Context, s string) interface{} {
-	switch s {
-	case "[TRUE]":
-		return true
-	case "[FALSE]":
-		return false
-	case "[NULL]":
-		return nil
-	case "[EMPTY]":
-		return ""
-	case "[NOW]":
-		return time.Now().Unix()
-	default:
-		orig := s
-		s = processTag(s, "CONF", func(tagName string) string {
-			m := GetEnvironment()
-			return fmt.Sprintf("%v", m.Get(tagName))
-		})
-		s = processTag(s, "CTXT", func(tagName string) string {
-			return fmt.Sprintf("%s", GetContext(ctx).Get(tagName))
-		})
-		s = processTag(s, "SHA256", func(tagName string) string {
-			return fmt.Sprintf("%x", sha256.Sum256([]byte(tagName)))
-		})
-		// Process NUMBER tag.
-		// If there is only a NUMBER tag, without any surrounding text, then return a float number
-		isNumber := false
-		s = processTag(s, "NUMBER", func(tagName string) string {
-			if orig == fmt.Sprintf("[NUMBER:%s]", tagName) {
-				isNumber = true
-			}
-			return tagName
-		})
-		if isNumber {
-			if v, err := strconv.ParseFloat(s, 64); err == nil {
-				return v
-			}
-		}
-		// Process NOW tag
-		// If there is only a NOW tag with unix format, then return an int64 number.
-		isUnixNow := false
-		s = processTag(s, "NOW", func(tagName string) string {
-			if orig == fmt.Sprintf("[NOW:%s]", tagName) && strings.HasSuffix(tagName, ":unix") {
-				isUnixNow = true
-			}
-			return processNow(tagName)
-		})
-		if isUnixNow {
-			if v, err := strconv.ParseInt(s, 10, 64); err == nil {
-				return v
-			}
-		}
-		return s
-	}
+	composedTag := NewComposedTag(s)
+	return composedTag.Value(ctx)
 }
 
-func processTag(s string, tag string, getTagValue func(string) string) string {
-	tagNames := getTagNames(s, tag)
-	for _, tagName := range tagNames {
-		token := fmt.Sprintf("[%s:%s]", tag, tagName)
-		s = strings.ReplaceAll(s, token, getTagValue(tagName))
-	}
-	return s
+var simpleTagFuncs = map[string]func(ctx context.Context) (interface{}, error){
+	"TRUE":  func(ctx context.Context) (interface{}, error) { return true, nil },
+	"FALSE": func(ctx context.Context) (interface{}, error) { return false, nil },
+	"EMPTY": func(ctx context.Context) (interface{}, error) { return "", nil },
+	"NOW":   func(ctx context.Context) (interface{}, error) { return time.Now().Unix(), nil },
+	"NULL":  func(ctx context.Context) (interface{}, error) { return nil, nil },
 }
 
-func getTagNames(s string, tag string) []string {
-	tagNames := []string{}
-	tokens := strings.Split(s, fmt.Sprintf("[%s:", tag))
-	if len(tokens) > 1 {
-		for _, token := range tokens[1:] {
-			n := strings.Index(token, "]")
-			if n < 1 {
-				continue
-			}
-			tagName := token[:n]
-			tagNames = append(tagNames, tagName)
-		}
-	}
-	return tagNames
+var valuedTagFuncs = map[string]func(ctx context.Context, s string) (interface{}, error){
+	"CONF": func(ctx context.Context, s string) (interface{}, error) {
+		m := GetEnvironment()
+		return m.Get(s), nil
+	},
+	"CTXT": func(ctx context.Context, s string) (interface{}, error) {
+		return GetContext(ctx).Get(s), nil
+	},
+	"SHA256": func(ctx context.Context, s string) (interface{}, error) {
+		return fmt.Sprintf("%x", sha256.Sum256([]byte(s))), nil
+	},
+	"NUMBER": func(ctx context.Context, s string) (interface{}, error) {
+		return strconv.ParseFloat(s, 64)
+	},
+	"NOW": func(ctx context.Context, s string) (interface{}, error) {
+		return processNow(s)
+	},
 }
 
 // processNow processes tag "NOW" with the format [NOW:{duration}:{format}].
 // So, tagName has the format: {duration}:{format}
-func processNow(tagName string) string {
-	parts := strings.SplitN(tagName, ":", 2)
+func processNow(s string) (interface{}, error) {
+	parts := strings.SplitN(s, ":", 2)
 	if len(parts) != 2 {
-		return ""
+		return nil, errors.New("invalid NOW tag")
 	}
 	duration := parts[0]
 	format := parts[1]
@@ -141,14 +93,170 @@ func processNow(tagName string) string {
 	if duration != "" {
 		d, err := time.ParseDuration(duration)
 		if err != nil {
-			return ""
+			return nil, fmt.Errorf("invalid duration in NOW tag: %w", err)
 		}
 		now = now.Add(d)
 	}
 	switch format {
 	case "unix":
-		return strconv.FormatInt(now.Unix(), 10)
+		return now.Unix(), nil
 	default:
-		return now.Format(format)
+		return now.Format(format), nil
 	}
+}
+
+// Tag interface to calculate the value of a tag.
+// A golium tag is a text surrounded by brackets that can be evaluated into a value.
+// For example: [CONF:property]
+type Tag interface {
+	Value(ctx context.Context) interface{}
+}
+
+// StringTag represents a implicit tag composed of a text.
+// This tag is used to compose a string with a tag to generate a new string.
+type StringTag struct {
+	s string
+}
+
+// NewStringTag creates a Tag that evaluated to the string without any modification.
+func NewStringTag(s string) Tag {
+	return &StringTag{s: s}
+}
+
+func (s StringTag) Value(ctx context.Context) interface{} {
+	return s.s
+}
+
+// NamedTag is a Tag that can be evaluated with a tag function depending on the name of the tag.
+type NamedTag struct {
+	s string
+}
+
+// NewNamedTag creates a NamedTag.
+func NewNamedTag(s string) Tag {
+	return &NamedTag{s: s}
+}
+
+func (t NamedTag) Value(ctx context.Context) interface{} {
+	if v, err := t.valueWithError(ctx); err == nil {
+		return v
+	}
+	return t.s
+}
+
+func (t NamedTag) valueWithError(ctx context.Context) (interface{}, error) {
+	tag := t.s[1 : len(t.s)-1]
+	parts := strings.SplitN(tag, ":", 2)
+	tagName := parts[0]
+	if len(parts) == 2 {
+		tagValue := parts[1]
+		return t.processValuedTag(ctx, tagName, tagValue)
+	}
+	return t.processSimpleTag(ctx, tagName)
+}
+
+func (t NamedTag) processSimpleTag(ctx context.Context, tagName string) (interface{}, error) {
+	if f, ok := simpleTagFuncs[tagName]; ok {
+		return f(ctx)
+	}
+	return nil, fmt.Errorf("invalid tag %s", tagName)
+}
+
+func (t NamedTag) processValuedTag(ctx context.Context, tagName, tagValue string) (interface{}, error) {
+	if f, ok := valuedTagFuncs[tagName]; ok {
+		composedTag := NewComposedTag(tagValue)
+		composedTagValue := composedTag.Value(ctx)
+		composedTagValueString := fmt.Sprintf("%v", composedTagValue)
+		return f(ctx, composedTagValueString)
+	}
+	return nil, fmt.Errorf("invalid tag %s", tagName)
+}
+
+type separator struct {
+	opener bool
+	pos    int
+}
+
+// ComposedTag is a composition of tags, including StringTags, NamedTags and other ComposedTags
+// to provide an evaluation.
+type ComposedTag struct {
+	s string
+}
+
+// NewComposedTag creates a ComposedTag.
+func NewComposedTag(s string) Tag {
+	return &ComposedTag{s: s}
+}
+
+func (t ComposedTag) findSeparators() (separators []separator) {
+	for i, c := range t.s {
+		if c == '[' {
+			sep := separator{opener: true, pos: i}
+			separators = append(separators, sep)
+		} else if c == ']' {
+			sep := separator{opener: false, pos: i}
+			separators = append(separators, sep)
+		}
+	}
+	return
+}
+
+func (t ComposedTag) buildTags(separators []separator) []Tag {
+	tags := []Tag{}
+	if len(separators) < 2 {
+		return tags
+	}
+	lastCloser := -1
+	for i := 0; i < len(separators)-1; i++ {
+		if !separators[i].opener {
+			// Discard it because we must start with an opener
+			continue
+		}
+		distance := 1
+		for j := i + 1; j < len(separators); j++ {
+			if separators[j].opener {
+				distance++
+			} else {
+				distance--
+			}
+			if distance != 0 {
+				continue
+			}
+			opener := separators[i].pos
+			closer := separators[j].pos
+			// Add a tag text if there is a text prefix
+			if lastCloser+1 < opener {
+				tag := NewStringTag(t.s[lastCloser+1 : opener])
+				tags = append(tags, tag)
+			}
+			// Found end of tag
+			tag := NewNamedTag(t.s[opener : closer+1])
+			tags = append(tags, tag)
+			i = j
+			lastCloser = closer
+			break
+		}
+	}
+	// Add a tag text if there is a text suffix
+	if lastCloser+1 < len(t.s) {
+		tag := NewStringTag(t.s[lastCloser+1:])
+		tags = append(tags, tag)
+	}
+	return tags
+}
+
+func (t ComposedTag) Value(ctx context.Context) interface{} {
+	tags := t.buildTags(t.findSeparators())
+	if len(tags) == 0 {
+		return t.s
+	}
+	if len(tags) == 1 {
+		return tags[0].Value(ctx)
+	}
+	// If multiple tags, it returns a string with the concatenation of each tag value
+	var v strings.Builder
+	for _, tag := range tags {
+		v.WriteString(fmt.Sprintf("%v", tag.Value(ctx)))
+	}
+	return v.String()
 }

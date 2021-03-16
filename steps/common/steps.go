@@ -33,7 +33,7 @@ type Steps struct {
 // InitializeSteps initializes all the steps.
 func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioContext) context.Context {
 	scenCtx.Step(`^I store "([^"]*)" in context "([^"]*)"$`, func(value, name string) error {
-		return StoreValueInContext(ctx, name, value)
+		return StoreValueInContext(ctx, golium.ValueAsString(ctx, name), golium.ValueAsString(ctx, value))
 	})
 	scenCtx.Step(`^I generate a UUID and store it in context "([^"]*)"$`, func(name string) error {
 		return GenerateUUIDInContext(ctx, golium.ValueAsString(ctx, name))

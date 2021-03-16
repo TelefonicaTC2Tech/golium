@@ -63,6 +63,8 @@ Feature: HTTP client
       And the HTTP request body with the JSON
       """
       {
+        "empty": "[EMPTY]",
+        "boolean": [FALSE],
         "list": [
           { "attribute": "attribute0", "value": "value0"},
           { "attribute": "attribute1", "value": "value1"},
@@ -74,6 +76,8 @@ Feature: HTTP client
       And the HTTP status code must be "200"
       And the HTTP response body must comply with the JSON schema "test-schema"
       And the HTTP response body must have the JSON properties
+          | json.empty            | [EMPTY]    |
+          | json.boolean          | [FALSE]    |
           | json.list.#           | [NUMBER:3] |
           | json.list.0.attribute | attribute0 |
           | json.list.0.value     | value0     |
