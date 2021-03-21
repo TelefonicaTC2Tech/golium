@@ -81,6 +81,6 @@ func (s *Server) handle(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(resp.Status)
 	if _, err := w.Write([]byte(resp.Body)); err != nil {
-		s.logger.Errorf("Failed writing the response body: %w", err)
+		s.logger.Errorf("Failed writing the response body: %s", err)
 	}
 }

@@ -60,7 +60,6 @@ func (l *Launcher) Launch(testSuiteInitializer func(context.Context, *godog.Test
 	conf := GetConfig()
 	godogOpts := godog.Options{
 		Output: colors.Colored(os.Stdout),
-		Tags:   "@wip",
 	}
 	godog.BindCommandLineFlags("godog.", &godogOpts)
 	pflag.Parse()
