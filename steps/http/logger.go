@@ -78,6 +78,11 @@ func (l Logger) LogResponse(resp *http.Response, body []byte, corr string) {
 		getBody(body))
 }
 
+// LogTimeout logs an HTTP response with timeout in the configured log file.
+func (l Logger) LogTimeout(corr string) {
+	l.log.Print("Response: Timeout\n\n")
+}
+
 func getRequestFirstLine(req *http.Request) string {
 	return fmt.Sprintf("%s %s", req.Method, req.URL)
 }

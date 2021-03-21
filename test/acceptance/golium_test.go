@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	"github.com/Telefonica/golium"
+	mockhttp "github.com/Telefonica/golium/mock/http"
 	"github.com/Telefonica/golium/steps/common"
 	"github.com/Telefonica/golium/steps/dns"
 	"github.com/Telefonica/golium/steps/http"
@@ -29,7 +30,13 @@ import (
 
 func TestMain(m *testing.M) {
 	launcher := golium.NewLauncher()
+	InitializeMocks()
 	launcher.Launch(InitializeTestSuite, InitializeScenario)
+}
+
+func InitializeMocks() {
+	server := mockhttp.NewServer(9000)
+	go server.Start()
 }
 
 func InitializeTestSuite(ctx context.Context, suiteCtx *godog.TestSuiteContext) {
@@ -42,6 +49,7 @@ func InitializeScenario(ctx context.Context, scenarioCtx *godog.ScenarioContext)
 		http.Steps{},
 		dns.Steps{},
 		redis.Steps{},
+		mockhttp.Steps{},
 	}
 	for _, stepsInitializer := range stepsInitializers {
 		ctx = stepsInitializer.InitializeSteps(ctx, scenarioCtx)

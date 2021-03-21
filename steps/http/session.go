@@ -17,11 +17,14 @@ package http
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"net/url"
 	"path"
+	"time"
 
 	"github.com/Telefonica/golium"
 	"github.com/google/uuid"
@@ -58,13 +61,15 @@ type Session struct {
 	Request    Request
 	Response   Response
 	NoRedirect bool
+	Timeout    time.Duration
+	Timedout   bool
 }
 
 // URL composes the endpoint, the resource, and query parameters to build a URL.
 func (s *Session) URL() (*url.URL, error) {
 	u, err := url.Parse(s.Request.Endpoint)
 	if err != nil {
-		return nil, fmt.Errorf("Invalid endpoint URL: %s. %s", s.Request.Endpoint, err)
+		return nil, fmt.Errorf("invalid endpoint URL '%s': %w", s.Request.Endpoint, err)
 	}
 	u.Path = path.Join(u.Path, s.Request.Path)
 	params := url.Values(s.Request.QueryParams)
@@ -75,6 +80,12 @@ func (s *Session) URL() (*url.URL, error) {
 // ConfigureEndpoint configures the HTTP endpoint.
 func (s *Session) ConfigureEndpoint(ctx context.Context, endpoint string) error {
 	s.Request.Endpoint = endpoint
+	return nil
+}
+
+// SetHTTPResponseTimeout configures a response timeout in milliseconds.
+func (s *Session) SetHTTPResponseTimeout(ctx context.Context, timeout int) error {
+	s.Timeout = time.Duration(timeout) * time.Millisecond
 	return nil
 }
 
@@ -104,7 +115,7 @@ func (s *Session) ConfigureRequestBodyJSONProperties(ctx context.Context, props 
 	var err error
 	for key, value := range props {
 		if json, err = sjson.Set(json, key, value); err != nil {
-			return fmt.Errorf("Error setting property '%s' with value '%s' in the request body. %s", key, value, err)
+			return fmt.Errorf("failed setting property '%s' with value '%s' in the request body: %w", key, value, err)
 		}
 	}
 	return s.ConfigureRequestBodyJSONText(ctx, json)
@@ -138,7 +149,7 @@ func (s *Session) SendHTTPRequest(ctx context.Context, method string) error {
 	reqBodyReader := bytes.NewReader(s.Request.RequestBody)
 	req, err := http.NewRequest(method, url.String(), reqBodyReader)
 	if err != nil {
-		return fmt.Errorf("Error creating the HTTP request with method: '%s' and url: '%s'. %s", method, url, err)
+		return fmt.Errorf("failed creating the HTTP request with method '%s' and url '%s'. %w", method, url, err)
 	}
 	if s.Request.Headers != nil {
 		hostHeaders, found := s.Request.Headers["Host"]
@@ -148,7 +159,7 @@ func (s *Session) SendHTTPRequest(ctx context.Context, method string) error {
 	}
 	req.Header = s.Request.Headers
 	logger.LogRequest(req, s.Request.RequestBody, corr)
-	client := http.Client{}
+	client := http.Client{Timeout: s.Timeout}
 	if s.NoRedirect {
 		client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
@@ -156,14 +167,19 @@ func (s *Session) SendHTTPRequest(ctx context.Context, method string) error {
 	}
 	resp, err := client.Do(req)
 	if err != nil {
-		return fmt.Errorf("Error with the HTTP request. %s", err)
+		if err, ok := err.(net.Error); ok && err.Timeout() {
+			logger.LogTimeout(corr)
+			s.Timedout = true
+			return nil
+		}
+		return fmt.Errorf("error with the HTTP request. %w", err)
 	}
 	defer resp.Body.Close()
 	// This is dangerous for big response bodies, but is read now to make sure that the body reader is closed.
 	// TODO: limit the max size of the response body.
 	respBodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("Error reading the response body. %s", err)
+		return fmt.Errorf("failed reading the response body: %w", err)
 	}
 	s.Response.Response = resp
 	s.Response.ResponseBody = respBodyBytes
@@ -171,10 +187,19 @@ func (s *Session) SendHTTPRequest(ctx context.Context, method string) error {
 	return nil
 }
 
+// ValidateResponseTimedout checks if the HTTP client timed out without
+// receiving a response.
+func (s *Session) ValidateResponseTimedout(ctx context.Context) error {
+	if !s.Timedout {
+		return errors.New("no timed out")
+	}
+	return nil
+}
+
 // ValidateStatusCode validates the status code from the HTTP response.
 func (s *Session) ValidateStatusCode(ctx context.Context, expectedCode int) error {
 	if expectedCode != s.Response.Response.StatusCode {
-		return fmt.Errorf("Status code mismatch. Expected: %d, actual: %d", expectedCode, s.Response.Response.StatusCode)
+		return fmt.Errorf("status code mismatch: expected '%d', actual '%d'", expectedCode, s.Response.Response.StatusCode)
 	}
 	return nil
 }
@@ -198,12 +223,12 @@ func (s *Session) ValidateResponseBodyJSONSchema(ctx context.Context, schema str
 	documentLoader := gojsonschema.NewStringLoader(string(s.Response.ResponseBody))
 	result, err := gojsonschema.Validate(schemaLoader, documentLoader)
 	if err != nil {
-		return fmt.Errorf("Error validating response body against schema: %s. %s", schema, err)
+		return fmt.Errorf("failed validating response body against schema '%s'. %w", schema, err)
 	}
 	if result.Valid() {
 		return nil
 	}
-	return fmt.Errorf("Invalid response body according to schema: %s. %+v", schema, result.Errors())
+	return fmt.Errorf("invalid response body according to schema '%s': %+v", schema, result.Errors())
 }
 
 // ValidateResponseBodyJSONProperties validates a list of properties in the JSON body of the HTTP response.
@@ -212,7 +237,7 @@ func (s *Session) ValidateResponseBodyJSONProperties(ctx context.Context, props 
 	for key, expectedValue := range props {
 		value := m.Get(key)
 		if value != expectedValue {
-			return fmt.Errorf("Mismatch of json property '%s'. Expected: '%s', actual: '%s'", key, expectedValue, value)
+			return fmt.Errorf("mismatch of json property '%s': expected '%s', actual '%s'", key, expectedValue, value)
 		}
 	}
 	return nil
@@ -224,7 +249,7 @@ func (s *Session) ValidateResponseBodyEmpty(ctx context.Context) error {
 	if s.Response.Response.ContentLength == 0 && len(s.Response.ResponseBody) == 0 {
 		return nil
 	}
-	return fmt.Errorf("The response body is not empty")
+	return errors.New("response body is not empty")
 }
 
 // StoreResponseBodyJSONPropertyInContext extracts a JSON property from the HTTP response body and stores it in the context.

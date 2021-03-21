@@ -22,11 +22,22 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // ValueAsString invokes Value and convert the return value to string.
 func ValueAsString(ctx context.Context, s string) string {
 	return fmt.Sprintf("%v", Value(ctx, s))
+}
+
+// ValueAsInt invokes Value and convert the return value to int.
+func ValueAsInt(ctx context.Context, s string) (int, error) {
+	v := Value(ctx, s)
+	if n, ok := v.(float64); ok {
+		return int(n), nil
+	}
+	return strconv.Atoi(s)
 }
 
 // Value converts a value as a string to consider some golium patterns.
@@ -59,6 +70,13 @@ var simpleTagFuncs = map[string]func(ctx context.Context) (interface{}, error){
 	"EMPTY": func(ctx context.Context) (interface{}, error) { return "", nil },
 	"NOW":   func(ctx context.Context) (interface{}, error) { return time.Now().Unix(), nil },
 	"NULL":  func(ctx context.Context) (interface{}, error) { return nil, nil },
+	"UUID": func(ctx context.Context) (interface{}, error) {
+		guid, err := uuid.NewUUID()
+		if err != nil {
+			return "", err
+		}
+		return guid.String(), nil
+	},
 }
 
 var valuedTagFuncs = map[string]func(ctx context.Context, s string) (interface{}, error){

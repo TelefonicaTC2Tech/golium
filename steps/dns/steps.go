@@ -19,7 +19,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"reflect"
-	"strconv"
 	"strings"
 
 	"github.com/Telefonica/golium"
@@ -43,17 +42,17 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 	scenCtx.Step(`^the DNS server "([^"]*)"$`, func(svr string) error {
 		return session.ConfigureServer(ctx, golium.ValueAsString(ctx, svr))
 	})
-	scenCtx.Step(`^a DNS timeout of "([^"]*)" milliseconds$`, func(time string) error {
-		timeout, err := strconv.Atoi(golium.ValueAsString(ctx, time))
+	scenCtx.Step(`^a DNS timeout of "([^"]*)" milliseconds$`, func(timeout string) error {
+		to, err := golium.ValueAsInt(ctx, timeout)
 		if err != nil {
-			return fmt.Errorf("Error casting timeout parameter. %s", err)
+			return fmt.Errorf("invalid timeout '%s': %w", timeout, err)
 		}
-		return session.SetDNSResponseTimeout(ctx, timeout)
+		return session.SetDNSResponseTimeout(ctx, to)
 	})
 	scenCtx.Step(`^the DNS query options$`, func(t *godog.Table) error {
 		options, err := parseOptionsTable(ctx, t)
 		if err != nil {
-			return fmt.Errorf("Error parsing DNS query options. %s", err)
+			return fmt.Errorf("failed parsing DNS query options: %w", err)
 		}
 		return session.ConfigureOptions(ctx, options)
 	})
@@ -63,7 +62,7 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 		qname = golium.ValueAsString(ctx, qname)
 		qt, ok := QueryTypes[qtype]
 		if !ok {
-			return fmt.Errorf("Invalid qtype: %s. Permitted values: %s", qtype, reflect.ValueOf(QueryTypes).MapKeys())
+			return fmt.Errorf("invalid qtype '%s': permitted values '%s'", qtype, reflect.ValueOf(QueryTypes).MapKeys())
 		}
 		return session.SendQuery(ctx, qt, qname, recursive)
 	})
@@ -77,7 +76,11 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 		}
 		return session.ValidateResponseWithOneOfCodes(ctx, codes)
 	})
-	scenCtx.Step(`the DNS response must have "(\d+)" ((\banswer\b)|(\bauthority\b)|(\badditional\b)) records?$`, func(n int, recordType string) error {
+	scenCtx.Step(`the DNS response must have "(\d+)" ((\banswer\b)|(\bauthority\b)|(\badditional\b)) records?$`, func(number string, recordType string) error {
+		n, err := golium.ValueAsInt(ctx, number)
+		if err != nil {
+			return fmt.Errorf("invalid number '%s': %w", number, err)
+		}
 		recordType = golium.ValueAsString(ctx, recordType)
 		return session.ValidateResponseWithNumberOfRecords(ctx, n, RecordType(recordType))
 	})
@@ -100,7 +103,7 @@ func parseOptionsTable(ctx context.Context, t *godog.Table) ([]dns.EDNS0, error)
 	}
 	var options []option
 	if err := golium.ConvertTableWithHeaderToStructSlice(ctx, t, &options); err != nil {
-		return nil, fmt.Errorf("Error mapping table with option struct. %s", err)
+		return nil, fmt.Errorf("failed mapping table with option struct: %w", err)
 	}
 	dnsOptions := make([]dns.EDNS0, len(options))
 	for i, o := range options {
@@ -120,7 +123,7 @@ func parseOptionsTable(ctx context.Context, t *godog.Table) ([]dns.EDNS0, error)
 func validateResponseWithRecords(ctx context.Context, session *Session, recordType RecordType, t *godog.Table) error {
 	expectedRecords := []Record{}
 	if err := golium.ConvertTableWithHeaderToStructSlice(ctx, t, &expectedRecords); err != nil {
-		return fmt.Errorf("Error processing the table with the expected records. %s", err)
+		return fmt.Errorf("failed processing the table with the expected records: %w", err)
 	}
 	return session.ValidateResponseWithRecords(ctx, recordType, expectedRecords)
 }

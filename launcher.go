@@ -16,7 +16,6 @@ package golium
 
 import (
 	"context"
-	"flag"
 	"os"
 	"path"
 	"time"
@@ -25,6 +24,7 @@ import (
 	"github.com/cucumber/godog"
 	"github.com/cucumber/godog/colors"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/pflag"
 )
 
 // Launcher is responsible to launch golium (based on godog).
@@ -34,24 +34,24 @@ type Launcher struct {
 
 // NewLauncher with a default configuration.
 func NewLauncher() *Launcher {
-	config := GetConfig()
-	if err := cfg.LoadEnv(config); err != nil {
-		logrus.Fatalf("Error configuring golium with environment variables. %s", err)
-	}
-	return &Launcher{}
+	return NewLauncherWithYaml("")
 }
 
 // NewLauncherWithYaml with a configuration from a yaml file.
 // The yaml file is merged with environment variables.
 func NewLauncherWithYaml(path string) *Launcher {
 	config := GetConfig()
-	if err := cfg.LoadYaml(path, &config); err != nil {
-		logrus.Fatalf("Error configuring golium with yaml file: %s. %s", path, err)
+	if path != "" {
+		if err := cfg.LoadYaml(path, config); err != nil {
+			logrus.Fatalf("Error configuring golium with yaml file: %s. %s", path, err)
+		}
 	}
-	if err := cfg.LoadEnv(&config); err != nil {
+	if err := cfg.LoadEnv(config); err != nil {
 		logrus.Fatalf("Error configuring golium with environment variables. %s", err)
 	}
-	return &Launcher{}
+	l := &Launcher{}
+	l.configLogger()
+	return l
 }
 
 // Launch golium.
@@ -60,12 +60,10 @@ func (l *Launcher) Launch(testSuiteInitializer func(context.Context, *godog.Test
 	conf := GetConfig()
 	godogOpts := godog.Options{
 		Output: colors.Colored(os.Stdout),
+		Tags:   "@wip",
 	}
-	godog.BindFlags("godog.", flag.CommandLine, &godogOpts)
-	flag.Parse()
-
-	// Configure the logger (based on logrus)
-	l.configLogger()
+	godog.BindCommandLineFlags("godog.", &godogOpts)
+	pflag.Parse()
 
 	start := time.Now()
 	logRecord := logrus.WithField("suite", conf.Suite).WithField("environment", conf.Environment)
