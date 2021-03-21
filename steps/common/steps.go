@@ -23,7 +23,6 @@ import (
 	"github.com/Telefonica/golium"
 	"github.com/cucumber/godog"
 	"github.com/google/uuid"
-	"github.com/pkg/errors"
 )
 
 // Steps to initialize common steps.
@@ -55,7 +54,7 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 		if v == e {
 			return nil
 		}
-		return errors.Errorf("mismatch of values: expected '%s', actual '%s'", e, v)
+		return fmt.Errorf("mismatch of values: expected '%s', actual '%s'", e, v)
 	})
 	return ctx
 }
@@ -70,7 +69,7 @@ func StoreValueInContext(ctx context.Context, name, value string) error {
 func GenerateUUIDInContext(ctx context.Context, name string) error {
 	guid, err := uuid.NewUUID()
 	if err != nil {
-		return errors.Wrap(err, "Error generating UUID")
+		return fmt.Errorf("failed generating UUID: %w", err)
 	}
 	return StoreValueInContext(ctx, name, guid.String())
 }
@@ -80,22 +79,22 @@ func GenerateUUIDInContext(ctx context.Context, name string) error {
 func ParseURL(ctx context.Context, uri, ctxtPrefix string) error {
 	u, err := url.Parse(uri)
 	if err != nil {
-		return errors.Wrapf(err, "failed parsing URL: %s", uri)
+		return fmt.Errorf("failed parsing URL '%s': %w", uri, err)
 	}
 	if err := StoreValueInContext(ctx, fmt.Sprintf("%s.scheme", ctxtPrefix), u.Scheme); err != nil {
-		return errors.Wrapf(err, "failed storing scheme of URL: %s", uri)
+		return fmt.Errorf("failed storing scheme of URL '%s': %w", uri, err)
 	}
 	if err := StoreValueInContext(ctx, fmt.Sprintf("%s.host", ctxtPrefix), u.Host); err != nil {
-		return errors.Wrapf(err, "failed storing host of URL: %s", uri)
+		return fmt.Errorf("failed storing host of URL '%s': %w", uri, err)
 	}
 	if err := StoreValueInContext(ctx, fmt.Sprintf("%s.hostname", ctxtPrefix), u.Hostname()); err != nil {
-		return errors.Wrapf(err, "failed storing host of URL: %s", uri)
+		return fmt.Errorf("failed storing host of URL '%s': %w", uri, err)
 	}
 	if err := StoreValueInContext(ctx, fmt.Sprintf("%s.path", ctxtPrefix), u.Path); err != nil {
-		return errors.Wrapf(err, "failed storing path of URL: %s", uri)
+		return fmt.Errorf("failed storing path of URL '%s': %w", uri, err)
 	}
 	if err := StoreValueInContext(ctx, fmt.Sprintf("%s.rawquery", ctxtPrefix), u.RawQuery); err != nil {
-		return errors.Wrapf(err, "failed storing raw query of URL: %s", uri)
+		return fmt.Errorf("failed storing raw query of URL '%s': %w", uri, err)
 	}
 	return ParseQuery(ctx, u.RawQuery, fmt.Sprintf("%s.query", ctxtPrefix))
 }
@@ -105,11 +104,11 @@ func ParseURL(ctx context.Context, uri, ctxtPrefix string) error {
 func ParseQuery(ctx context.Context, query, ctxtPrefix string) error {
 	v, err := url.ParseQuery(query)
 	if err != nil {
-		return errors.Wrapf(err, "failed parsing query: %s", query)
+		return fmt.Errorf("failed parsing query '%s': %w", query, err)
 	}
 	for key := range v {
 		if err := StoreValueInContext(ctx, fmt.Sprintf("%s.%s", ctxtPrefix, key), v.Get(key)); err != nil {
-			return errors.Wrapf(err, "failed storing query param: %s", key)
+			return fmt.Errorf("failed storing query param '%s': %w", key, err)
 		}
 	}
 	return nil

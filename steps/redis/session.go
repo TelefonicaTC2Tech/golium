@@ -44,7 +44,7 @@ type Session struct {
 func (s *Session) ConfigureClient(ctx context.Context, options *redis.Options) error {
 	s.Client = redis.NewClient(options)
 	if err := s.Client.Ping(context.Background()).Err(); err != nil {
-		return fmt.Errorf("Error configuring client: %+v. %s", options, err)
+		return fmt.Errorf("failed configuring client '%+v': %w", options, err)
 	}
 	s.Correlator = uuid.New().String()
 	return nil
@@ -83,7 +83,7 @@ func (s *Session) SetJSONValue(ctx context.Context, key string, props map[string
 	var err error
 	for key, value := range props {
 		if json, err = sjson.Set(json, key, value); err != nil {
-			return fmt.Errorf("Error setting property '%s' with value '%s' in the request body. %s", key, value, err)
+			return fmt.Errorf("failed setting property '%s' with value '%s' in the request body: %w", key, value, err)
 		}
 	}
 	return s.SetTextValue(ctx, key, json)
@@ -97,7 +97,7 @@ func (s *Session) ValidateTextValue(ctx context.Context, key, expectedValue stri
 		return err
 	}
 	if expectedValue != value {
-		return fmt.Errorf("Mismatch value for key '%s'. Expected value: %s, Actual value: %s", key, expectedValue, value)
+		return fmt.Errorf("mismatch value for key '%s': expected value '%s', actual value '%s'", key, expectedValue, value)
 	}
 	return nil
 }
@@ -112,10 +112,10 @@ func (s *Session) ValidateHashValue(ctx context.Context, key string, props map[s
 	for key, expectedValue := range props {
 		value, found := m[key]
 		if !found {
-			return fmt.Errorf("Missing property '%s'. Expected: '%s'", key, expectedValue)
+			return fmt.Errorf("missing property '%s': expected '%s'", key, expectedValue)
 		}
 		if value != expectedValue {
-			return fmt.Errorf("Mismatch of json property '%s'. Expected: '%s', actual: '%s'", key, expectedValue, value)
+			return fmt.Errorf("mismatch of json property '%s': expected '%s', actual '%s'", key, expectedValue, value)
 		}
 	}
 	return nil
@@ -131,7 +131,7 @@ func (s *Session) ValidateJSONValue(ctx context.Context, key string, props map[s
 	for key, expectedValue := range props {
 		value := m.Get(key)
 		if value != expectedValue {
-			return fmt.Errorf("Mismatch of json property '%s'. Expected: '%s', actual: '%s'", key, expectedValue, value)
+			return fmt.Errorf("mismatch of json property '%s': expected '%s', actual '%s'", key, expectedValue, value)
 		}
 	}
 	return nil
@@ -149,14 +149,14 @@ func (s *Session) ValidateNonExistantKey(ctx context.Context, key string) error 
 	if exists == 0 {
 		return nil
 	}
-	return fmt.Errorf("Redis key '%s' exists", key)
+	return fmt.Errorf("redis key '%s' exists", key)
 }
 
 // SubscribeTopic subscribes to a redis topic to receive messages via a channel.
 func (s *Session) SubscribeTopic(ctx context.Context, topic string) error {
 	s.pubsub = s.Client.Subscribe(ctx, topic)
 	if _, err := s.pubsub.Receive(ctx); err != nil {
-		return fmt.Errorf("Error receiving messages from the topic %s. %s", topic, err)
+		return fmt.Errorf("failed receiving messages from the topic '%s': %w", topic, err)
 	}
 	channel := s.pubsub.Channel()
 	go func() {
@@ -182,7 +182,7 @@ func (s *Session) UnsubscribeTopic(ctx context.Context, topic string) error {
 func (s *Session) PublishTextMessage(ctx context.Context, topic, message string) error {
 	GetLogger().LogPublishedMessage(message, topic, s.Correlator)
 	if err := s.Client.Publish(ctx, topic, message).Err(); err != nil {
-		return fmt.Errorf("Error publishing the message '%s' to topic '%s'. %s", message, topic, err)
+		return fmt.Errorf("failed publishing the message '%s' to topic '%s': %w", message, topic, err)
 	}
 	return nil
 }
@@ -193,7 +193,7 @@ func (s *Session) PublishJSONMessage(ctx context.Context, topic string, props ma
 	var err error
 	for key, value := range props {
 		if json, err = sjson.Set(json, key, value); err != nil {
-			return fmt.Errorf("Error setting property '%s' with value '%s' in the message. %s", key, value, err)
+			return fmt.Errorf("failed setting property '%s' with value '%s' in the message: %w", key, value, err)
 		}
 	}
 	return s.PublishTextMessage(ctx, topic, json)
@@ -208,7 +208,7 @@ func (s *Session) WaitForTextMessage(ctx context.Context, timeout time.Duration,
 				return nil
 			}
 		}
-		return fmt.Errorf("Not received message: %s", expectedMsg)
+		return fmt.Errorf("not received message '%s'", expectedMsg)
 	})
 }
 
@@ -222,7 +222,7 @@ func (s *Session) WaitForJSONMessageWithProperties(ctx context.Context, timeout 
 				return nil
 			}
 		}
-		return fmt.Errorf("Not received message with JSON properties: %+v", props)
+		return fmt.Errorf("not received message with JSON properties '%+v'", props)
 	})
 }
 

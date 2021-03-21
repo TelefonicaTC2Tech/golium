@@ -177,7 +177,7 @@ func (t NamedTag) processSimpleTag(ctx context.Context, tagName string) (interfa
 	if f, ok := simpleTagFuncs[tagName]; ok {
 		return f(ctx)
 	}
-	return nil, fmt.Errorf("invalid tag %s", tagName)
+	return nil, fmt.Errorf("invalid tag '%s'", tagName)
 }
 
 func (t NamedTag) processValuedTag(ctx context.Context, tagName, tagValue string) (interface{}, error) {
@@ -187,7 +187,7 @@ func (t NamedTag) processValuedTag(ctx context.Context, tagName, tagValue string
 		composedTagValueString := fmt.Sprintf("%v", composedTagValue)
 		return f(ctx, composedTagValueString)
 	}
-	return nil, fmt.Errorf("invalid tag %s", tagName)
+	return nil, fmt.Errorf("invalid tag '%s'", tagName)
 }
 
 type separator struct {

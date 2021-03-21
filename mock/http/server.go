@@ -23,12 +23,14 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// Server type for the HTTP mock server.
 type Server struct {
 	Port         int
 	mockRequests MockRequests
 	logger       *logrus.Entry
 }
 
+// NewServer creates an instance of Server.
 func NewServer(port int) *Server {
 	return &Server{
 		Port:         port,
@@ -37,6 +39,8 @@ func NewServer(port int) *Server {
 	}
 }
 
+// Start the HTTP mock server.
+// Note that it block the current goroutine with http.ListenAndServe function.
 func (s *Server) Start() error {
 	http.HandleFunc("/_mock/requests", s.handleMockRequest)
 	http.HandleFunc("/", s.handle)

@@ -37,7 +37,7 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 	scenCtx.Step(`^the redis endpoint$`, func(t *godog.Table) error {
 		var options redis.Options
 		if err := golium.ConvertTableWithoutHeaderToStruct(ctx, t, &options); err != nil {
-			return fmt.Errorf("Error configuring redis endpoint. %s", err)
+			return fmt.Errorf("failed configuring redis endpoint: %w", err)
 		}
 		return session.ConfigureClient(ctx, &options)
 	})
@@ -50,14 +50,14 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 	scenCtx.Step(`^I set the redis key "([^"]*)" with hash properties`, func(key string, t *godog.Table) error {
 		props, err := golium.ConvertTableToMap(ctx, t)
 		if err != nil {
-			return fmt.Errorf("Error processing table to a map for the hashed value in redis. %s", err)
+			return fmt.Errorf("failed processing table to a map for the hashed value in redis: %w", err)
 		}
 		return session.SetHashValue(ctx, key, props)
 	})
 	scenCtx.Step(`^I set the redis key "([^"]*)" with the JSON properties`, func(key string, t *godog.Table) error {
 		props, err := golium.ConvertTableToMap(ctx, t)
 		if err != nil {
-			return fmt.Errorf("Error processing table to a map for the JSON value in redis. %s", err)
+			return fmt.Errorf("failed processing table to a map for the JSON value in redis: %w", err)
 		}
 		return session.SetJSONValue(ctx, key, props)
 	})
@@ -67,14 +67,14 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 	scenCtx.Step(`^the redis key "([^"]*)" must have hash properties`, func(key string, t *godog.Table) error {
 		props, err := golium.ConvertTableToMap(ctx, t)
 		if err != nil {
-			return fmt.Errorf("Error processing table to a map for the expected hashed value in redis. %s", err)
+			return fmt.Errorf("failed processing table to a map for the expected hashed value in redis: %w", err)
 		}
 		return session.ValidateHashValue(ctx, key, props)
 	})
 	scenCtx.Step(`^the redis key "([^"]*)" must have the JSON properties`, func(key string, t *godog.Table) error {
 		props, err := golium.ConvertTableToMap(ctx, t)
 		if err != nil {
-			return fmt.Errorf("Error processing table to a map for the expected JSON value in redis. %s", err)
+			return fmt.Errorf("failed processing table to a map for the expected JSON value in redis: %w", err)
 		}
 		return session.ValidateJSONValue(ctx, key, props)
 	})
@@ -93,7 +93,7 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 	scenCtx.Step(`^I publish a message to the redis topic "([^"]*)" with the JSON properties$`, func(topic string, t *godog.Table) error {
 		props, err := golium.ConvertTableToMap(ctx, t)
 		if err != nil {
-			return fmt.Errorf("Error processing table to a map for the request body. %s", err)
+			return fmt.Errorf("failed processing table to a map for the request body: %w", err)
 		}
 		return session.PublishJSONMessage(ctx, golium.ValueAsString(ctx, topic), props)
 	})
@@ -105,7 +105,7 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 		timeoutDuration := time.Duration(timeout) * time.Second
 		props, err := golium.ConvertTableToMap(ctx, t)
 		if err != nil {
-			return fmt.Errorf("Error processing table to a map for the redis message. %s", err)
+			return fmt.Errorf("failed processing table to a map for the redis message: %w", err)
 		}
 		return session.WaitForJSONMessageWithProperties(ctx, timeoutDuration, props)
 	})
@@ -113,10 +113,10 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 		timeoutDuration := time.Duration(timeout) * time.Second
 		props, err := golium.ConvertTableToMap(ctx, t)
 		if err != nil {
-			return fmt.Errorf("Error processing table to a map for the redis message. %s", err)
+			return fmt.Errorf("failed processing table to a map for the redis message: %w", err)
 		}
 		if err := session.WaitForJSONMessageWithProperties(ctx, timeoutDuration, props); err == nil {
-			return fmt.Errorf("Received a message with JSON properties: %+v", props)
+			return fmt.Errorf("received a message with JSON properties '%+v'", props)
 		}
 		return nil
 	})

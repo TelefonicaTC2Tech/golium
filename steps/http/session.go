@@ -223,7 +223,7 @@ func (s *Session) ValidateResponseBodyJSONSchema(ctx context.Context, schema str
 	documentLoader := gojsonschema.NewStringLoader(string(s.Response.ResponseBody))
 	result, err := gojsonschema.Validate(schemaLoader, documentLoader)
 	if err != nil {
-		return fmt.Errorf("failed validating response body against schema '%s'. %w", schema, err)
+		return fmt.Errorf("failed validating response body against schema '%s': %w", schema, err)
 	}
 	if result.Valid() {
 		return nil

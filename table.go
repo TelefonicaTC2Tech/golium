@@ -16,6 +16,7 @@ package golium
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/url"
 	"reflect"
@@ -34,7 +35,7 @@ func ConvertTableToMap(ctx context.Context, t *godog.Table) (map[string]interfac
 	for i := 0; i < len(t.Rows); i++ {
 		cells := t.Rows[i].Cells
 		if len(cells) != 2 {
-			return m, fmt.Errorf("Table must have 2 columns")
+			return m, errors.New("table must have 2 columns")
 		}
 		propKey := cells[0].Value
 		propValue := cells[1].Value
@@ -55,7 +56,7 @@ func ConvertTableToMultiMap(ctx context.Context, t *godog.Table) (map[string][]s
 	for i := 0; i < len(t.Rows); i++ {
 		cells := t.Rows[i].Cells
 		if len(cells) != 2 {
-			return m, fmt.Errorf("Table must have 2 columns")
+			return m, errors.New("table must have 2 columns")
 		}
 		propKey := ValueAsString(ctx, cells[0].Value)
 		propValue := ValueAsString(ctx, cells[1].Value)
@@ -92,7 +93,7 @@ func ConvertTableToMultiMap(ctx context.Context, t *godog.Table) (map[string][]s
 //		}
 func ConvertTableWithHeaderToStructSlice(ctx context.Context, t *godog.Table, slicePtr interface{}) error {
 	if len(t.Rows) == 0 {
-		return fmt.Errorf("Table requires at least 1 row with the header")
+		return errors.New("table requires at least 1 row with the header")
 	}
 	if len(t.Rows) == 1 {
 		// No data
@@ -100,7 +101,7 @@ func ConvertTableWithHeaderToStructSlice(ctx context.Context, t *godog.Table, sl
 	}
 
 	if reflect.TypeOf(slicePtr).Kind() != reflect.Ptr {
-		return fmt.Errorf("Expected a pointer to an slice of structs")
+		return errors.New("expected a pointer to an slice of structs")
 	}
 	slicePtrValue := reflect.ValueOf(slicePtr)
 	sliceValue := slicePtrValue.Elem()
@@ -111,7 +112,7 @@ func ConvertTableWithHeaderToStructSlice(ctx context.Context, t *godog.Table, sl
 		elemValue := reflect.New(sliceElemType).Elem()
 		for n, cell := range t.Rows[i].Cells {
 			if err := assignFieldInStruct(elemValue, header[n].Value, Value(ctx, cell.Value)); err != nil {
-				return fmt.Errorf("Error setting element '%s' in struct of type '%s'. %s",
+				return fmt.Errorf("failed setting element '%s' in struct of type '%s': %w",
 					header[n].Value, sliceElemType, err)
 			}
 		}
@@ -150,12 +151,12 @@ func ConvertTableWithoutHeaderToStruct(ctx context.Context, t *godog.Table, v in
 	for i := 0; i < len(t.Rows); i++ {
 		cells := t.Rows[i].Cells
 		if len(cells) != 2 {
-			return fmt.Errorf("Table must have 2 columns")
+			return fmt.Errorf("table must have 2 columns")
 		}
 		propKey := cells[0].Value
 		propValue := cells[1].Value
 		if err := assignFieldInStruct(value, propKey, Value(ctx, propValue)); err != nil {
-			return fmt.Errorf("Error setting element '%s' in struct of type '%s'. %s",
+			return fmt.Errorf("failed setting element '%s' in struct of type '%s': %w",
 				propKey, value.Type(), err)
 		}
 	}
@@ -167,16 +168,16 @@ func assignFieldInStruct(value reflect.Value, fieldName string, fieldValue inter
 		value = reflect.Indirect(value)
 	}
 	if value.Kind() != reflect.Struct {
-		return fmt.Errorf("orig must be a struct")
+		return fmt.Errorf("value must be a struct")
 	}
 	f := value.FieldByNameFunc(func(n string) bool {
-		return strings.ToLower(n) == strings.ToLower(fieldName)
+		return strings.EqualFold(n, fieldName)
 	})
 	if !f.IsValid() {
-		return fmt.Errorf("Field %s is not valid", fieldName)
+		return fmt.Errorf("field '%s' is not valid", fieldName)
 	}
 	if !f.CanSet() {
-		return fmt.Errorf("Field %s cannot be set", fieldName)
+		return fmt.Errorf("field '%s' cannot be set", fieldName)
 	}
 	if f.Kind() == reflect.Ptr {
 		if fieldValue == nil {
@@ -195,7 +196,7 @@ func assignFieldInStruct(value reflect.Value, fieldName string, fieldValue inter
 	if f.Kind() == reflect.Bool {
 		v, err := strconv.ParseBool(fieldValueStr)
 		if err != nil {
-			return fmt.Errorf("Error parsing to boolean the field '%s' with value '%s'", fieldName, fieldValueStr)
+			return fmt.Errorf("failed parsing to boolean the field '%s' with value '%s'", fieldName, fieldValueStr)
 		}
 		f.SetBool(v)
 		return nil
@@ -203,7 +204,7 @@ func assignFieldInStruct(value reflect.Value, fieldName string, fieldValue inter
 	if f.Kind() == reflect.Int || f.Kind() == reflect.Int8 || f.Kind() == reflect.Int16 || f.Kind() == reflect.Int32 || f.Kind() == reflect.Int64 {
 		v, err := strconv.ParseInt(fieldValueStr, 10, 64)
 		if err != nil {
-			return fmt.Errorf("Error parsing to integer the field '%s' with value '%s'", fieldName, fieldValueStr)
+			return fmt.Errorf("failed parsing to integer the field '%s' with value '%s'", fieldName, fieldValueStr)
 		}
 		f.SetInt(v)
 		return nil
@@ -211,7 +212,7 @@ func assignFieldInStruct(value reflect.Value, fieldName string, fieldValue inter
 	if f.Kind() == reflect.Uint || f.Kind() == reflect.Uint8 || f.Kind() == reflect.Uint16 || f.Kind() == reflect.Uint32 || f.Kind() == reflect.Uint64 {
 		v, err := strconv.ParseUint(fieldValueStr, 10, 64)
 		if err != nil {
-			return fmt.Errorf("Error parsing to unsigned integer the field '%s' with value '%s'", fieldName, fieldValueStr)
+			return fmt.Errorf("failed parsing to unsigned integer the field '%s' with value '%s'", fieldName, fieldValueStr)
 		}
 		f.SetUint(v)
 		return nil
@@ -219,7 +220,7 @@ func assignFieldInStruct(value reflect.Value, fieldName string, fieldValue inter
 	if f.Kind() == reflect.Float32 || f.Kind() == reflect.Float64 {
 		v, err := strconv.ParseFloat(fieldValueStr, 64)
 		if err != nil {
-			return fmt.Errorf("Error parsing to float the field '%s' with value '%s'", fieldName, fieldValueStr)
+			return fmt.Errorf("failed parsing to float the field '%s' with value '%s'", fieldName, fieldValueStr)
 		}
 		f.SetFloat(v)
 		return nil
@@ -227,7 +228,7 @@ func assignFieldInStruct(value reflect.Value, fieldName string, fieldValue inter
 	if f.Kind() == reflect.Complex64 || f.Kind() == reflect.Complex128 {
 		v, err := strconv.ParseComplex(fieldValueStr, 128)
 		if err != nil {
-			return fmt.Errorf("Error parsing to complex the field '%s' with value '%s'", fieldName, fieldValueStr)
+			return fmt.Errorf("failed parsing to complex the field '%s' with value '%s'", fieldName, fieldValueStr)
 		}
 		f.SetComplex(v)
 		return nil

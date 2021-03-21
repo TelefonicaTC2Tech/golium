@@ -15,11 +15,12 @@
 package jwt
 
 import (
+	"fmt"
+
 	"github.com/lestrrat-go/jwx/jwa"
 	"github.com/lestrrat-go/jwx/jwe"
 	"github.com/lestrrat-go/jwx/jws"
 	"github.com/lestrrat-go/jwx/jwt"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -46,7 +47,7 @@ func sign(payload []byte, signatureAlgorithm jwa.SignatureAlgorithm, privateKey 
 	withHeaders := jws.WithHeaders(headers)
 	signed, err := jws.Sign(payload, signatureAlgorithm, privateKey, withHeaders)
 	if err != nil {
-		return "", errors.Wrap(err, "failed signing JWT")
+		return "", fmt.Errorf("failed signing JWT: %w", err)
 	}
 	return string(signed), nil
 }
@@ -56,7 +57,7 @@ func sign(payload []byte, signatureAlgorithm jwa.SignatureAlgorithm, privateKey 
 func parse(token string) (*jws.Message, []byte, error) {
 	msg, err := jws.ParseString(token)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed parsing the JWT")
+		return nil, nil, fmt.Errorf("failed parsing the JWT: %w", err)
 	}
 	return msg, msg.Payload(), nil
 }
@@ -96,7 +97,7 @@ func encrypt(payload []byte, keyEncryptionAlgorithm jwa.KeyEncryptionAlgorithm, 
 	withHeaders := jwe.WithProtectedHeaders(headers)
 	encrypted, err := jwe.Encrypt(payload, keyEncryptionAlgorithm, publicKey, contentEncryptionAlgorithm, jwa.NoCompress, withHeaders)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to encrypt token")
+		return "", fmt.Errorf("failed to encrypt token: %w", err)
 	}
 	return string(encrypted), nil
 }
@@ -106,11 +107,11 @@ func encrypt(payload []byte, keyEncryptionAlgorithm jwa.KeyEncryptionAlgorithm, 
 func decrypt(encrypted []byte, keyEncryptionAlgorithm jwa.KeyEncryptionAlgorithm, privateKey interface{}) (*jwe.Message, []byte, error) {
 	msg, err := jwe.Parse(encrypted)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed parsing the encrypted token")
+		return nil, nil, fmt.Errorf("failed parsing the encrypted token: %w", err)
 	}
 	payload, err := msg.Decrypt(keyEncryptionAlgorithm, privateKey)
 	if err != nil {
-		return msg, nil, errors.Wrap(err, "failed decrypting the encrypted token")
+		return msg, nil, fmt.Errorf("failed decrypting the encrypted token: %w", err)
 	}
 	return msg, payload, nil
 }
