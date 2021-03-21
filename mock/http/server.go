@@ -46,17 +46,20 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) handleMockRequest(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
+	switch r.Method {
+	case http.MethodPost:
+		var mockRequest MockRequest
+		if err := json.NewDecoder(r.Body).Decode(&mockRequest); err != nil {
+			s.logger.Errorf("Failed decoding mockRequest: %s", err)
+			return
+		}
+		s.logger.Infof("Pushing mockRequest: %s", mockRequest)
+		s.mockRequests.PushMockRequest(&mockRequest)
+	case http.MethodDelete:
+		s.mockRequests.CleanMockRequests()
+	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
 	}
-	var mockRequest MockRequest
-	if err := json.NewDecoder(r.Body).Decode(&mockRequest); err != nil {
-		s.logger.Errorf("Failed decoding mockRequest: %s", err)
-		return
-	}
-	s.logger.Infof("Pushing mockRequest: %s", mockRequest)
-	s.mockRequests.PushMockRequest(&mockRequest)
 }
 
 func (s *Server) handle(w http.ResponseWriter, r *http.Request) {
@@ -64,6 +67,9 @@ func (s *Server) handle(w http.ResponseWriter, r *http.Request) {
 	if mockRequest == nil {
 		w.WriteHeader(http.StatusNotFound)
 		return
+	}
+	if !mockRequest.Permanent {
+		s.mockRequests.RemoveMockRequest(mockRequest)
 	}
 	if mockRequest.Latency < 0 {
 		s.logger.Info("Simulating response timeout")
