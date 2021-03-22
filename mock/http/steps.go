@@ -67,6 +67,9 @@ func MockRequestSimple(ctx context.Context, server, path string, status int, bod
 }
 
 func sendMockRequest(ctx context.Context, server string, mockRequest *MockRequest) error {
+	if mockRequest.Latency < 0 {
+		return fmt.Errorf("invalid latency: %d", mockRequest.Latency)
+	}
 	u, err := url.Parse(server)
 	if err != nil {
 		return fmt.Errorf("invalid endpoint URL: %s: %w", server, err)

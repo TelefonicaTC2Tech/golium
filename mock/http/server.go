@@ -40,7 +40,7 @@ func NewServer(port int) *Server {
 }
 
 // Start the HTTP mock server.
-// Note that it block the current goroutine with http.ListenAndServe function.
+// Note that it blocks the current goroutine with http.ListenAndServe function.
 func (s *Server) Start() error {
 	http.HandleFunc("/_mock/requests", s.handleMockRequest)
 	http.HandleFunc("/", s.handle)
@@ -74,11 +74,6 @@ func (s *Server) handle(w http.ResponseWriter, r *http.Request) {
 	}
 	if !mockRequest.Permanent {
 		s.mockRequests.RemoveMockRequest(mockRequest)
-	}
-	if mockRequest.Latency < 0 {
-		s.logger.Info("Simulating response timeout")
-		time.Sleep(time.Duration(5) * time.Minute)
-		return
 	}
 	if mockRequest.Latency > 0 {
 		time.Sleep(time.Duration(mockRequest.Latency) * time.Millisecond)

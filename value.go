@@ -26,12 +26,12 @@ import (
 	"github.com/google/uuid"
 )
 
-// ValueAsString invokes Value and convert the return value to string.
+// ValueAsString invokes Value and converts the return value to string.
 func ValueAsString(ctx context.Context, s string) string {
 	return fmt.Sprintf("%v", Value(ctx, s))
 }
 
-// ValueAsInt invokes Value and convert the return value to int.
+// ValueAsInt invokes Value and converts the return value to int.
 func ValueAsInt(ctx context.Context, s string) (int, error) {
 	v := Value(ctx, s)
 	if n, ok := v.(float64); ok {
