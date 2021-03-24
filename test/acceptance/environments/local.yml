@@ -87,3 +87,5 @@ signPublicKey: |
   RQIDAQAB
   -----END RSA PUBLIC KEY-----
 
+# HTTP mock settings
+httpMockUrl: http://localhost:9000

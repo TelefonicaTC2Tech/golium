@@ -37,27 +37,34 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 	scenCtx.Step(`^the HTTP endpoint "([^"]*)"$`, func(endpoint string) error {
 		return session.ConfigureEndpoint(ctx, golium.ValueAsString(ctx, endpoint))
 	})
+	scenCtx.Step(`^an HTTP timeout of "([^"]*)" milliseconds$`, func(timeout string) error {
+		to, err := golium.ValueAsInt(ctx, timeout)
+		if err != nil {
+			return fmt.Errorf("invalid timeout '%s': %w", timeout, err)
+		}
+		return session.SetHTTPResponseTimeout(ctx, to)
+	})
 	scenCtx.Step(`^the HTTP path "([^"]*)"$`, func(path string) error {
 		return session.ConfigurePath(ctx, golium.ValueAsString(ctx, path))
 	})
 	scenCtx.Step(`^the HTTP query parameters$`, func(t *godog.Table) error {
 		params, err := golium.ConvertTableToMultiMap(ctx, t)
 		if err != nil {
-			return fmt.Errorf("Error processing query parameters from table. %s", err)
+			return fmt.Errorf("failed processing query parameters from table: %w", err)
 		}
 		return session.ConfigureQueryParams(ctx, params)
 	})
 	scenCtx.Step(`^the HTTP request headers$`, func(t *godog.Table) error {
 		headers, err := golium.ConvertTableToMultiMap(ctx, t)
 		if err != nil {
-			return fmt.Errorf("Error processing HTTP headers from table. %s", err)
+			return fmt.Errorf("failed processing HTTP headers from table: %w", err)
 		}
 		return session.ConfigureHeaders(ctx, headers)
 	})
 	scenCtx.Step(`^the JSON properties in the HTTP request body$`, func(t *godog.Table) error {
 		props, err := golium.ConvertTableToMap(ctx, t)
 		if err != nil {
-			return fmt.Errorf("Error processing table to a map for the request body. %s", err)
+			return fmt.Errorf("failed processing table to a map for the request body: %w", err)
 		}
 		return session.ConfigureRequestBodyJSONProperties(ctx, props)
 	})
@@ -70,13 +77,16 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 	scenCtx.Step(`^I send a HTTP "([^"]*)" request$`, func(method string) error {
 		return session.SendHTTPRequest(ctx, golium.ValueAsString(ctx, method))
 	})
+	scenCtx.Step(`^the HTTP response timed out$`, func() error {
+		return session.ValidateResponseTimedout(ctx)
+	})
 	scenCtx.Step(`^the HTTP status code must be "(\d+)"$`, func(code int) error {
 		return session.ValidateStatusCode(ctx, code)
 	})
 	scenCtx.Step(`^the HTTP response must contain the headers$`, func(t *godog.Table) error {
 		headers, err := golium.ConvertTableToMultiMap(ctx, t)
 		if err != nil {
-			return fmt.Errorf("Error processing HTTP headers from table. %s", err)
+			return fmt.Errorf("failed processing HTTP headers from table: %w", err)
 		}
 		return session.ValidateResponseHeaders(ctx, headers)
 	})
@@ -86,7 +96,7 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 	scenCtx.Step(`^the HTTP response body must have the JSON properties$`, func(t *godog.Table) error {
 		props, err := golium.ConvertTableToMap(ctx, t)
 		if err != nil {
-			return fmt.Errorf("Error processing the table for validating the response body. %s", err)
+			return fmt.Errorf("failed processing the table for validating the response body: %w", err)
 		}
 		return session.ValidateResponseBodyJSONProperties(ctx, props)
 	})

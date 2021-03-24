@@ -18,13 +18,14 @@ import (
 	"context"
 	"crypto/x509"
 	"encoding/pem"
+	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/Telefonica/golium"
 	"github.com/lestrrat-go/jwx/jwa"
 	"github.com/lestrrat-go/jwx/jwe"
 	"github.com/lestrrat-go/jwx/jws"
-	"github.com/pkg/errors"
 	"github.com/tidwall/sjson"
 )
 
@@ -46,7 +47,7 @@ type Session struct {
 func (s *Session) ConfigureSignatureAlgorithm(ctx context.Context, alg string) error {
 	s.SignatureAlgorithm = jwa.SignatureAlgorithm(alg)
 	if err := s.SignatureAlgorithm.Accept(s.SignatureAlgorithm); err != nil {
-		return errors.Errorf("invalid sign algorithm: %s", alg)
+		return fmt.Errorf("invalid sign algorithm '%s'", alg)
 	}
 	return nil
 }
@@ -55,7 +56,7 @@ func (s *Session) ConfigureSignatureAlgorithm(ctx context.Context, alg string) e
 func (s *Session) ConfigureKeyEncryptionAlgorithm(ctx context.Context, alg string) error {
 	s.KeyEncryptionAlgorithm = jwa.KeyEncryptionAlgorithm(alg)
 	if err := s.KeyEncryptionAlgorithm.Accept(s.KeyEncryptionAlgorithm); err != nil {
-		return errors.Errorf("invalid key encryption algorithm: %s", alg)
+		return fmt.Errorf("invalid key encryption algorithm '%s'", alg)
 	}
 	return nil
 }
@@ -64,7 +65,7 @@ func (s *Session) ConfigureKeyEncryptionAlgorithm(ctx context.Context, alg strin
 func (s *Session) ConfigureContentEncryptionAlgorithm(ctx context.Context, alg string) error {
 	s.ContentEncryptionAlgorithm = jwa.ContentEncryptionAlgorithm(alg)
 	if err := s.ContentEncryptionAlgorithm.Accept(s.ContentEncryptionAlgorithm); err != nil {
-		return errors.Errorf("invalid content encryption algorithm: %s", alg)
+		return fmt.Errorf("invalid content encryption algorithm '%s'", alg)
 	}
 	return nil
 }
@@ -80,10 +81,10 @@ func (s *Session) ConfigurePublicKey(ctx context.Context, publicKeyPEM string) e
 	case "PUBLIC KEY", "RSA PUBLIC KEY":
 		s.PublicKey, err = x509.ParsePKIXPublicKey(block.Bytes)
 	default:
-		return errors.Errorf("invalid PEM type: %s", block.Type)
+		return fmt.Errorf("invalid PEM type '%s'", block.Type)
 	}
 	if err != nil {
-		return errors.Wrap(err, "failed processing the public key")
+		return fmt.Errorf("failed processing the public key: %w", err)
 	}
 	return nil
 }
@@ -99,10 +100,10 @@ func (s *Session) ConfigurePrivateKey(ctx context.Context, privateKeyPEM string)
 	case "RSA PRIVATE KEY":
 		s.PrivateKey, err = x509.ParsePKCS1PrivateKey(block.Bytes)
 	default:
-		return errors.Errorf("invalid PEM type: %s", block.Type)
+		return fmt.Errorf("invalid PEM type '%s'", block.Type)
 	}
 	if err != nil {
-		return errors.Wrap(err, "failed processing the private key")
+		return fmt.Errorf("failed processing the private key: %w", err)
 	}
 	return nil
 }
@@ -120,7 +121,7 @@ func (s *Session) ConfigureJSONPayload(ctx context.Context, props map[string]int
 	var err error
 	for key, value := range props {
 		if json, err = sjson.Set(json, key, value); err != nil {
-			return errors.Wrapf(err, "failed setting property '%s' with value '%s' in the request body", key, value)
+			return fmt.Errorf("failed setting property '%s' with value '%s' in the request body: %w", key, value, err)
 		}
 	}
 	return s.ConfigurePayloadWithContentType(ctx, json, "JSON")
@@ -230,7 +231,7 @@ func (s *Session) ValidateJWT(ctx context.Context) error {
 		return nil
 	}
 	if err := verify(s.Token, s.SignatureAlgorithm, s.PublicKey); err != nil {
-		return errors.Wrap(err, "token is invalid")
+		return fmt.Errorf("token is invalid: %w", err)
 	}
 	return nil
 }
@@ -258,7 +259,7 @@ func (s *Session) ValidateInvalidJWT(ctx context.Context, expectedError string) 
 	if expectedError == "" || strings.Contains(err.Error(), expectedError) {
 		return nil
 	}
-	return errors.Wrap(err, "token is invalid")
+	return fmt.Errorf("token is invalid: %w", err)
 }
 
 // ValidatePayloadJSONProperties checks if the payload contains a map of expected properties.
@@ -270,7 +271,7 @@ func (s *Session) ValidatePayloadJSONProperties(ctx context.Context, expectedPay
 	for key, expectedValue := range expectedPayload {
 		value := m.Get(key)
 		if expectedValue != value {
-			return errors.Errorf("mismatch payload property: '%s'. Expected '%v', actual '%v'", key, expectedValue, value)
+			return fmt.Errorf("mismatch payload property '%s': expected '%v', actual '%v'", key, expectedValue, value)
 		}
 	}
 	return nil

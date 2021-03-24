@@ -80,7 +80,7 @@ func (s *Session) SendQuery(ctx context.Context, qtype uint16, qdomain string, r
 	logger.LogRequest(m, corr)
 	r, rtt, err := c.ExchangeContext(ctx, m, s.Server)
 	if err != nil {
-		return fmt.Errorf("Error in DNS query to %s. %s", s.Server, err)
+		return fmt.Errorf("failed DNS query to '%s': %w", s.Server, err)
 	}
 	logger.LogResponse(m, corr)
 	s.Response = r
@@ -92,10 +92,10 @@ func (s *Session) SendQuery(ctx context.Context, qtype uint16, qdomain string, r
 func (s *Session) ValidateResponseWithCode(ctx context.Context, expectedCode string) error {
 	responseCode, ok := dns.RcodeToString[s.Response.Rcode]
 	if !ok {
-		return fmt.Errorf("Invalid code: %d", s.Response.Rcode)
+		return fmt.Errorf("invalid code '%d'", s.Response.Rcode)
 	}
 	if responseCode != expectedCode {
-		return fmt.Errorf("Expected DNS code: %s but received: %s", expectedCode, responseCode)
+		return fmt.Errorf("expected DNS code '%s' but received '%s'", expectedCode, responseCode)
 	}
 	return nil
 }
@@ -104,14 +104,14 @@ func (s *Session) ValidateResponseWithCode(ctx context.Context, expectedCode str
 func (s *Session) ValidateResponseWithOneOfCodes(ctx context.Context, expectedCodes []string) error {
 	responseCode, ok := dns.RcodeToString[s.Response.Rcode]
 	if !ok {
-		return fmt.Errorf("Invalid code: %d", s.Response.Rcode)
+		return fmt.Errorf("invalid code '%d'", s.Response.Rcode)
 	}
 	for _, code := range expectedCodes {
 		if responseCode == code {
 			return nil
 		}
 	}
-	return fmt.Errorf("Expected DNS code one of: %s but received: %s", expectedCodes, responseCode)
+	return fmt.Errorf("expected DNS code one of '%s' but received '%s'", expectedCodes, responseCode)
 }
 
 // ValidateResponseWithNumberOfRecords validates the amount of records in a DNS response for one of the
@@ -119,7 +119,7 @@ func (s *Session) ValidateResponseWithOneOfCodes(ctx context.Context, expectedCo
 func (s *Session) ValidateResponseWithNumberOfRecords(ctx context.Context, expectedRecords int, recordType RecordType) error {
 	records := len(getRecordsForType(s.Response, recordType))
 	if records != expectedRecords {
-		return fmt.Errorf("Expected %d records of type: %s but received %d", expectedRecords, recordType, records)
+		return fmt.Errorf("expected '%d' records of type '%s' but received '%d'", expectedRecords, recordType, records)
 	}
 	return nil
 }
@@ -130,7 +130,7 @@ func (s *Session) ValidateResponseWithRecords(ctx context.Context, recordType Re
 	records := getRecordsForType(s.Response, recordType)
 	for _, expectedRecord := range expectedRecords {
 		if !expectedRecord.IsContained(records) {
-			return fmt.Errorf("No %s record with: %+v", recordType, expectedRecord)
+			return fmt.Errorf("no '%s' record with '%+v'", recordType, expectedRecord)
 		}
 	}
 	return nil

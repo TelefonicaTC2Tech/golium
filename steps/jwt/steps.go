@@ -16,10 +16,10 @@ package jwt
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Telefonica/golium"
 	"github.com/cucumber/godog"
-	"github.com/pkg/errors"
 )
 
 // Steps type is responsible to initialize the JWT steps in godog framework.
@@ -46,7 +46,7 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 	scenCtx.Step(`^the JWT payload with the JSON properties$`, func(t *godog.Table) error {
 		props, err := golium.ConvertTableToMap(ctx, t)
 		if err != nil {
-			return errors.Wrap(err, "failed processing table to a map for the payload")
+			return fmt.Errorf("failed processing table to a map for the payload: %w", err)
 		}
 		return session.ConfigureJSONPayload(ctx, props)
 	})
@@ -83,7 +83,7 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 	scenCtx.Step(`^the JWT payload must have the JSON properties$`, func(t *godog.Table) error {
 		props, err := golium.ConvertTableToMap(ctx, t)
 		if err != nil {
-			return errors.Wrap(err, "failed processing table to a map for the payload")
+			return fmt.Errorf("failed processing table to a map for the payload: %w", err)
 		}
 		return session.ValidatePayloadJSONProperties(ctx, props)
 	})
