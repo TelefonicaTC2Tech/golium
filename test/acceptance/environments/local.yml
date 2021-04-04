@@ -7,6 +7,8 @@ dns: 8.8.8.8:53
 timeout: 2000
 
 # JWT settings
+signSymmetricKey: sign_symmetric_key_that_is_long_enough_for_algorithm_HS512_(with_more_than 256 bits!)
+
 encryptPrivateKey: |
   -----BEGIN RSA PRIVATE KEY-----
   MIIEpQIBAAKCAQEAu+5LoHNwgUG8+bn5Mn51uTQ6EfP6XlblPv23i1LmTHpoGsgG
