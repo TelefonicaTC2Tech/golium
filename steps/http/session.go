@@ -46,6 +46,10 @@ type Request struct {
 	Method string
 	// Request body as slice of bytes
 	RequestBody []byte
+	// Username for basic authentication
+	Username string
+	// Password for basic authentication
+	Password string
 }
 
 // Response information of the session.
@@ -109,6 +113,12 @@ func (s *Session) ConfigureHeaders(ctx context.Context, headers map[string][]str
 	return nil
 }
 
+func (s *Session) ConfigureCredentials(ctx context.Context, username, password string) error {
+	s.Request.Username = username
+	s.Request.Password = password
+	return nil
+}
+
 // ConfigureRequestBodyJSONProperties writes the body in the HTTP request as a JSON with properties.
 func (s *Session) ConfigureRequestBodyJSONProperties(ctx context.Context, props map[string]interface{}) error {
 	var json string
@@ -128,6 +138,22 @@ func (s *Session) ConfigureRequestBodyJSONText(ctx context.Context, message stri
 		s.Request.Headers = make(map[string][]string)
 	}
 	s.Request.Headers["Content-Type"] = []string{"application/json"}
+	return nil
+}
+
+// ConfigureRequestBodyURLEncodedProperties writes the body in the HTTP request as x-www-form-urlencoded with properties.
+func (s *Session) ConfigureRequestBodyURLEncodedProperties(ctx context.Context, props map[string][]string) error {
+	data := url.Values{}
+	for k, s := range props {
+		for _, v := range s {
+			data.Add(k, v)
+		}
+	}
+	s.Request.RequestBody = []byte(data.Encode())
+	if s.Request.Headers == nil {
+		s.Request.Headers = make(map[string][]string)
+	}
+	s.Request.Headers["Content-Type"] = []string{"application/x-www-form-urlencoded"}
 	return nil
 }
 
@@ -158,6 +184,9 @@ func (s *Session) SendHTTPRequest(ctx context.Context, method string) error {
 		}
 	}
 	req.Header = s.Request.Headers
+	if s.Request.Username != "" || s.Request.Password != "" {
+		req.SetBasicAuth(s.Request.Username, s.Request.Password)
+	}
 	logger.LogRequest(req, s.Request.RequestBody, corr)
 	client := http.Client{Timeout: s.Timeout}
 	if s.NoRedirect {

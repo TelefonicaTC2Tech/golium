@@ -17,6 +17,7 @@ package golium
 import (
 	"context"
 	"crypto/sha256"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"strconv"
@@ -49,6 +50,7 @@ func ValueAsInt(ctx context.Context, s string) (int, error) {
 // - Configuration parameters: [CONF:test.parameter]
 // - Context values: [CTXT:test.context]
 // - SHA256: [SHA256:text.to.be.hashed]
+// - BASE64: [BASE64:text.to.be.base64.encoded]
 // - Time: [NOW:+24h:unix] with the format: [NOW:{duration}:{format}]
 //   The value {duration} can be empty (there is no change from now timestamp) or a format valid for
 //   time.ParseDuration function. Currently, it supports the following units: "ns", "us", "ms", "s", "m", "h".
@@ -89,6 +91,9 @@ var valuedTagFuncs = map[string]func(ctx context.Context, s string) (interface{}
 	},
 	"SHA256": func(ctx context.Context, s string) (interface{}, error) {
 		return fmt.Sprintf("%x", sha256.Sum256([]byte(s))), nil
+	},
+	"BASE64": func(ctx context.Context, s string) (interface{}, error) {
+		return base64.StdEncoding.EncodeToString([]byte(s)), nil
 	},
 	"NUMBER": func(ctx context.Context, s string) (interface{}, error) {
 		return strconv.ParseFloat(s, 64)

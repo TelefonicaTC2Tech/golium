@@ -50,6 +50,9 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 		}
 		return session.ConfigureJSONPayload(ctx, props)
 	})
+	scenCtx.Step(`^the JWT symmetric key$`, func(message *godog.DocString) error {
+		return session.ConfigureSymmetricKey(ctx, golium.ValueAsString(ctx, message.Content))
+	})
 	scenCtx.Step(`^the JWT public key$`, func(message *godog.DocString) error {
 		return session.ConfigurePublicKey(ctx, golium.ValueAsString(ctx, message.Content))
 	})
