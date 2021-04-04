@@ -3,7 +3,7 @@ Feature: HTTP client
   @http
   Scenario: Send a GET request
     Given the HTTP endpoint "[CONF:url]/anything"
-      And the HTTP path "/test1"
+      And the HTTP path "/test-query"
       And the HTTP query parameters
           | exists | true |
           | sort   | name |
@@ -15,17 +15,18 @@ Feature: HTTP client
           | Content-Type | application/json |
       And the HTTP response body must comply with the JSON schema "test-schema"
       And the HTTP response body must have the JSON properties
-          | args.exists           | true                                            |
-          | args.sort             | name                                            |
-          | headers.Authorization | Bearer access-token                             |
-          | headers.Host          | [CONF:host]                                     |
-          | method                | GET                                             |
-          | url                   | [CONF:url]/anything/test1?exists=true&sort=name |
+          | headers.Authorization | Bearer access-token                                  |
+          | headers.Content-Type  | [NULL]                                               |
+          | headers.Host          | [CONF:host]                                          |
+          | args.exists           | true                                                 |
+          | args.sort             | name                                                 |
+          | method                | GET                                                  |
+          | url                   | [CONF:url]/anything/test-query?exists=true&sort=name |
 
   @http
-  Scenario: Send a POST request
+  Scenario: Send a POST request with a JSON body using a table of properties
     Given the HTTP endpoint "[CONF:url]/anything"
-      And the HTTP path "/test2"
+      And the HTTP path "/test-json"
       And the HTTP request headers
           | Authorization | Bearer access-token |
       And the JSON properties in the HTTP request body
@@ -42,22 +43,50 @@ Feature: HTTP client
           | Content-Type | application/json |
       And the HTTP response body must comply with the JSON schema "test-schema"
       And the HTTP response body must have the JSON properties
-          | headers.Authorization | Bearer access-token       |
-          | headers.Host          | [CONF:host]               |
-          | method                | POST                      |
-          | url                   | [CONF:url]/anything/test2 |
-          | json.name             | golium                    |
-          | json.active           | [TRUE]                    |
-          | json.inactive         | [FALSE]                   |
-          | json.empty            | [EMPTY]                   |
-          | json.null             | [NULL]                    |
-          | json.integer          | [NUMBER:1234]             |
-          | json.float            | [NUMBER:-34.6]            |
+          | headers.Authorization | Bearer access-token           |
+          | headers.Content-Type  | application/json              |
+          | headers.Host          | [CONF:host]                   |
+          | method                | POST                          |
+          | url                   | [CONF:url]/anything/test-json |
+          | json.name             | golium                        |
+          | json.active           | [TRUE]                        |
+          | json.inactive         | [FALSE]                       |
+          | json.empty            | [EMPTY]                       |
+          | json.null             | [NULL]                        |
+          | json.integer          | [NUMBER:1234]                 |
+          | json.float            | [NUMBER:-34.6]                |
+
+  @http
+  Scenario: Send a POST request with a x-www-form-urlencoded body using a table of properties
+    Given the HTTP endpoint "[CONF:url]/anything"
+      And the HTTP path "/test-urlencoded"
+      And the HTTP request headers
+          | Authorization | Bearer access-token |
+      And the HTTP request body with the URL encoded properties
+          | name    | test           |
+          | surname | golium         |
+          | boolean | [TRUE]         |
+          | float   | [NUMBER:-34.6] |
+     When I send a HTTP "POST" request
+     Then the HTTP status code must be "200"
+      And the HTTP response must contain the headers
+          | Content-Type | application/json |
+      And the HTTP response body must comply with the JSON schema "test-schema"
+      And the HTTP response body must have the JSON properties
+          | headers.Authorization | Bearer access-token                 |
+          | headers.Content-Type  | application/x-www-form-urlencoded   |
+          | headers.Host          | [CONF:host]                         |
+          | method                | POST                                |
+          | url                   | [CONF:url]/anything/test-urlencoded |
+          | form.name             | test                                |
+          | form.surname          | golium                              |
+          | form.boolean          | true                                |
+          | form.float            | -34.6                               |
 
   @http
   Scenario: Send a POST request defined by a json string using the context storage
     Given the HTTP endpoint "[CONF:url]/anything"
-      And the HTTP path "/test3-1"
+      And the HTTP path "/test-content"
       And the HTTP request headers
           | Content-Type | application/json |
       And the HTTP request body with the JSON

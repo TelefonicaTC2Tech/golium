@@ -1,7 +1,35 @@
 Feature: JWT
 
   @jwt
-  Scenario: Create and process a signed JWT
+  Scenario: Create and process a signed JWT with HS512
+    Given the JWT signature algorithm "HS512"
+      And the JWT symmetric key
+          """
+          [CONF:signSymmetricKey]
+          """
+    Given the JWT payload with the JSON properties
+          | sub           | golium           |
+          | iss           | issuer           |
+          | iat           | [NOW]            |
+          | exp           | [NOW:+24h:unix]  |
+          | object.string | test with golium |
+          | object.bool   | [TRUE]           |
+          | object.number | [NUMBER:123.4]   |
+      And I generate a signed JWT and store it in context "jwt.jws"
+     When I process the signed JWT
+          """
+          [CTXT:jwt.jws]
+          """
+     Then the JWT must be valid
+      And the JWT payload must have the JSON properties
+          | sub           | golium           |
+          | iss           | issuer           |
+          | object.string | test with golium |
+          | object.bool   | [TRUE]           |
+          | object.number | [NUMBER:123.4]   |
+
+  @jwt
+  Scenario: Create and process a signed JWT with RS256
     Given the JWT signature algorithm "RS256"
       And the JWT payload with the JSON properties
           | sub           | golium           |

@@ -70,6 +70,13 @@ func (s *Session) ConfigureContentEncryptionAlgorithm(ctx context.Context, alg s
 	return nil
 }
 
+// ConfigureSymmetricKey configures the symmetric key. It sets this key as public and private key.
+func (s *Session) ConfigureSymmetricKey(ctx context.Context, symmetricKey string) error {
+	s.PublicKey = []byte(symmetricKey)
+	s.PrivateKey = s.PublicKey
+	return nil
+}
+
 // ConfigurePublicKey configures the public key to verify the signature of a JWT token or to encrypt a JWE token.
 func (s *Session) ConfigurePublicKey(ctx context.Context, publicKeyPEM string) error {
 	block, _ := pem.Decode([]byte(publicKeyPEM))

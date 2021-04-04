@@ -61,6 +61,9 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 		}
 		return session.ConfigureHeaders(ctx, headers)
 	})
+	scenCtx.Step(`^the HTTP request with username "([^"]*)" and password "([^"]*)"$`, func(username, password string) error {
+		return session.ConfigureCredentials(ctx, golium.ValueAsString(ctx, username), golium.ValueAsString(ctx, password))
+	})
 	scenCtx.Step(`^the JSON properties in the HTTP request body$`, func(t *godog.Table) error {
 		props, err := golium.ConvertTableToMap(ctx, t)
 		if err != nil {
@@ -70,6 +73,13 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 	})
 	scenCtx.Step(`^the HTTP request body with the JSON$`, func(message *godog.DocString) error {
 		return session.ConfigureRequestBodyJSONText(ctx, golium.ValueAsString(ctx, message.Content))
+	})
+	scenCtx.Step(`^the HTTP request body with the URL encoded properties$`, func(t *godog.Table) error {
+		props, err := golium.ConvertTableToMultiMap(ctx, t)
+		if err != nil {
+			return fmt.Errorf("failed processing table to a map for the request body: %w", err)
+		}
+		return session.ConfigureRequestBodyURLEncodedProperties(ctx, props)
 	})
 	scenCtx.Step(`^the HTTP client does not follow any redirection$`, func() error {
 		return session.ConfigureNoRedirection(ctx)

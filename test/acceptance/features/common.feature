@@ -10,6 +10,13 @@ Feature: Common
       And the HTTP response body must have the JSON properties
           | method | GET                                                      |
           | url    | [CONF:url]/anything/[CTXT:test.uuid]/[SHA256:test.value] |
+  
+  @common
+  Scenario: Base64 encoding
+    Given I store "username" in context "test.base64.username"
+      And I store "password" in context "test.base64.password"
+     When I store "[BASE64:[CTXT:test.base64.username]:[CTXT:test.base64.password]]" in context "test.base64.auth"
+     Then the value "[CTXT:test.base64.auth]" must be equal to "dXNlcm5hbWU6cGFzc3dvcmQ="
 
   @common
   Scenario: Wait
