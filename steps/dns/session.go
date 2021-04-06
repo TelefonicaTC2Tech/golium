@@ -15,10 +15,16 @@
 package dns
 
 import (
+	"bytes"
 	"context"
+	"crypto/tls"
+	"encoding/base64"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"time"
 
+	"github.com/AdguardTeam/dnsproxy/upstream"
 	"github.com/google/uuid"
 	"github.com/miekg/dns"
 )
@@ -85,6 +91,91 @@ func (s *Session) SendQuery(ctx context.Context, qtype uint16, qdomain string, r
 	logger.LogResponse(m, corr)
 	s.Response = r
 	s.RTT = rtt
+	return nil
+}
+
+// SendDoHQuery sends a DoH query to resolve a domain.
+func (s *Session) SendDoHQuery(ctx context.Context, method string, qtype uint16, qdomain string, recursive bool) error {
+	logger := GetLogger()
+	corr := uuid.New().String()
+	//Set DNS query
+	m := &dns.Msg{}
+	m.SetQuestion(dns.Fqdn(qdomain), qtype)
+	m.RecursionDesired = recursive
+	s.Query = m
+	logger.LogRequest(m, corr)
+	// Pack the DNS query to convert to a DNS wireformat
+	data, err := s.Query.Pack()
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client := &http.Client{
+		Timeout:   s.Timeout,
+		Transport: tr,
+	}
+	var request *http.Request
+
+	switch method {
+	case "GET":
+		dq := base64.RawURLEncoding.EncodeToString(data)
+		request, err = http.NewRequest("GET", fmt.Sprintf("https://%s/dns-query?dns=%s", s.Server, dq), nil)
+	case "POST":
+		request, err = http.NewRequest("POST", fmt.Sprintf("https://%s/dns-query", s.Server), bytes.NewReader(data))
+	default:
+		return fmt.Errorf("Unsupported method. %s", method)
+	}
+
+	request.Header.Set("Content-Type", "application/dns-message")
+	response, err := client.Do(request)
+	if err != nil {
+		return fmt.Errorf("error sending request. %s", err)
+	}
+	// Check Content-Type
+	if response.Header.Get("Content-Type") != "application/dns-message" {
+		return fmt.Errorf("error in Content-Type Header. Value: %s, Expected: %s", response.Header.Get("Content-Type"), "application/dns-message")
+	}
+	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return fmt.Errorf("error reading the response body. %s", err)
+	}
+	// Get the response body and Unpack it to convert from a DNS wireformat
+	dnsResp := new(dns.Msg)
+	err = dnsResp.Unpack(body)
+	if err != nil {
+		return fmt.Errorf("error unpacking body. %s", err)
+	}
+	logger.LogResponse(dnsResp, corr)
+	// Set response in dns session struct
+	s.Response = dnsResp
+	return nil
+}
+
+// SendDoTQuery sends a DoT query to resolve a domain.
+func (s *Session) SendDoTQuery(ctx context.Context, qtype uint16, qdomain string, recursive bool) error {
+	logger := GetLogger()
+	corr := uuid.New().String()
+	//Set DNS query
+	opts := upstream.Options{
+		Timeout:            s.Timeout,
+		InsecureSkipVerify: true,
+	}
+	u, err := upstream.AddressToUpstream(s.Server, opts)
+	if err != nil {
+		logger.log.Fatalf("Cannot create an upstream: %s", err)
+	}
+	m := &dns.Msg{}
+	m.Id = dns.Id()
+	m.SetQuestion(dns.Fqdn(qdomain), qtype)
+	m.RecursionDesired = recursive
+	s.Query = m
+	logger.LogRequest(m, corr)
+	dnsResp, err := u.Exchange(m)
+	if err != nil {
+		logger.log.Fatalf("Cannot make the DNS request: %s", err)
+	}
+	logger.LogResponse(m, corr)
+	// Set response in dns session struct
+	s.Response = dnsResp
 	return nil
 }
 

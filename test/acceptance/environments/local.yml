@@ -4,6 +4,8 @@ host: httpbin.org
 
 # DNS settings
 dns: 8.8.8.8:53
+doh: dns.google:443
+dot: tls://8.8.8.8:853
 timeout: 2000
 
 # JWT settings
