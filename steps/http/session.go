@@ -275,7 +275,7 @@ func (s *Session) ValidateResponseBodyJSONProperties(ctx context.Context, props 
 // ValidateResponseBodyEmpty validates that the response body is empty.
 // It checks the Content-Length header and the response body buffer.
 func (s *Session) ValidateResponseBodyEmpty(ctx context.Context) error {
-	if s.Response.Response.ContentLength == 0 && len(s.Response.ResponseBody) == 0 {
+	if s.Response.Response.ContentLength == -1 || (s.Response.Response.ContentLength == 0 && len(s.Response.ResponseBody) == 0) {
 		return nil
 	}
 	return errors.New("response body is not empty")
