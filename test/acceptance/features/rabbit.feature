@@ -2,7 +2,7 @@ Feature: Rabbit client
 
   @rabbit
   Scenario: Publish and subscribe a text message
-    Given the rabbit endpoint "amqp://admin:password@localhost:5672/"
+    Given the rabbit endpoint "amqp://guest:guest@localhost:5672/"
       And I subscribe to the rabbit topic "test-topic"
      When I publish a message to the rabbit topic "test-topic" with the text
           """
@@ -16,7 +16,7 @@ Feature: Rabbit client
 
   @rabbit
   Scenario: Publish and subscribe a JSON message
-    Given the rabbit endpoint "amqp://admin:password@localhost:5672/"
+    Given the rabbit endpoint "amqp://guest:guest@localhost:5672/"
       And I subscribe to the rabbit topic "test-topic"
      When I publish a message to the rabbit topic "test-topic" with the JSON properties
           | id       | abc    |
