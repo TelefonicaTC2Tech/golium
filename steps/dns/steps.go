@@ -40,6 +40,7 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 
 	// Initialize the steps
 	scenCtx.Step(`^the DNS server "([^"]*)"$`, func(svr string) error {
+		// DNS transport protocol is set to UDP by default
 		var transport = "UDP"
 		return session.ConfigureServer(ctx, golium.ValueAsString(ctx, svr), golium.ValueAsString(ctx, transport))
 	})
@@ -80,6 +81,27 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 		default:
 			return fmt.Errorf("unsupported transport protocol. %s", session.Transport)
 		}
+	})
+	scenCtx.Step(`^I send a DoH "([^"]*)" request of type "([^"]*)" for "([^"]*)"(\s\bwithout recursion\b)?$`, func(method, qtype, qname, recursion string) error {
+		recursive := recursion == ""
+		method = golium.ValueAsString(ctx, method)
+		qtype = golium.ValueAsString(ctx, qtype)
+		qname = golium.ValueAsString(ctx, qname)
+		qt, ok := QueryTypes[qtype]
+		if !ok {
+			return fmt.Errorf("Invalid qtype: %s. Permitted values: %s", qtype, reflect.ValueOf(QueryTypes).MapKeys())
+		}
+		return session.SendDoHQuery(ctx, method, qt, qname, recursive)
+	})
+	scenCtx.Step(`^I send a DoT query of type "([^"]*)" for "([^"]*)"(\s\bwithout recursion\b)?$`, func(qtype, qname, recursion string) error {
+		recursive := recursion == ""
+		qtype = golium.ValueAsString(ctx, qtype)
+		qname = golium.ValueAsString(ctx, qname)
+		qt, ok := QueryTypes[qtype]
+		if !ok {
+			return fmt.Errorf("Invalid qtype: %s. Permitted values: %s", qtype, reflect.ValueOf(QueryTypes).MapKeys())
+		}
+		return session.SendDoTQuery(ctx, qt, qname, recursive)
 	})
 	scenCtx.Step(`the DNS response must have the code "([^"]*)"$`, func(code string) error {
 		return session.ValidateResponseWithCode(ctx, golium.ValueAsString(ctx, code))
