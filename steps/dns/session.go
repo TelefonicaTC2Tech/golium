@@ -33,6 +33,8 @@ import (
 type Session struct {
 	// Server is the address to the DNS server, including the server port (e.g. 8.8.8.8:53).
 	Server string
+	// Transport is the network protocol used to send the queries (valid values: UDP, DoT, Doh with GET, DoH with POST)
+	Transport string
 	// DNS query options (EDNS0)
 	Options []dns.EDNS0
 	// Query contains the DNS request message.
@@ -45,9 +47,10 @@ type Session struct {
 	Timeout time.Duration
 }
 
-// ConfigureServer configures the DNS server location.
-func (s *Session) ConfigureServer(ctx context.Context, svr string) error {
+// ConfigureServer configures the DNS server location and the transport protocol.
+func (s *Session) ConfigureServer(ctx context.Context, svr string, transport string) error {
 	s.Server = svr
+	s.Transport = transport
 	return nil
 }
 
@@ -118,9 +121,9 @@ func (s *Session) SendDoHQuery(ctx context.Context, method string, qtype uint16,
 	switch method {
 	case "GET":
 		dq := base64.RawURLEncoding.EncodeToString(data)
-		request, err = http.NewRequest("GET", fmt.Sprintf("https://%s/dns-query?dns=%s", s.Server, dq), nil)
+		request, err = http.NewRequest("GET", fmt.Sprintf("%s?dns=%s", s.Server, dq), nil)
 	case "POST":
-		request, err = http.NewRequest("POST", fmt.Sprintf("https://%s/dns-query", s.Server), bytes.NewReader(data))
+		request, err = http.NewRequest("POST", fmt.Sprintf("%s", s.Server), bytes.NewReader(data))
 	default:
 		return fmt.Errorf("Unsupported method. %s", method)
 	}

@@ -1,12 +1,9 @@
 Feature: DOT client
 
-  Background:
-    Given the DNS server "[CONF:dot]"
-    And a DNS timeout of "[CONF:timeout]" milliseconds
-
   @dot
   Scenario: DoT Query domain inspecting answer records
-     When I send a DoT query of type "A" for "www.telefonica.com"
+    Given the DNS server "[CONF:dot]" on "DoT"
+     When I send a DNS query of type "A" for "www.telefonica.com"
      Then the DNS response must have the code "NOERROR"
       And the DNS response must contain the following answer records
           | name                | class | type  | data          |
@@ -14,7 +11,9 @@ Feature: DOT client
 
   @dot
   Scenario Outline: DoT Query domain with recursion
-     When I send a DoT query of type "<type>" for "<domain>"
+    Given the DNS server "[CONF:dot]" on "DoT"
+      And a DNS timeout of "[CONF:timeout]" milliseconds
+     When I send a DNS query of type "<type>" for "<domain>"
      Then the DNS response must have the code "<code>"
       And the DNS response must have "<answer>" answer record
       And the DNS response must have "<authority>" authority records
@@ -33,7 +32,8 @@ Feature: DOT client
 
   @dot
   Scenario Outline: DoT Query domain without recursion
-    When I send a DoT query of type "<type>" for "<domain>" without recursion
+    Given the DNS server "[CONF:dot]" on "DoT"
+    When I send a DNS query of type "<type>" for "<domain>" without recursion
     Then the DNS response must have one of the following codes: "<code>"
 
     Examples: 

@@ -1,12 +1,9 @@
 Feature: DOH client
 
-  Background:
-    Given the DNS server "[CONF:doh]"
-    And a DNS timeout of "[CONF:timeout]" milliseconds
-
   @doh
   Scenario Outline: DoH Query domain inspecting answer records
-     When I send a DoH "<method>" request of type "A" for "www.telefonica.com"
+    Given the DNS server "[CONF:doh]" on "DoH with <method>"
+     When I send a DNS query of type "A" for "www.telefonica.com"
      Then the DNS response must have the code "NOERROR"
       And the DNS response must contain the following answer records
           | name                | class | type  | data          |
@@ -19,7 +16,9 @@ Feature: DOH client
 
   @doh
   Scenario Outline: DoH Query domain with recursion
-     When I send a DoH "<method>" request of type "<type>" for "<domain>"
+    Given the DNS server "[CONF:doh]" on "DoH with <method>"
+      And a DNS timeout of "[CONF:timeout]" milliseconds
+     When I send a DNS query of type "<type>" for "<domain>"
      Then the DNS response must have the code "<code>"
       And the DNS response must have "<answer>" answer record
       And the DNS response must have "<authority>" authority records
@@ -46,7 +45,8 @@ Feature: DOH client
 
   @doh
   Scenario Outline: DoH Query domain without recursion
-    When I send a DoH "<method>" request of type "<type>" for "<domain>" without recursion
+    Given the DNS server "[CONF:doh]" on "DoH with <method>"
+    When I send a DNS query of type "<type>" for "<domain>" without recursion
     Then the DNS response must have one of the following codes: "<code>"
 
     Examples: method <method> domain <domain> with type <type>

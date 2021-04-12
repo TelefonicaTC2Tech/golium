@@ -4,7 +4,7 @@ host: httpbin.org
 
 # DNS settings
 dns: 8.8.8.8:53
-doh: dns.google:443
+doh: https://dns.google:443/dns-query
 dot: tls://8.8.8.8:853
 timeout: 2000
 
