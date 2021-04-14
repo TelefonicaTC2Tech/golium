@@ -33,6 +33,8 @@ type Session struct {
 	Messages []string
 	// Correlator is used to correlate the messages for a specific session
 	Correlator string
+	// TransactionID is used to identify each transaction.
+	TransactionID string
 	// rabbit channel.
 	// It is stored after subscription to close the subscription.
 	channel *amqp.Channel
@@ -46,6 +48,7 @@ func (s *Session) ConfigureConnection(ctx context.Context, uri string) error {
 		return fmt.Errorf("failed configuring connection '%s': %w", uri, err)
 	}
 	s.Correlator = uuid.New().String()
+	s.TransactionID = uuid.New().String()
 	return nil
 }
 
@@ -146,8 +149,10 @@ func (s *Session) PublishTextMessage(ctx context.Context, topic, message string)
 		false, // mandatory
 		false, // immediate
 		amqp.Publishing{
-			ContentType: "text/plain",
-			Body:        []byte(message),
+			ContentType:   "text/plain",
+			Body:          []byte(message),
+			CorrelationId: s.Correlator,
+			MessageId:     s.TransactionID,
 		})
 	if err != nil {
 		return fmt.Errorf("failed publishing the message '%s' to topic '%s': %w", message, topic, err)
@@ -186,11 +191,15 @@ func (s *Session) WaitForJSONMessageWithProperties(ctx context.Context, timeout 
 	return waitUpTo(timeout, func() error {
 		for _, msg := range s.Messages {
 			logrus.Debugf("Checking message: %s", msg)
-			if matchMessage(msg, props) {
-				return nil
+			m := golium.NewMapFromJSONBytes([]byte(msg))
+			for key, expectedValue := range props {
+				value := m.Get(key)
+				if value != expectedValue {
+					return fmt.Errorf("mismatch of json property '%s': expected '%s', actual '%s'", key, expectedValue, value)
+				}
 			}
 		}
-		return fmt.Errorf("not received message with JSON properties '%+v'", props)
+		return nil
 	})
 }
 

@@ -34,9 +34,8 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 	session := GetSession(ctx)
 	// Initialize the steps
 	scenCtx.Step(`^the rabbit endpoint "([^"]*)"$`, func(uri string) error {
-		return session.ConfigureConnection(ctx, uri)
+		return session.ConfigureConnection(ctx, golium.ValueAsString(ctx, uri))
 	})
-
 	scenCtx.Step(`^I subscribe to the rabbit topic "([^"]*)"$`, func(topic string) error {
 		return session.SubscribeTopic(ctx, golium.ValueAsString(ctx, topic))
 	})
@@ -44,6 +43,9 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 		return session.UnsubscribeTopic(ctx, golium.ValueAsString(ctx, topic))
 	})
 	scenCtx.Step(`^I publish a message to the rabbit topic "([^"]*)" with the text$`, func(topic string, message *godog.DocString) error {
+		return session.PublishTextMessage(ctx, golium.ValueAsString(ctx, topic), golium.ValueAsString(ctx, message.Content))
+	})
+	scenCtx.Step(`^I publish a message to the rabbit topic "([^"]*)" with the JSON$`, func(topic string, message *godog.DocString) error {
 		return session.PublishTextMessage(ctx, golium.ValueAsString(ctx, topic), golium.ValueAsString(ctx, message.Content))
 	})
 	scenCtx.Step(`^I publish a message to the rabbit topic "([^"]*)" with the JSON properties$`, func(topic string, t *godog.Table) error {
@@ -54,6 +56,10 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 		return session.PublishJSONMessage(ctx, golium.ValueAsString(ctx, topic), props)
 	})
 	scenCtx.Step(`^I wait up to "(\d+)" seconds? for a rabbit message with the text$`, func(timeout int, message *godog.DocString) error {
+		timeoutDuration := time.Duration(timeout) * time.Second
+		return session.WaitForTextMessage(ctx, timeoutDuration, message.Content)
+	})
+	scenCtx.Step(`^I wait up to "(\d+)" seconds? for a rabbit message with the JSON$`, func(timeout int, message *godog.DocString) error {
 		timeoutDuration := time.Duration(timeout) * time.Second
 		return session.WaitForTextMessage(ctx, timeoutDuration, message.Content)
 	})
