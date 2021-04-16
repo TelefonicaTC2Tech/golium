@@ -197,6 +197,7 @@ func (s *Session) WaitForJSONMessageWithProperties(ctx context.Context, timeout 
 				if value != expectedValue {
 					return fmt.Errorf("mismatch of json property '%s': expected '%s', actual '%s'", key, expectedValue, value)
 				}
+				return nil
 			}
 		}
 		return nil
