@@ -26,7 +26,7 @@ import (
 
 var logger *Logger
 
-// GetLogger returns the logger for rabbit messages in publish/subscribe.
+// GetLogger returns the logger for elasticsearch messages in publish/subscribe.
 // If the logger is not created yet, it creates a new instance of Logger.
 func GetLogger() *Logger {
 	if logger != nil {
@@ -58,11 +58,13 @@ func NewLogger(path string) (*Logger, error) {
 	}, nil
 }
 
+// LogCreateIndex logs a creation in elasticsearch in the configured log file.
 func (l Logger) LogCreateIndex(res *esapi.Response, document, index, corr string) {
 	l.log.Printf("Create index '%s' [%s]:\n%s\n\n", index, corr, document)
 	l.logResponse(res, corr)
 }
 
+// LogSearchIndex logs a search in elasticsearch in the configured log file.
 func (l Logger) LogSearchIndex(res *esapi.Response, body, index, corr string) {
 	l.log.Printf("Search index '%s' [%s] with body:\n%s\n\n", index, corr, body)
 	l.logResponse(res, corr)

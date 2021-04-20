@@ -18,19 +18,19 @@ import (
 	"context"
 )
 
-// ContextKey defines a type to store the rabbit session in context.Context.
+// ContextKey defines a type to store the elasticsearch session in context.Context.
 type ContextKey string
 
 var contextKey ContextKey = "elasticsearchSession"
 
-// InitializeContext adds the rabbit session to the context.
+// InitializeContext adds the elasticsearch session to the context.
 // The new context is returned because context is immutable.
 func InitializeContext(ctx context.Context) context.Context {
 	var session Session
 	return context.WithValue(ctx, contextKey, &session)
 }
 
-// GetSession returns the rabbit session stored in context.
+// GetSession returns the elasticsearch session stored in context.
 // Note that the context should be previously initialized with InitializeContext function.
 func GetSession(ctx context.Context) *Session {
 	return ctx.Value(contextKey).(*Session)

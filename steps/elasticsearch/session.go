@@ -29,14 +29,14 @@ import (
 	"github.com/tidwall/sjson"
 )
 
-// Session contains the information of a rabbit session.
+// Session contains the information of a elasticsearch session.
 type Session struct {
 	Client       *elasticsearch.Client
 	SearchResult golium.Map
 	Correlator   string
 }
 
-// ConfigureClient creates a rabbit connection based on the URI.
+// ConfigureClient creates a elasticsearch connection based on the URI.
 func (s *Session) ConfigureConnection(ctx context.Context, config elasticsearch.Config) error {
 	var err error
 	if s.Client, err = elasticsearch.NewClient(config); err != nil {
@@ -46,7 +46,7 @@ func (s *Session) ConfigureConnection(ctx context.Context, config elasticsearch.
 	return nil
 }
 
-// CreatesDocument creates a document in index with given JSON properties
+// CreatesDocument creates a document in index with given JSON properties.
 func (s *Session) CreatesDocument(ctx context.Context, index string, props map[string]interface{}) error {
 	logger := GetLogger()
 	var err error
@@ -73,6 +73,7 @@ func (s *Session) CreatesDocument(ctx context.Context, index string, props map[s
 	return nil
 }
 
+// SearchDocument searchs in elasticsearch with given index and JSON body and saves the result in the application context.
 func (s *Session) SearchDocument(ctx context.Context, index string, body string) error {
 	logger := GetLogger()
 	res, err := s.Client.Search(
@@ -95,6 +96,7 @@ func (s *Session) SearchDocument(ctx context.Context, index string, body string)
 	return nil
 }
 
+// ValidateDocumentJSONProperties validates that the search result in the application context has the given properties.
 func (s *Session) ValidateDocumentJSONProperties(ctx context.Context, props map[string]interface{}) error {
 	for key, expectedValue := range props {
 		value := s.SearchResult.Get(key)
