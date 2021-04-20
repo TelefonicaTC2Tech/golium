@@ -21,8 +21,8 @@ Feature: Elasticsearch client
           }
           """
       And the search result must have the JSON properties
-          | hits.total.value             | [NUMBER:1]                          |
-          | hits.hits.#                  | [NUMBER:1]                          |
+          | hits.total.value           | [NUMBER:1]                          |
+          | hits.hits.#                | [NUMBER:1]                          |
           | hits.hits.0._source.name   | example                             |
           | hits.hits.0._source.number | [NUMBER:1]                          |
           | hits.hits.0._source.bool   | [TRUE]                              |
