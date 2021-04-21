@@ -66,8 +66,8 @@ func (s *Session) ConfigureOptions(ctx context.Context, options []dns.EDNS0) err
 	return nil
 }
 
-// SendQuery sends a DNS query to resolve a domain.
-func (s *Session) SendQuery(ctx context.Context, qtype uint16, qdomain string, recursive bool) error {
+// SendUDPQuery sends a DNS query to resolve a domain.
+func (s *Session) SendUDPQuery(ctx context.Context, qtype uint16, qdomain string, recursive bool) error {
 	logger := GetLogger()
 	corr := uuid.New().String()
 	c := dns.Client{Timeout: s.Timeout}

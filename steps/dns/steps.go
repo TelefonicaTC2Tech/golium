@@ -41,8 +41,8 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 	// Initialize the steps
 	scenCtx.Step(`^the DNS server "([^"]*)"$`, func(svr string) error {
 		// DNS transport protocol is set to UDP by default
-		var transport = "UDP"
-		return session.ConfigureServer(ctx, golium.ValueAsString(ctx, svr), golium.ValueAsString(ctx, transport))
+		transport := "UDP"
+		return session.ConfigureServer(ctx, golium.ValueAsString(ctx, svr), transport)
 	})
 	scenCtx.Step(`^the DNS server "([^"]*)" on "([^"]*)"$`, func(svr, transport string) error {
 		return session.ConfigureServer(ctx, golium.ValueAsString(ctx, svr), golium.ValueAsString(ctx, transport))
@@ -71,7 +71,7 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 		}
 		switch session.Transport {
 		case "UDP":
-			return session.SendQuery(ctx, qt, qname, recursive)
+			return session.SendUDPQuery(ctx, qt, qname, recursive)
 		case "DoH with GET":
 			return session.SendDoHQuery(ctx, "GET", qt, qname, recursive)
 		case "DoH with POST":
