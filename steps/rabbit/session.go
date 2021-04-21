@@ -26,15 +26,19 @@ import (
 	"github.com/tidwall/sjson"
 )
 
+// MsgWithCorr contains the information of a message with a corresponding correlator.
+type MsgWithCorr struct {
+	Message    string
+	Correlator string
+}
+
 // Session contains the information of a rabbit session.
 type Session struct {
 	Connection *amqp.Connection
 	// Messages received from the publish/subscribe channel
-	Messages []string
-	// Correlator is used to correlate the messages for a specific session
-	Correlator string
-	// TransactionID is used to identify each transaction.
-	TransactionID string
+	Messages []MsgWithCorr
+	// SessionCorrelator is used to correlate the messages for a specific session
+	SessionCorrelator string
 	// rabbit channel.
 	// It is stored after subscription to close the subscription.
 	channel *amqp.Channel
@@ -47,8 +51,7 @@ func (s *Session) ConfigureConnection(ctx context.Context, uri string) error {
 	if err != nil {
 		return fmt.Errorf("failed configuring connection '%s': %w", uri, err)
 	}
-	s.Correlator = uuid.New().String()
-	s.TransactionID = uuid.New().String()
+	s.SessionCorrelator = uuid.New().String()
 	return nil
 }
 
@@ -107,8 +110,11 @@ func (s *Session) SubscribeTopic(ctx context.Context, topic string) error {
 	go func() {
 		logrus.Debugf("Receiving messages from topic %s...", topic)
 		for msg := range msgs {
-			GetLogger().LogReceivedMessage(string(msg.Body), topic, s.Correlator)
-			s.Messages = append(s.Messages, string(msg.Body))
+			GetLogger().LogReceivedMessage(string(msg.Body), topic, s.SessionCorrelator)
+			var message MsgWithCorr
+			message.Correlator = msg.CorrelationId
+			message.Message = string(msg.Body)
+			s.Messages = append(s.Messages, message)
 		}
 		logrus.Debugf("Stop receiving messages from topic %s", topic)
 	}()
@@ -124,8 +130,8 @@ func (s *Session) UnsubscribeTopic(ctx context.Context, topic string) error {
 }
 
 // PublishTextMessage publishes a text message in a rabbit topic.
-func (s *Session) PublishTextMessage(ctx context.Context, topic, message string) error {
-	GetLogger().LogPublishedMessage(message, topic, s.Correlator)
+func (s *Session) PublishTextMessage(ctx context.Context, correlator string, topic, message string) error {
+	GetLogger().LogPublishedMessage(message, topic, s.SessionCorrelator)
 	var err error
 	s.channel, err = s.Connection.Channel()
 	if err != nil {
@@ -151,8 +157,8 @@ func (s *Session) PublishTextMessage(ctx context.Context, topic, message string)
 		amqp.Publishing{
 			ContentType:   "text/plain",
 			Body:          []byte(message),
-			CorrelationId: s.Correlator,
-			MessageId:     s.TransactionID,
+			CorrelationId: correlator,
+			MessageId:     s.SessionCorrelator,
 		})
 	if err != nil {
 		return fmt.Errorf("failed publishing the message '%s' to topic '%s': %w", message, topic, err)
@@ -161,7 +167,7 @@ func (s *Session) PublishTextMessage(ctx context.Context, topic, message string)
 }
 
 // PublishJSONMessage publishes a JSON message in a rabbit topic.
-func (s *Session) PublishJSONMessage(ctx context.Context, topic string, props map[string]interface{}) error {
+func (s *Session) PublishJSONMessage(ctx context.Context, correlator string, topic string, props map[string]interface{}) error {
 	var json string
 	var err error
 	for key, value := range props {
@@ -169,7 +175,7 @@ func (s *Session) PublishJSONMessage(ctx context.Context, topic string, props ma
 			return fmt.Errorf("failed setting property '%s' with value '%s' in the message: %w", key, value, err)
 		}
 	}
-	return s.PublishTextMessage(ctx, topic, json)
+	return s.PublishTextMessage(ctx, correlator, topic, json)
 }
 
 // WaitForTextMessage waits up to timeout till the expected message is found in the received messages
@@ -177,7 +183,7 @@ func (s *Session) PublishJSONMessage(ctx context.Context, topic string, props ma
 func (s *Session) WaitForTextMessage(ctx context.Context, timeout time.Duration, expectedMsg string) error {
 	return waitUpTo(timeout, func() error {
 		for _, msg := range s.Messages {
-			if msg == expectedMsg {
+			if msg.Message == expectedMsg {
 				return nil
 			}
 		}
@@ -187,11 +193,14 @@ func (s *Session) WaitForTextMessage(ctx context.Context, timeout time.Duration,
 
 // WaitForJSONMessageWithProperties waits 1 second and verifies if there is a message received
 // in the topic with the requested properties.
-func (s *Session) WaitForJSONMessageWithProperties(ctx context.Context, timeout time.Duration, props map[string]interface{}) error {
+func (s *Session) WaitForJSONMessageWithProperties(ctx context.Context, timeout time.Duration, corr string, props map[string]interface{}) error {
 	return waitUpTo(timeout, func() error {
 		for _, msg := range s.Messages {
 			logrus.Debugf("Checking message: %s", msg)
-			m := golium.NewMapFromJSONBytes([]byte(msg))
+			if corr != msg.Correlator {
+				return fmt.Errorf("mismatch correlator: expected '%s', actual '%s'", corr, msg.Correlator)
+			}
+			m := golium.NewMapFromJSONBytes([]byte(msg.Message))
 			for key, expectedValue := range props {
 				value := m.Get(key)
 				if value != expectedValue {

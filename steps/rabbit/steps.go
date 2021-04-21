@@ -42,42 +42,42 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 	scenCtx.Step(`^I unsubscribe from the rabbit topic "([^"]*)"$`, func(topic string) error {
 		return session.UnsubscribeTopic(ctx, golium.ValueAsString(ctx, topic))
 	})
-	scenCtx.Step(`^I publish a message to the rabbit topic "([^"]*)" with the text$`, func(topic string, message *godog.DocString) error {
-		return session.PublishTextMessage(ctx, golium.ValueAsString(ctx, topic), golium.ValueAsString(ctx, message.Content))
+	scenCtx.Step(`^I publish a message with the correlator "([^"]*)" to the rabbit topic "([^"]*)" with the text$`, func(correlator string, topic string, message *godog.DocString) error {
+		return session.PublishTextMessage(ctx, golium.ValueAsString(ctx, correlator), golium.ValueAsString(ctx, topic), golium.ValueAsString(ctx, message.Content))
 	})
-	scenCtx.Step(`^I publish a message to the rabbit topic "([^"]*)" with the JSON$`, func(topic string, message *godog.DocString) error {
-		return session.PublishTextMessage(ctx, golium.ValueAsString(ctx, topic), golium.ValueAsString(ctx, message.Content))
+	scenCtx.Step(`^I publish a message with the correlator "([^"]*)" to the rabbit topic "([^"]*)" with the JSON$`, func(correlator string, topic string, message *godog.DocString) error {
+		return session.PublishTextMessage(ctx, golium.ValueAsString(ctx, correlator), golium.ValueAsString(ctx, topic), golium.ValueAsString(ctx, message.Content))
 	})
-	scenCtx.Step(`^I publish a message to the rabbit topic "([^"]*)" with the JSON properties$`, func(topic string, t *godog.Table) error {
+	scenCtx.Step(`^I publish a message with the correlator "([^"]*)" to the rabbit topic "([^"]*)" with the JSON properties$`, func(correlator string, topic string, t *godog.Table) error {
 		props, err := golium.ConvertTableToMap(ctx, t)
 		if err != nil {
 			return fmt.Errorf("failed processing table to a map for the request body: %w", err)
 		}
-		return session.PublishJSONMessage(ctx, golium.ValueAsString(ctx, topic), props)
+		return session.PublishJSONMessage(ctx, golium.ValueAsString(ctx, correlator), golium.ValueAsString(ctx, topic), props)
 	})
-	scenCtx.Step(`^I wait up to "(\d+)" seconds? for a rabbit message with the text$`, func(timeout int, message *godog.DocString) error {
+	scenCtx.Step(`^I wait up to "(\d+)" seconds? for a rabbit message with the correlator "([^"]*)" with the text$`, func(timeout int, correlator string, message *godog.DocString) error {
 		timeoutDuration := time.Duration(timeout) * time.Second
 		return session.WaitForTextMessage(ctx, timeoutDuration, message.Content)
 	})
-	scenCtx.Step(`^I wait up to "(\d+)" seconds? for a rabbit message with the JSON$`, func(timeout int, message *godog.DocString) error {
+	scenCtx.Step(`^I wait up to "(\d+)" seconds? for a rabbit message with the correlator "([^"]*)" with the JSON$`, func(timeout int, correlator string, message *godog.DocString) error {
 		timeoutDuration := time.Duration(timeout) * time.Second
 		return session.WaitForTextMessage(ctx, timeoutDuration, message.Content)
 	})
-	scenCtx.Step(`^I wait up to "(\d+)" seconds? for a rabbit message with the JSON properties$`, func(timeout int, t *godog.Table) error {
+	scenCtx.Step(`^I wait up to "(\d+)" seconds? for a rabbit message with the correlator "([^"]*)" with the JSON properties$`, func(timeout int, correlator string, t *godog.Table) error {
 		timeoutDuration := time.Duration(timeout) * time.Second
 		props, err := golium.ConvertTableToMap(ctx, t)
 		if err != nil {
 			return fmt.Errorf("failed processing table to a map for the rabbit message: %w", err)
 		}
-		return session.WaitForJSONMessageWithProperties(ctx, timeoutDuration, props)
+		return session.WaitForJSONMessageWithProperties(ctx, timeoutDuration, golium.ValueAsString(ctx, correlator), props)
 	})
-	scenCtx.Step(`^I wait up to "(\d+)" seconds? without a rabbit message with the JSON properties$`, func(timeout int, t *godog.Table) error {
+	scenCtx.Step(`^I wait up to "(\d+)" seconds? without a rabbit message with the correlator "([^"]*)" with the JSON properties$`, func(timeout int, correlator string, t *godog.Table) error {
 		timeoutDuration := time.Duration(timeout) * time.Second
 		props, err := golium.ConvertTableToMap(ctx, t)
 		if err != nil {
 			return fmt.Errorf("failed processing table to a map for the rabbit message: %w", err)
 		}
-		if err := session.WaitForJSONMessageWithProperties(ctx, timeoutDuration, props); err == nil {
+		if err := session.WaitForJSONMessageWithProperties(ctx, timeoutDuration, golium.ValueAsString(ctx, correlator), props); err == nil {
 			return fmt.Errorf("received a message with JSON properties '%+v'", props)
 		}
 		return nil

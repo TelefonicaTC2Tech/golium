@@ -4,11 +4,11 @@ Feature: Rabbit client
   Scenario: Publish and subscribe a text message
     Given the rabbit endpoint "amqp://guest:guest@localhost:5672/"
       And I subscribe to the rabbit topic "test-topic"
-     When I publish a message to the rabbit topic "test-topic" with the text
+     When I publish a message with the correlator "test-correlator" to the rabbit topic "test-topic" with the text
           """
           This is a test message
           """
-     Then I wait up to "3" seconds for a rabbit message with the text
+     Then I wait up to "3" seconds for a rabbit message with the correlator "test-correlator" with the text
           """
           This is a test message
           """
@@ -18,13 +18,13 @@ Feature: Rabbit client
   Scenario: Publish and subscribe a JSON message
     Given the rabbit endpoint "amqp://guest:guest@localhost:5672/"
       And I subscribe to the rabbit topic "test-topic"
-     When I publish a message to the rabbit topic "test-topic" with the JSON properties
+     When I publish a message with the correlator "test-correlator" to the rabbit topic "test-topic" with the JSON properties
           | id       | abc    |
           | name     | Golium |
-     Then I wait up to "3" seconds for a rabbit message with the JSON properties
+     Then I wait up to "3" seconds for a rabbit message with the correlator "test-correlator" with the JSON properties
           | id       | abc    |
           | name     | Golium |
-      And I wait up to "3" seconds without a rabbit message with the JSON properties
+      And I wait up to "3" seconds without a rabbit message with the correlator "test-correlator" with the JSON properties
           | id       | abc        |
           | name     | unexpected |
      And I unsubscribe from the rabbit topic "test-topic"
@@ -33,7 +33,7 @@ Feature: Rabbit client
   Scenario: Publish and subscribe a JSON message with list inside
     Given the rabbit endpoint "amqp://guest:guest@localhost:5672/"
       And I subscribe to the rabbit topic "test-topic"
-     When I publish a message to the rabbit topic "test-topic" with the JSON
+     When I publish a message with the correlator "test-correlator" to the rabbit topic "test-topic" with the JSON
       """
       {
         "key1": "value1",   
@@ -44,7 +44,7 @@ Feature: Rabbit client
         }
       }
       """
-     Then I wait up to "3" seconds for a rabbit message with the JSON
+     Then I wait up to "3" seconds for a rabbit message with the correlator "test-correlator" with the JSON
       """
       {
         "key1": "value1",   
@@ -61,7 +61,7 @@ Feature: Rabbit client
   Scenario: Publish and subscribe a JSON message with list inside and check JSON properties field by field
     Given the rabbit endpoint "amqp://guest:guest@localhost:5672/"
       And I subscribe to the rabbit topic "test-topic"
-     When I publish a message to the rabbit topic "test-topic" with the JSON
+     When I publish a message with the correlator "test-correlator" to the rabbit topic "test-topic" with the JSON
       """
       {
         "key1": "value1",   
@@ -72,7 +72,7 @@ Feature: Rabbit client
         }
       }
       """
-     Then I wait up to "3" seconds for a rabbit message with the JSON properties
+     Then I wait up to "3" seconds for a rabbit message with the correlator "test-correlator" with the JSON properties   
           | key1                   | value1       |
           | listA.#                | [NUMBER:3]   |
           | listA.0                |  element1A   |
