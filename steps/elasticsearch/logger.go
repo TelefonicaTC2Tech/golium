@@ -26,7 +26,7 @@ import (
 
 var logger *Logger
 
-// GetLogger returns the logger for elasticsearch messages in publish/subscribe.
+// GetLogger returns the logger for elasticsearch requests and responses.
 // If the logger is not created yet, it creates a new instance of Logger.
 func GetLogger() *Logger {
 	if logger != nil {
@@ -41,13 +41,13 @@ func GetLogger() *Logger {
 	return logger
 }
 
-// Logger logs the HTTP request and response in a configurable file.
+// Logger logs the elasticsearch requests and responses in a configurable file.
 type Logger struct {
 	log *log.Logger
 }
 
 // NewLogger creates an instance of the logger.
-// It configures the file path where the HTTP request and response are written.
+// It configures the file path where the elasticsearch requests and responses are written.
 func NewLogger(path string) (*Logger, error) {
 	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
