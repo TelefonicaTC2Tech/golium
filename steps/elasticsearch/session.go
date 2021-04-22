@@ -37,7 +37,7 @@ type Session struct {
 }
 
 // ConfigureClient creates a elasticsearch connection based on the URI.
-func (s *Session) ConfigureConnection(ctx context.Context, config elasticsearch.Config) error {
+func (s *Session) ConfigureClient(ctx context.Context, config elasticsearch.Config) error {
 	var err error
 	if s.Client, err = elasticsearch.NewClient(config); err != nil {
 		return errors.Wrap(err, "failed configuring elasticsearch client")

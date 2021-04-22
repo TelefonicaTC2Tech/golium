@@ -23,15 +23,15 @@ import (
 	"github.com/elastic/go-elasticsearch/v8"
 )
 
-// Steps type is responsible to initialize the HTTP client steps in godog framework.
+// Steps type is responsible to initialize the Elasticsearch client steps in godog framework.
 type Steps struct {
 }
 
-// InitializeSteps adds client HTTP steps to the scenario context.
+// InitializeSteps adds client elasticsearch steps to the scenario context.
 // It implements StepsInitializer interface.
-// It returns a new context (context is immutable) with the HTTP Context.
+// It returns a new context (context is immutable) with the elasticsearch Context.
 func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioContext) context.Context {
-	// Initialize the HTTP session in the context
+	// Initialize the elasticsearch session in the context
 	ctx = InitializeContext(ctx)
 	session := GetSession(ctx)
 	// Initialize the steps
@@ -40,7 +40,7 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 		if err := golium.ConvertTableWithoutHeaderToStruct(ctx, t, &options); err != nil {
 			return fmt.Errorf("failed configuring elasticsearch client: %w", err)
 		}
-		return session.ConfigureConnection(ctx, options)
+		return session.ConfigureClient(ctx, options)
 	})
 	scenCtx.Step(`^I create the elasticsearch document with index "([^"]*)" and the JSON properties`, func(idx string, t *godog.Table) error {
 		index := golium.ValueAsString(ctx, idx)
