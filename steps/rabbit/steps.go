@@ -16,11 +16,13 @@ package rabbit
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/Telefonica/golium"
 	"github.com/cucumber/godog"
+	"github.com/streadway/amqp"
 )
 
 // Steps to initialize common steps.
@@ -29,7 +31,7 @@ type Steps struct {
 
 // InitializeSteps initializes all the steps.
 func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioContext) context.Context {
-	// Initialize the HTTP session in the context
+	// Initialize the RabbitMQ session in the context
 	ctx = InitializeContext(ctx)
 	session := GetSession(ctx)
 	// Initialize the steps
@@ -42,45 +44,88 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 	scenCtx.Step(`^I unsubscribe from the rabbit topic "([^"]*)"$`, func(topic string) error {
 		return session.UnsubscribeTopic(ctx, golium.ValueAsString(ctx, topic))
 	})
-	scenCtx.Step(`^I publish a message with the correlator "([^"]*)" to the rabbit topic "([^"]*)" with the text$`, func(correlator string, topic string, message *godog.DocString) error {
-		return session.PublishTextMessage(ctx, golium.ValueAsString(ctx, correlator), golium.ValueAsString(ctx, topic), golium.ValueAsString(ctx, message.Content))
-	})
-	scenCtx.Step(`^I publish a message with the correlator "([^"]*)" to the rabbit topic "([^"]*)" with the JSON$`, func(correlator string, topic string, message *godog.DocString) error {
-		return session.PublishTextMessage(ctx, golium.ValueAsString(ctx, correlator), golium.ValueAsString(ctx, topic), golium.ValueAsString(ctx, message.Content))
-	})
-	scenCtx.Step(`^I publish a message with the correlator "([^"]*)" to the rabbit topic "([^"]*)" with the JSON properties$`, func(correlator string, topic string, t *godog.Table) error {
+	scenCtx.Step(`^I set rabbitmq headers$`, func(t *godog.Table) error {
 		props, err := golium.ConvertTableToMap(ctx, t)
 		if err != nil {
 			return fmt.Errorf("failed processing table to a map for the request body: %w", err)
 		}
-		return session.PublishJSONMessage(ctx, golium.ValueAsString(ctx, correlator), golium.ValueAsString(ctx, topic), props)
+		return session.ConfigureHeaders(ctx, props)
 	})
-	scenCtx.Step(`^I wait up to "(\d+)" seconds? for a rabbit message with the correlator "([^"]*)" with the text$`, func(timeout int, correlator string, message *godog.DocString) error {
+	scenCtx.Step(`^I set standard rabbitmq properties$`, func(t *godog.Table) error {
+		var props amqp.Publishing
+		if err := golium.ConvertTableWithoutHeaderToStruct(ctx, t, &props); err != nil {
+			return fmt.Errorf("failed configuring redis endpoint: %w", err)
+		}
+		return session.ConfigureStandardProperties(ctx, props)
+	})
+	scenCtx.Step(`^I publish a message to the rabbit topic "([^"]*)" with the text$`, func(topic string, message *godog.DocString) error {
+		return session.PublishTextMessage(ctx, golium.ValueAsString(ctx, topic), golium.ValueAsString(ctx, message.Content))
+	})
+	scenCtx.Step(`^I publish a message to the rabbit topic "([^"]*)" with the JSON properties$`, func(topic string, t *godog.Table) error {
+		props, err := golium.ConvertTableToMap(ctx, t)
+		if err != nil {
+			return fmt.Errorf("failed processing table to a map for the request body: %w", err)
+		}
+		return session.PublishJSONMessage(ctx, golium.ValueAsString(ctx, topic), props)
+	})
+	scenCtx.Step(`^I wait up to "(\d+)" seconds? for a rabbit message with the text$`, func(timeout int, message *godog.DocString) error {
 		timeoutDuration := time.Duration(timeout) * time.Second
 		return session.WaitForTextMessage(ctx, timeoutDuration, message.Content)
 	})
-	scenCtx.Step(`^I wait up to "(\d+)" seconds? for a rabbit message with the correlator "([^"]*)" with the JSON$`, func(timeout int, correlator string, message *godog.DocString) error {
-		timeoutDuration := time.Duration(timeout) * time.Second
-		return session.WaitForTextMessage(ctx, timeoutDuration, message.Content)
-	})
-	scenCtx.Step(`^I wait up to "(\d+)" seconds? for a rabbit message with the correlator "([^"]*)" with the JSON properties$`, func(timeout int, correlator string, t *godog.Table) error {
+	scenCtx.Step(`^I wait up to "(\d+)" seconds? for a rabbit message with the JSON properties$`, func(timeout int, t *godog.Table) error {
 		timeoutDuration := time.Duration(timeout) * time.Second
 		props, err := golium.ConvertTableToMap(ctx, t)
 		if err != nil {
 			return fmt.Errorf("failed processing table to a map for the rabbit message: %w", err)
 		}
-		return session.WaitForJSONMessageWithProperties(ctx, timeoutDuration, golium.ValueAsString(ctx, correlator), props)
+		return session.WaitForJSONMessageWithProperties(ctx, timeoutDuration, props)
 	})
-	scenCtx.Step(`^I wait up to "(\d+)" seconds? without a rabbit message with the correlator "([^"]*)" with the JSON properties$`, func(timeout int, correlator string, t *godog.Table) error {
+	scenCtx.Step(`^I wait up to "(\d+)" seconds? without a rabbit message with the JSON properties$`, func(timeout int, t *godog.Table) error {
 		timeoutDuration := time.Duration(timeout) * time.Second
 		props, err := golium.ConvertTableToMap(ctx, t)
 		if err != nil {
 			return fmt.Errorf("failed processing table to a map for the rabbit message: %w", err)
 		}
-		if err := session.WaitForJSONMessageWithProperties(ctx, timeoutDuration, golium.ValueAsString(ctx, correlator), props); err == nil {
+		if err := session.WaitForJSONMessageWithProperties(ctx, timeoutDuration, props); err == nil {
 			return fmt.Errorf("received a message with JSON properties '%+v'", props)
 		}
 		return nil
+	})
+	scenCtx.Step(`^I wait up to "(\d+)" seconds? for a rabbit message$`, func(timeout int) error {
+		timeoutDuration := time.Duration(timeout) * time.Second
+		return session.WaitForMessage(ctx, timeoutDuration)
+	})
+	scenCtx.Step(`^I wait up to "(\d+)" seconds? without receiving a rabbit message$`, func(timeout int) error {
+		timeoutDuration := time.Duration(timeout) * time.Second
+		if err := session.WaitForMessage(ctx, timeoutDuration); err == nil {
+			return errors.New("failed waiting no message: message received")
+		}
+		return nil
+	})
+	scenCtx.Step(`^the rabbit message has the rabbitmq headers$`, func(t *godog.Table) error {
+		headers, err := golium.ConvertTableToMap(ctx, t)
+		if err != nil {
+			return fmt.Errorf("failed processing table to a map for the rabbit message: %w", err)
+		}
+		return session.ValidateMessageHeaders(ctx, headers)
+	})
+	scenCtx.Step(`^the rabbit message has the standard rabbitmq properties$`, func(t *godog.Table) error {
+		var props amqp.Delivery
+		if err := golium.ConvertTableWithoutHeaderToStruct(ctx, t, &props); err != nil {
+			return fmt.Errorf("failed configuring redis endpoint: %w", err)
+		}
+		return session.ValidateMessageStandardProperties(ctx, props)
+	})
+	scenCtx.Step(`^the rabbit message body has the text$`, func(m *godog.DocString) error {
+		message := golium.ValueAsString(ctx, m.Content)
+		return session.ValidateMessageTextBody(ctx, message)
+	})
+	scenCtx.Step(`^the rabbit message body has the JSON properties$`, func(t *godog.Table) error {
+		props, err := golium.ConvertTableToMap(ctx, t)
+		if err != nil {
+			return fmt.Errorf("failed processing table to a map for the rabbit message: %w", err)
+		}
+		return session.ValidateMessageJSONBody(ctx, props)
 	})
 	return ctx
 }

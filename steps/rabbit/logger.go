@@ -46,7 +46,7 @@ type Logger struct {
 }
 
 // NewLogger creates an instance of the logger.
-// It configures the file path where the HTTP request and response are written.
+// It configures the file path where the RabbitMQ interactions are written.
 func NewLogger(path string) (*Logger, error) {
 	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
