@@ -46,8 +46,8 @@ func (s *Session) ConfigureClient(ctx context.Context, config elasticsearch.Conf
 	return nil
 }
 
-// CreatesDocument creates a document in index with given JSON properties.
-func (s *Session) CreatesDocument(ctx context.Context, index string, props map[string]interface{}) error {
+// NewDocument creates a new document, with the given JSON and for the given index.
+func (s *Session) NewDocument(ctx context.Context, index string, props map[string]interface{}) error {
 	logger := GetLogger()
 	var err error
 	data := ""

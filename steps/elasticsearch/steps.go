@@ -48,7 +48,7 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 		if err != nil {
 			return fmt.Errorf("failed processing table to a map for the JSON value in elasticsearch: %w", err)
 		}
-		return session.CreatesDocument(ctx, index, props)
+		return session.NewDocument(ctx, index, props)
 	})
 	scenCtx.Step(`^I search in the elasticsearch index "([^"]*)" with the JSON body$`, func(idx string, b *godog.DocString) error {
 		index := golium.ValueAsString(ctx, idx)
