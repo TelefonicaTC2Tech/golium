@@ -54,7 +54,7 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 	scenCtx.Step(`^I set standard rabbitmq properties$`, func(t *godog.Table) error {
 		var props amqp.Publishing
 		if err := golium.ConvertTableWithoutHeaderToStruct(ctx, t, &props); err != nil {
-			return fmt.Errorf("failed configuring redis endpoint: %w", err)
+			return fmt.Errorf("failed configuring rabbitmq endpoint: %w", err)
 		}
 		return session.ConfigureStandardProperties(ctx, props)
 	})

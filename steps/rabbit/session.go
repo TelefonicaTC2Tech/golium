@@ -164,7 +164,7 @@ func (s *Session) PublishTextMessage(ctx context.Context, topic, message string)
 		"",         // routing key
 		false,      // mandatory
 		false,      // immediate
-		publishing, // publishin
+		publishing, // publishing
 	)
 	if err != nil {
 		return fmt.Errorf("failed publishing the message '%s' to topic '%s': %w", message, topic, err)
@@ -229,7 +229,7 @@ func (s *Session) WaitForMessage(ctx context.Context, timeout time.Duration) err
 	return nil
 }
 
-// ValidateMessageStandardProperties checks if the message standard rabbitmq properties are equals the expected values.
+// ValidateMessageStandardProperties checks if the message standard rabbitmq properties are equal the expected values.
 func (s *Session) ValidateMessageStandardProperties(ctx context.Context, props amqp.Delivery) error {
 	msg := reflect.ValueOf(s.msg)
 	expectedMsg := reflect.ValueOf(props)
@@ -247,7 +247,7 @@ func (s *Session) ValidateMessageStandardProperties(ctx context.Context, props a
 	return nil
 }
 
-// ValidateMessageHeaders checks if the message rabbitmq headers are equals the expected values.
+// ValidateMessageHeaders checks if the message rabbitmq headers are equal the expected values.
 func (s *Session) ValidateMessageHeaders(ctx context.Context, headers map[string]interface{}) error {
 	h := s.msg.Headers
 	for key, expectedValue := range headers {
@@ -271,7 +271,7 @@ func (s *Session) ValidateMessageTextBody(ctx context.Context, expectedMsg strin
 	return nil
 }
 
-// ValidateMessageJSONBody checks if the message json body properties are equals the expected values.
+// ValidateMessageJSONBody checks if the message json body properties are equal the expected values.
 func (s *Session) ValidateMessageJSONBody(ctx context.Context, props map[string]interface{}) error {
 	m := golium.NewMapFromJSONBytes([]byte(s.msg.Body))
 	for key, expectedValue := range props {
