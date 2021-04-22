@@ -3,6 +3,7 @@ module github.com/Telefonica/golium
 go 1.15
 
 require (
+	github.com/AdguardTeam/dnsproxy v0.37.0
 	github.com/cucumber/godog v0.11.0
 	github.com/elastic/go-elasticsearch/v8 v8.0.0-20210414074309-f7ffd04b8d6a
 	github.com/go-redis/redis/v8 v8.7.1
