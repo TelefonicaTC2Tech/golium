@@ -16,7 +16,6 @@ package rabbit
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -91,16 +90,13 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 		}
 		return nil
 	})
-	scenCtx.Step(`^I wait up to "(\d+)" seconds? for a rabbit message$`, func(timeout int) error {
+	scenCtx.Step(`^I wait up to "(\d+)" seconds? for a rabbit message with the standard rabbitmq properties$`, func(timeout int, t *godog.Table) error {
 		timeoutDuration := time.Duration(timeout) * time.Second
-		return session.WaitForMessage(ctx, timeoutDuration)
-	})
-	scenCtx.Step(`^I wait up to "(\d+)" seconds? without receiving a rabbit message$`, func(timeout int) error {
-		timeoutDuration := time.Duration(timeout) * time.Second
-		if err := session.WaitForMessage(ctx, timeoutDuration); err == nil {
-			return errors.New("failed waiting no message: message received")
+		var props amqp.Delivery
+		if err := golium.ConvertTableWithoutHeaderToStruct(ctx, t, &props); err != nil {
+			return fmt.Errorf("failed processing table to a map for the standard rabbitmq properties: %w", err)
 		}
-		return nil
+		return session.WaitForMessageWithStandardProperties(ctx, timeoutDuration, props)
 	})
 	scenCtx.Step(`^the rabbit message has the rabbitmq headers$`, func(t *godog.Table) error {
 		headers, err := golium.ConvertTableToMap(ctx, t)
@@ -112,7 +108,7 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 	scenCtx.Step(`^the rabbit message has the standard rabbitmq properties$`, func(t *godog.Table) error {
 		var props amqp.Delivery
 		if err := golium.ConvertTableWithoutHeaderToStruct(ctx, t, &props); err != nil {
-			return fmt.Errorf("failed configuring redis endpoint: %w", err)
+			return fmt.Errorf("failed configuring rabbit endpoint: %w", err)
 		}
 		return session.ValidateMessageStandardProperties(ctx, props)
 	})

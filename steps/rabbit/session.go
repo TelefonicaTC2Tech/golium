@@ -23,6 +23,7 @@ import (
 	"github.com/Telefonica/golium"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 	"github.com/tidwall/sjson"
 )
@@ -124,6 +125,14 @@ func (s *Session) SubscribeTopic(ctx context.Context, topic string) error {
 		false,  // no-wait
 		nil,    // args
 	)
+	go func() {
+		logrus.Debugf("Receiving messages from topic %s...", topic)
+		for msg := range s.subCh {
+			GetLogger().LogReceivedMessage(string(msg.Body), topic, s.Correlator)
+			s.Messages = append(s.Messages, msg)
+		}
+		logrus.Debugf("Stop receiving messages from topic %s", topic)
+	}()
 	if err != nil {
 		return errors.Wrap(err, "failed to register a consumer")
 	}
@@ -204,29 +213,50 @@ func (s *Session) PublishJSONMessage(ctx context.Context, topic string, props ma
 // WaitForTextMessage waits up to timeout until the expected message is found in the received messages
 // for this session.
 func (s *Session) WaitForTextMessage(ctx context.Context, timeout time.Duration, expectedMsg string) error {
-	if err := s.WaitForMessage(ctx, timeout); err != nil {
-		return err
-	}
-	return s.ValidateMessageTextBody(ctx, expectedMsg)
+	return waitUpTo(timeout, func() error {
+		for _, msg := range s.Messages {
+			if string(msg.Body) == expectedMsg {
+				s.msg = msg
+				return nil
+			}
+		}
+		return fmt.Errorf("not received message '%s'", expectedMsg)
+	})
 }
 
 // WaitForJSONMessageWithProperties waits up to timeout and verifies if there is a message received
 // in the topic with the requested properties.
 func (s *Session) WaitForJSONMessageWithProperties(ctx context.Context, timeout time.Duration, props map[string]interface{}) error {
-	if err := s.WaitForMessage(ctx, timeout); err != nil {
-		return err
-	}
-	return s.ValidateMessageJSONBody(ctx, props)
+	return waitUpTo(timeout, func() error {
+		for _, msg := range s.Messages {
+			logrus.Debugf("Checking message: %s", msg)
+			m := golium.NewMapFromJSONBytes([]byte(msg.Body))
+			for key, expectedValue := range props {
+				value := m.Get(key)
+				if value != expectedValue {
+					return fmt.Errorf("mismatch of json property '%s': expected '%s', actual '%s'", key, expectedValue, value)
+				}
+			}
+			s.msg = msg
+			return nil
+		}
+		return fmt.Errorf("no message received")
+	})
 }
 
-// WaitForMessage waits up to timeout until the message arrives for this session.
-func (s *Session) WaitForMessage(ctx context.Context, timeout time.Duration) error {
-	select {
-	case s.msg = <-s.subCh:
-	case <-time.After(timeout):
-		return fmt.Errorf("failed receiving message after '%s'", timeout)
-	}
-	return nil
+// WaitForMessageWithStandardProperties waits for a message with standard rabbitmq properties that are equal to the expected values.
+func (s *Session) WaitForMessageWithStandardProperties(ctx context.Context, timeout time.Duration, props amqp.Delivery) error {
+	return waitUpTo(timeout, func() error {
+		for _, msg := range s.Messages {
+			logrus.Debugf("Checking message: %s", msg)
+			s.msg = msg
+			if err := s.ValidateMessageStandardProperties(ctx, props); err == nil {
+				s.Messages = []amqp.Delivery{msg}
+				return nil
+			}
+		}
+		return fmt.Errorf("no message received matches the standard properties")
+	})
 }
 
 // ValidateMessageStandardProperties checks if the message standard rabbitmq properties are equal the expected values.
@@ -281,4 +311,17 @@ func (s *Session) ValidateMessageJSONBody(ctx context.Context, props map[string]
 		}
 	}
 	return nil
+}
+
+func waitUpTo(timeout time.Duration, f func() error) error {
+	end := time.Now().Add(timeout)
+	var err error
+	err = fmt.Errorf("time has expired without message")
+	for time.Now().Before(end) {
+		time.Sleep(10 * time.Millisecond)
+		if err = f(); err == nil {
+			break
+		}
+	}
+	return err
 }
