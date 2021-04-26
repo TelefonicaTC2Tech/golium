@@ -20,7 +20,7 @@ import (
 
 	"github.com/Telefonica/golium"
 	"github.com/cucumber/godog"
-	"github.com/elastic/go-elasticsearch/v8"
+	"github.com/elastic/go-elasticsearch/v7"
 )
 
 // Steps type is responsible to initialize the Elasticsearch client steps in godog framework.

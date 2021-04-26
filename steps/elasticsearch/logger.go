@@ -20,7 +20,7 @@ import (
 	"path"
 
 	"github.com/Telefonica/golium"
-	"github.com/elastic/go-elasticsearch/v8/esapi"
+	"github.com/elastic/go-elasticsearch/v7/esapi"
 	"github.com/sirupsen/logrus"
 )
 
