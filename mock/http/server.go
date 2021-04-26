@@ -79,12 +79,17 @@ func (s *Server) handle(w http.ResponseWriter, r *http.Request) {
 		time.Sleep(time.Duration(mockRequest.Latency) * time.Millisecond)
 	}
 	resp := mockRequest.Response
+	if http.StatusText(resp.Status) == "" {
+		s.logger.Errorf("Status code to return not valid: %d", resp.Status)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(resp.Status)
 	for header, values := range resp.Headers {
 		for _, value := range values {
 			w.Header().Add(header, value)
 		}
 	}
-	w.WriteHeader(resp.Status)
 	if _, err := w.Write([]byte(resp.Body)); err != nil {
 		s.logger.Errorf("Failed writing the response body: %s", err)
 	}
