@@ -62,5 +62,8 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 		}
 		return session.ValidateDocumentJSONProperties(ctx, props)
 	})
+	scenCtx.AfterScenario(func(sc *godog.Scenario, err error) {
+		session.CleanUp(ctx)
+	})
 	return ctx
 }

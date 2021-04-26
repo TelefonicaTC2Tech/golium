@@ -24,6 +24,7 @@ import (
 	"github.com/Telefonica/golium"
 	"github.com/elastic/go-elasticsearch/v7"
 	"github.com/elastic/go-elasticsearch/v7/esapi"
+	"github.com/elastic/go-elasticsearch/v7/esutil"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/tidwall/sjson"
@@ -31,9 +32,10 @@ import (
 
 // Session contains the information of a elasticsearch session.
 type Session struct {
-	Client       *elasticsearch.Client
-	SearchResult golium.Map
-	Correlator   string
+	Client           *elasticsearch.Client
+	SearchResult     golium.Map
+	Correlator       string
+	indexedDocuments []*IndexedDocument
 }
 
 // ConfigureClient creates a elasticsearch connection based on the URI.
@@ -68,6 +70,11 @@ func (s *Session) NewDocument(ctx context.Context, index string, props map[strin
 	defer res.Body.Close()
 	if res.IsError() {
 		return s.parseErrorResponse(res)
+	}
+	if document, err := s.getResponseIndexedDocument(res); err == nil {
+		s.indexedDocuments = append(s.indexedDocuments, document)
+	} else {
+		logger.LogError(errors.Wrap(err, "failed storeing indexed document"), s.Correlator)
 	}
 	logger.LogCreateIndex(res, data, index, s.Correlator)
 	return nil
@@ -107,6 +114,48 @@ func (s *Session) ValidateDocumentJSONProperties(ctx context.Context, props map[
 	return nil
 }
 
+// CleanUp cleans session by deleting all indexed documents in Elasticsearch
+func (s *Session) CleanUp(ctx context.Context) {
+	logger := GetLogger()
+	indexer, err := esutil.NewBulkIndexer(esutil.BulkIndexerConfig{
+		Client: s.Client,
+	})
+	if err != nil {
+		logger.LogError(errors.Wrap(err, "failed creating indexer to clean up indexes"), s.Correlator)
+		return
+	}
+	for _, document := range s.indexedDocuments {
+		if err := indexer.Add(
+			ctx,
+			esutil.BulkIndexerItem{
+				Action:     "delete",
+				Index:      document.Index,
+				DocumentID: document.Id,
+				OnFailure: func(ctx context.Context, item esutil.BulkIndexerItem, res esutil.BulkIndexerResponseItem, err error) {
+					errMsg := fmt.Sprintf("failed deleting document to clean up indexes for document %+v", document)
+					if err != nil {
+						logger.LogError(errors.Wrap(err, errMsg), s.Correlator)
+					} else {
+						logger.LogError(errors.Wrap(errors.Errorf("elasticsearch error: %s: %s", res.Error.Type, res.Error.Reason), errMsg), s.Correlator)
+					}
+				},
+			},
+		); err != nil {
+			logger.LogError(errors.Wrapf(err, "failed adding indexed item to clean up indexes for document '%+v", document), s.Correlator)
+			return
+		}
+	}
+	if err := indexer.Close(ctx); err != nil {
+		logger.LogError(errors.Wrap(err, "failed closing indexer to clean up indexes"), s.Correlator)
+		return
+	}
+	stats := indexer.Stats()
+	if stats.NumFailed > 0 {
+		logger.LogError(errors.Errorf("failed cleaning up indexes: indexer stats %+v", stats), s.Correlator)
+		return
+	}
+}
+
 func (s *Session) parseErrorResponse(res *esapi.Response) error {
 	resDAO := &Response{}
 	if err := json.NewDecoder(res.Body).Decode(&resDAO); err != nil {
@@ -118,4 +167,12 @@ func (s *Session) parseErrorResponse(res *esapi.Response) error {
 		resDAO.Error.Type,
 		resDAO.Error.Reason,
 	)
+}
+
+func (s *Session) getResponseIndexedDocument(res *esapi.Response) (*IndexedDocument, error) {
+	resDAO := &IndexedDocument{}
+	if err := json.NewDecoder(res.Body).Decode(&resDAO); err != nil {
+		return nil, errors.Wrapf(err, "failed parsing the index response body: %s", err)
+	}
+	return resDAO, nil
 }

@@ -73,3 +73,8 @@ func (l Logger) LogSearchIndex(res *esapi.Response, body, index, corr string) {
 func (l Logger) logResponse(res *esapi.Response, corr string) {
 	l.log.Printf("Response [%s]:\n%s\n\n", corr, res.String())
 }
+
+// LogError logs a creation in elasticsearch in the configured log file.
+func (l Logger) LogError(err error, corr string) {
+	l.log.Printf("Error [%s]:\n%s\n\n", corr, err.Error())
+}
