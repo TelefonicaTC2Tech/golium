@@ -132,18 +132,18 @@ Feature: HTTP client
 
   @http
   Scenario: Follow redirection
-    Given the HTTP endpoint "http://www.elevenpaths.com"
+    Given the HTTP endpoint "http://www.telefonica.es"
      When I send a HTTP "GET" request
       And the HTTP status code must be "200"
 
   @http
   Scenario: Follow no redirection
-    Given the HTTP endpoint "http://www.elevenpaths.com"
+    Given the HTTP endpoint "http://www.telefonica.es"
       And the HTTP client does not follow any redirection
      When I send a HTTP "GET" request
       And the HTTP status code must be "301"
       And the HTTP response must contain the headers
-          | Location | https://www.elevenpaths.com/ |
+          | Location | https://www.telefonica.es/ |
       And I store the header "Location" from the HTTP response in context "header.location"
 
   @http
