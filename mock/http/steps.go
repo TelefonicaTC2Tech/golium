@@ -34,6 +34,9 @@ type Steps struct {
 // InitializeSteps initializes all the steps.
 func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioContext) context.Context {
 	scenCtx.Step(`^I mock the HTTP request at "([^"]*)" for path "([^"]*)" with status "(\d+)" and JSON body$`, func(server, path string, status int, message *godog.DocString) error {
+		if http.StatusText(status) == "" {
+			return fmt.Errorf("status code to return not valid: %d", status)
+		}
 		return MockRequestSimple(ctx, golium.ValueAsString(ctx, server), golium.ValueAsString(ctx, path), status, golium.ValueAsString(ctx, message.Content))
 	})
 	scenCtx.Step(`^I mock the HTTP request at "([^"]*)" with the JSON$`, func(server string, body *godog.DocString) error {
