@@ -229,19 +229,26 @@ func (s *Session) WaitForTextMessage(ctx context.Context, timeout time.Duration,
 func (s *Session) WaitForJSONMessageWithProperties(ctx context.Context, timeout time.Duration, props map[string]interface{}) error {
 	return waitUpTo(timeout, func() error {
 		for _, msg := range s.Messages {
-			logrus.Debugf("Checking message: %s", msg)
-			m := golium.NewMapFromJSONBytes([]byte(msg.Body))
-			for key, expectedValue := range props {
-				value := m.Get(key)
-				if value != expectedValue {
-					return fmt.Errorf("mismatch of json property '%s': expected '%s', actual '%s'", key, expectedValue, value)
-				}
+			logrus.Debugf("Checking message: %s", msg.Body)
+			if matchMessage(string(msg.Body), props) {
+				s.msg = msg
+				return nil
 			}
-			s.msg = msg
-			return nil
 		}
-		return fmt.Errorf("no message received")
+		return fmt.Errorf("not received message with JSON properties '%+v'", props)
 	})
+}
+
+func matchMessage(msg string, expectedProps map[string]interface{}) bool {
+	m := golium.NewMapFromJSONBytes([]byte(msg))
+	for key, expectedValue := range expectedProps {
+		value := m.Get(key)
+		if value != expectedValue {
+			logrus.Debugf("Invalid value: %+v. Expected: %+v", value, expectedValue)
+			return false
+		}
+	}
+	return true
 }
 
 // WaitForMessageWithStandardProperties waits for a message with standard rabbitmq properties that are equal to the expected values.

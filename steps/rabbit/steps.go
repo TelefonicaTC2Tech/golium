@@ -90,7 +90,7 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 		}
 		return nil
 	})
-	scenCtx.Step(`^I wait up to "(\d+)" seconds? for a rabbit message with the standard rabbitmq properties$`, func(timeout int, t *godog.Table) error {
+	scenCtx.Step(`^I wait up to "(\d+)" seconds? for a rabbit message with the standard properties$`, func(timeout int, t *godog.Table) error {
 		timeoutDuration := time.Duration(timeout) * time.Second
 		var props amqp.Delivery
 		if err := golium.ConvertTableWithoutHeaderToStruct(ctx, t, &props); err != nil {
