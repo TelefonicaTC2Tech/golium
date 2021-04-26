@@ -30,7 +30,7 @@ type Steps struct {
 
 // InitializeSteps initializes all the steps.
 func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioContext) context.Context {
-	// Initialize the RabbitMQ session in the context
+	// Initialize the rabbit session in the context
 	ctx = InitializeContext(ctx)
 	session := GetSession(ctx)
 	// Initialize the steps
@@ -43,17 +43,17 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 	scenCtx.Step(`^I unsubscribe from the rabbit topic "([^"]*)"$`, func(topic string) error {
 		return session.UnsubscribeTopic(ctx, golium.ValueAsString(ctx, topic))
 	})
-	scenCtx.Step(`^I set rabbitmq headers$`, func(t *godog.Table) error {
+	scenCtx.Step(`^I set rabbit headers$`, func(t *godog.Table) error {
 		props, err := golium.ConvertTableToMap(ctx, t)
 		if err != nil {
 			return fmt.Errorf("failed processing table to a map for the request body: %w", err)
 		}
 		return session.ConfigureHeaders(ctx, props)
 	})
-	scenCtx.Step(`^I set standard rabbitmq properties$`, func(t *godog.Table) error {
+	scenCtx.Step(`^I set standard rabbit properties$`, func(t *godog.Table) error {
 		var props amqp.Publishing
 		if err := golium.ConvertTableWithoutHeaderToStruct(ctx, t, &props); err != nil {
-			return fmt.Errorf("failed configuring rabbitmq endpoint: %w", err)
+			return fmt.Errorf("failed configuring rabbit endpoint: %w", err)
 		}
 		return session.ConfigureStandardProperties(ctx, props)
 	})
@@ -94,7 +94,7 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 		timeoutDuration := time.Duration(timeout) * time.Second
 		var props amqp.Delivery
 		if err := golium.ConvertTableWithoutHeaderToStruct(ctx, t, &props); err != nil {
-			return fmt.Errorf("failed processing table to a map for the standard RabbitMQ properties: %w", err)
+			return fmt.Errorf("failed processing table to a map for the standard rabbit properties: %w", err)
 		}
 		return session.WaitForMessageWithStandardProperties(ctx, timeoutDuration, props)
 	})
@@ -102,21 +102,21 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 		timeoutDuration := time.Duration(timeout) * time.Second
 		var props amqp.Delivery
 		if err := golium.ConvertTableWithoutHeaderToStruct(ctx, t, &props); err != nil {
-			return fmt.Errorf("failed processing table to a map for the standard RabbitMQ properties: %w", err)
+			return fmt.Errorf("failed processing table to a map for the standard rabbit properties: %w", err)
 		}
 		if err := session.WaitForMessageWithStandardProperties(ctx, timeoutDuration, props); err == nil {
-			return fmt.Errorf("received a message with standard RabbitMQ properties '%+v'", props)
+			return fmt.Errorf("received a message with standard rabbit properties '%+v'", props)
 		}
 		return nil
 	})
-	scenCtx.Step(`^the rabbit message has the rabbitmq headers$`, func(t *godog.Table) error {
+	scenCtx.Step(`^the rabbit message has the rabbit headers$`, func(t *godog.Table) error {
 		headers, err := golium.ConvertTableToMap(ctx, t)
 		if err != nil {
 			return fmt.Errorf("failed processing table to a map for the rabbit message: %w", err)
 		}
 		return session.ValidateMessageHeaders(ctx, headers)
 	})
-	scenCtx.Step(`^the rabbit message has the standard rabbitmq properties$`, func(t *godog.Table) error {
+	scenCtx.Step(`^the rabbit message has the standard rabbit properties$`, func(t *godog.Table) error {
 		var props amqp.Delivery
 		if err := golium.ConvertTableWithoutHeaderToStruct(ctx, t, &props); err != nil {
 			return fmt.Errorf("failed configuring rabbit endpoint: %w", err)

@@ -44,7 +44,7 @@ type Session struct {
 	headers amqp.Table
 	// rabbit publishing message
 	publishing amqp.Publishing
-	// rabbitmq received delivery message
+	// rabbit received delivery message
 	msg amqp.Delivery
 }
 
@@ -61,16 +61,16 @@ func (s *Session) ConfigureConnection(ctx context.Context, uri string) error {
 	return nil
 }
 
-// ConfigureHeaders stores a table of rabbitmq headers in the application context.
+// ConfigureHeaders stores a table of rabbit headers in the application context.
 func (s *Session) ConfigureHeaders(ctx context.Context, headers map[string]interface{}) error {
 	s.headers = headers
 	if err := s.headers.Validate(); err != nil {
-		return errors.Wrap(err, "failed setting rabbitmq headers")
+		return errors.Wrap(err, "failed setting rabbit headers")
 	}
 	return nil
 }
 
-// SetHeaders stores a standard rabbitmq properties in the application context.
+// SetHeaders stores standard rabbit properties in the application context.
 func (s *Session) ConfigureStandardProperties(ctx context.Context, props amqp.Publishing) error {
 	s.publishing = props
 	return nil
@@ -251,7 +251,7 @@ func matchMessage(msg string, expectedProps map[string]interface{}) bool {
 	return true
 }
 
-// WaitForMessageWithStandardProperties waits for a message with standard rabbitmq properties that are equal to the expected values.
+// WaitForMessageWithStandardProperties waits for a message with standard rabbit properties that are equal to the expected values.
 func (s *Session) WaitForMessageWithStandardProperties(ctx context.Context, timeout time.Duration, props amqp.Delivery) error {
 	return waitUpTo(timeout, func() error {
 		for _, msg := range s.Messages {
@@ -266,7 +266,7 @@ func (s *Session) WaitForMessageWithStandardProperties(ctx context.Context, time
 	})
 }
 
-// ValidateMessageStandardProperties checks if the message standard rabbitmq properties are equal the expected values.
+// ValidateMessageStandardProperties checks if the message standard rabbit properties are equal the expected values.
 func (s *Session) ValidateMessageStandardProperties(ctx context.Context, props amqp.Delivery) error {
 	msg := reflect.ValueOf(s.msg)
 	expectedMsg := reflect.ValueOf(props)
@@ -277,23 +277,23 @@ func (s *Session) ValidateMessageStandardProperties(ctx context.Context, props a
 			value := msg.Field(i).Interface()
 			expectedValue := expectedMsg.Field(i).Interface()
 			if value != expectedValue {
-				return fmt.Errorf("mismatch of standard rabbitmq property '%s': expected '%s', actual '%s'", key, expectedValue, value)
+				return fmt.Errorf("mismatch of standard rabbit property '%s': expected '%s', actual '%s'", key, expectedValue, value)
 			}
 		}
 	}
 	return nil
 }
 
-// ValidateMessageHeaders checks if the message rabbitmq headers are equal the expected values.
+// ValidateMessageHeaders checks if the message rabbit headers are equal the expected values.
 func (s *Session) ValidateMessageHeaders(ctx context.Context, headers map[string]interface{}) error {
 	h := s.msg.Headers
 	for key, expectedValue := range headers {
 		value, found := h[key]
 		if !found {
-			return fmt.Errorf("missing rabbitmq message header '%s'", key)
+			return fmt.Errorf("missing rabbit message header '%s'", key)
 		}
 		if value != expectedValue {
-			return fmt.Errorf("mismatch of standard rabbitmq property '%s': expected '%s', actual '%s'", key, expectedValue, value)
+			return fmt.Errorf("mismatch of standard rabbit property '%s': expected '%s', actual '%s'", key, expectedValue, value)
 		}
 	}
 	return nil
@@ -323,7 +323,6 @@ func (s *Session) ValidateMessageJSONBody(ctx context.Context, props map[string]
 func waitUpTo(timeout time.Duration, f func() error) error {
 	end := time.Now().Add(timeout)
 	var err error
-	err = fmt.Errorf("time has expired without message")
 	for time.Now().Before(end) {
 		time.Sleep(10 * time.Millisecond)
 		if err = f(); err == nil {
