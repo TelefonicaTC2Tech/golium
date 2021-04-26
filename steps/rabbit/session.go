@@ -255,7 +255,7 @@ func matchMessage(msg string, expectedProps map[string]interface{}) bool {
 func (s *Session) WaitForMessageWithStandardProperties(ctx context.Context, timeout time.Duration, props amqp.Delivery) error {
 	return waitUpTo(timeout, func() error {
 		for _, msg := range s.Messages {
-			logrus.Debugf("Checking message: %s", msg)
+			logrus.Debugf("Checking message: %s", msg.Body)
 			s.msg = msg
 			if err := s.ValidateMessageStandardProperties(ctx, props); err == nil {
 				s.Messages = []amqp.Delivery{msg}
