@@ -86,9 +86,9 @@ Feature: Rabbit client
 
   @rabbit
   Scenario: Subscribe and waits for no message
+    Given I generate a UUID and store it in context "CorrelationId"
     Given the rabbit endpoint "amqp://guest:guest@localhost:5672/"
      When I subscribe to the rabbit topic "test-rabbitmq-empty-topic"
-     Then I wait up to "3" seconds without a rabbit message with the JSON properties
-          | id       | never-sent |
-          | name     | Golium     |
+     Then I wait up to "3" seconds without a rabbit message with the standard properties
+          | CorrelationId | [CTXT:CorrelationId] |
       And I unsubscribe from the rabbit topic "test-rabbitmq-empty-topic"

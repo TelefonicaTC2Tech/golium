@@ -94,9 +94,20 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 		timeoutDuration := time.Duration(timeout) * time.Second
 		var props amqp.Delivery
 		if err := golium.ConvertTableWithoutHeaderToStruct(ctx, t, &props); err != nil {
-			return fmt.Errorf("failed processing table to a map for the standard rabbitmq properties: %w", err)
+			return fmt.Errorf("failed processing table to a map for the standard RabbitMQ properties: %w", err)
 		}
 		return session.WaitForMessageWithStandardProperties(ctx, timeoutDuration, props)
+	})
+	scenCtx.Step(`^I wait up to "(\d+)" seconds? without a rabbit message with the standard properties$`, func(timeout int, t *godog.Table) error {
+		timeoutDuration := time.Duration(timeout) * time.Second
+		var props amqp.Delivery
+		if err := golium.ConvertTableWithoutHeaderToStruct(ctx, t, &props); err != nil {
+			return fmt.Errorf("failed processing table to a map for the standard RabbitMQ properties: %w", err)
+		}
+		if err := session.WaitForMessageWithStandardProperties(ctx, timeoutDuration, props); err == nil {
+			return fmt.Errorf("received a message with standard RabbitMQ properties '%+v'", props)
+		}
+		return nil
 	})
 	scenCtx.Step(`^the rabbit message has the rabbitmq headers$`, func(t *godog.Table) error {
 		headers, err := golium.ConvertTableToMap(ctx, t)
