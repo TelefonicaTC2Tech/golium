@@ -69,7 +69,7 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 	})
 	scenCtx.Step(`^I wait up to "(\d+)" seconds? for a rabbit message with the text$`, func(timeout int, message *godog.DocString) error {
 		timeoutDuration := time.Duration(timeout) * time.Second
-		return session.WaitForTextMessage(ctx, timeoutDuration, message.Content)
+		return session.WaitForTextMessage(ctx, timeoutDuration, golium.ValueAsString(ctx, message.Content))
 	})
 	scenCtx.Step(`^I wait up to "(\d+)" seconds? for a rabbit message with the JSON properties$`, func(timeout int, t *godog.Table) error {
 		timeoutDuration := time.Duration(timeout) * time.Second
