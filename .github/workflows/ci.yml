@@ -9,9 +9,9 @@ on:
 jobs:
 
   build:
-    
+
     runs-on: ubuntu-latest
-    
+
     services:
       redis:
         image: redis
@@ -24,7 +24,7 @@ jobs:
           - 6379:6379
 
       rabbit:
-        image: rabbitmq:3.8.14-alpine
+        image: rabbitmq:3.8.14
         ports:
           - 5672:5672
         options: >-
@@ -33,6 +33,17 @@ jobs:
           --health-timeout 5s
           --health-retries 5
      
+      elasticsearch:
+        image: elasticsearch:7.12.0
+        ports:
+          - 9200:9200
+        options: >-
+          -e="discovery.type=single-node"
+          --health-cmd "curl http://localhost:9200/_cluster/health"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
     - uses: actions/checkout@v2
 
