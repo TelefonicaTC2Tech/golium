@@ -40,9 +40,6 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 	scenCtx.Step(`^I subscribe to the rabbit topic "([^"]*)"$`, func(topic string) error {
 		return session.SubscribeTopic(ctx, golium.ValueAsString(ctx, topic))
 	})
-	scenCtx.Step(`^I unsubscribe from the rabbit topic "([^"]*)"$`, func(topic string) error {
-		return session.UnsubscribeTopic(ctx, golium.ValueAsString(ctx, topic))
-	})
 	scenCtx.Step(`^I set rabbit headers$`, func(t *godog.Table) error {
 		props, err := golium.ConvertTableToMap(ctx, t)
 		if err != nil {
@@ -133,6 +130,9 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 			return fmt.Errorf("failed processing table to a map for the rabbit message: %w", err)
 		}
 		return session.ValidateMessageJSONBody(ctx, props)
+	})
+	scenCtx.AfterScenario(func(sc *godog.Scenario, err error) {
+		session.Unsubscribe(ctx)
 	})
 	return ctx
 }

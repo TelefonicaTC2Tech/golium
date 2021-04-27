@@ -70,7 +70,7 @@ func (s *Session) ConfigureHeaders(ctx context.Context, headers map[string]inter
 	return nil
 }
 
-// SetHeaders stores standard rabbit properties in the application context.
+// ConfigureStandardProperties stores a table of rabbit properties in the application context.
 func (s *Session) ConfigureStandardProperties(ctx context.Context, props amqp.Publishing) error {
 	s.publishing = props
 	return nil
@@ -139,11 +139,13 @@ func (s *Session) SubscribeTopic(ctx context.Context, topic string) error {
 	return nil
 }
 
-// UnsubscribeTopic unsubscribes from a rabbit topic to stop receiving messages via a channel.
-// The channel is closed.
+// Unsubscribe unsubscribes from rabbit closing the channel asociated.
 // If this method is not invoked, then the goroutine created with SubscribeTopic is never closed
-// and will permanently process messages from the topic until the program is finished.
-func (s *Session) UnsubscribeTopic(ctx context.Context, topic string) error {
+// and will permanently processing messages from the topic until the program is finished.
+func (s *Session) Unsubscribe(ctx context.Context) error {
+	if s.channel == nil {
+		return nil
+	}
 	return s.channel.Close()
 }
 

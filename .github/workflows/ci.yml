@@ -24,7 +24,7 @@ jobs:
           - 6379:6379
 
       rabbit:
-        image: rabbitmq:3.8.14
+        image: rabbitmq:3.8.3
         ports:
           - 5672:5672
         options: >-
