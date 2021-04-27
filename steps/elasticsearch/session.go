@@ -74,7 +74,7 @@ func (s *Session) NewDocument(ctx context.Context, index string, props map[strin
 	if document, err := s.getResponseIndexedDocument(res); err == nil {
 		s.indexedDocuments = append(s.indexedDocuments, document)
 	} else {
-		logger.LogError(errors.Wrap(err, "failed storeing indexed document"), s.Correlator)
+		logger.LogError(errors.Wrap(err, "failed storing indexed document"), s.Correlator)
 	}
 	logger.LogCreateIndex(res, data, index, s.Correlator)
 	return nil
@@ -136,7 +136,7 @@ func (s *Session) CleanUp(ctx context.Context) {
 					if err != nil {
 						logger.LogError(errors.Wrap(err, errMsg), s.Correlator)
 					} else {
-						logger.LogError(errors.Wrap(errors.Errorf("elasticsearch error: %s: %s", res.Error.Type, res.Error.Reason), errMsg), s.Correlator)
+						logger.LogError(errors.Wrap(errors.Errorf("elasticsearch error. %s: %s", res.Error.Type, res.Error.Reason), errMsg), s.Correlator)
 					}
 				},
 			},
