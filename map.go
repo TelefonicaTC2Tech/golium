@@ -61,6 +61,9 @@ func (m *gjsonMap) Get(path string) interface{} {
 	case gjson.Number:
 		return result.Float()
 	default:
+		if result.IsArray() {
+			return result.Array()
+		}
 		return result.String()
 	}
 }

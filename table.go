@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/cucumber/godog"
+	"github.com/tidwall/gjson"
 )
 
 // ConvertTableToMap converts a godog table with 2 columns into a map[string]interface{}.
@@ -142,6 +143,8 @@ func ConvertTableWithHeaderToStructSlice(ctx context.Context, t *godog.Table, sl
 // 		})
 // It will be equivalent to:
 //		testElement := TestElement{Name: "example 1", Value: 1}
+// Warning: still pending process values directly as arrays, i.e.: | addresses | ["http://localhost:8080"] |
+//          use by now a CONF tag, i.e.: | addresses | [CONF:elasticsearch.addresses] |
 func ConvertTableWithoutHeaderToStruct(ctx context.Context, t *godog.Table, v interface{}) error {
 	if len(t.Rows) == 0 {
 		return nil
@@ -189,6 +192,22 @@ func assignFieldInStruct(value reflect.Value, fieldName string, fieldValue inter
 		f = fv.Elem()
 	}
 	fieldValueStr := fmt.Sprintf("%v", fieldValue)
+	if f.Kind() == reflect.Slice {
+		array, ok := fieldValue.([]gjson.Result)
+		if !ok {
+			return fmt.Errorf("failed setting the field '%s' with value '%s', not an array/slice", fieldName, fieldValueStr)
+		}
+		length := len(array)
+		var fv reflect.Value
+		if length > 0 {
+			fv = makeSlice(array[0], length)
+			for i, v := range array {
+				setSliceValue(fv.Index(i), v)
+			}
+		}
+		f.Set(fv)
+		return nil
+	}
 	if f.Kind() == reflect.String {
 		f.SetString(fieldValueStr)
 		return nil
@@ -234,4 +253,31 @@ func assignFieldInStruct(value reflect.Value, fieldName string, fieldValue inter
 		return nil
 	}
 	return nil
+}
+
+func makeSlice(element gjson.Result, length int) reflect.Value {
+	var rv reflect.Value
+	switch element.Type {
+	case gjson.False, gjson.True:
+		var b bool
+		rv = reflect.ValueOf(b)
+	case gjson.Number:
+		var i int
+		rv = reflect.ValueOf(i)
+	case gjson.String, gjson.JSON, gjson.Null:
+		var s string
+		rv = reflect.ValueOf(s)
+	}
+	return reflect.MakeSlice(reflect.SliceOf(rv.Type()), length, length)
+}
+
+func setSliceValue(field reflect.Value, value gjson.Result) {
+	switch value.Type {
+	case gjson.False, gjson.True:
+		field.Set(reflect.ValueOf(value.Bool()))
+	case gjson.Number:
+		field.Set(reflect.ValueOf(value.Int()))
+	case gjson.String, gjson.JSON, gjson.Null:
+		field.Set(reflect.ValueOf(value.String()))
+	}
 }

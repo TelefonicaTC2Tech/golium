@@ -96,3 +96,8 @@ signPublicKey: |
 
 # HTTP mock settings
 httpMockUrl: http://localhost:9000
+
+# elasticsearch settings
+elasticsearch:
+  addresses:
+    - http://localhost:9200

@@ -3,7 +3,7 @@ Feature: Elasticsearch client
   @elasticsearch
   Scenario: Create and search a document
     Given the elasticsearch server
-          | addresses     | [ http://localhost:9200 ] |
+          | addresses | [CONF:elasticsearch.addresses] |
      When I create the elasticsearch document with index "example" and the JSON properties
           | name   | example                             |
           | number | [NUMBER:1]                          |
