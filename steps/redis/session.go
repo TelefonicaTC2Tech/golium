@@ -151,10 +151,6 @@ func (s *Session) ValidateJSONValue(ctx context.Context, key string, props map[s
 
 // ValidateNonExistantKey checks if the redis key has not value.
 func (s *Session) ValidateNonExistantKey(ctx context.Context, key string) error {
-	err := s.ValidateNonExistantKey(ctx, key)
-	if err == nil {
-		return fmt.Errorf("failed validating key: key '%s' does not exist", key)
-	}
 	exists, err := s.Client.Exists(context.Background(), key).Result()
 	if err != nil {
 		if err == redis.Nil {
