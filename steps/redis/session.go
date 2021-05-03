@@ -60,7 +60,11 @@ func (s *Session) ConfigureTTL(ctx context.Context, ttl int) error {
 // It uses session TTL to establish an expiration time (no expiration if TTL is 0).
 func (s *Session) SetTextValue(ctx context.Context, key, value string) error {
 	expiration := time.Duration(s.TTL * int(time.Millisecond))
-	return s.Client.Set(context.Background(), key, value, expiration).Err()
+	if err := s.Client.Set(context.Background(), key, value, expiration).Err(); err != nil {
+		return err
+	}
+	GetLogger().LogSetKey(key, value, s.Correlator)
+	return nil
 }
 
 // SetHashValue sets a redis key with a mapped value.
@@ -74,7 +78,11 @@ func (s *Session) SetHashValue(ctx context.Context, key string, value map[string
 		return nil
 	}
 	expiration := time.Duration(s.TTL * int(time.Millisecond))
-	return s.Client.PExpire(context.Background(), key, expiration).Err()
+	if err := s.Client.PExpire(context.Background(), key, expiration).Err(); err != nil {
+		return err
+	}
+	GetLogger().LogHSetKey(key, value, s.Correlator)
+	return nil
 }
 
 // SetJSONValue sets a redis key with a JSON document extracted from a table of properties.
@@ -100,6 +108,7 @@ func (s *Session) ValidateTextValue(ctx context.Context, key, expectedValue stri
 	if err != nil {
 		return err
 	}
+	GetLogger().LogGetKey(key, value, s.Correlator)
 	if expectedValue != value {
 		return fmt.Errorf("mismatch value for key '%s': expected value '%s', actual value '%s'", key, expectedValue, value)
 	}
@@ -117,6 +126,7 @@ func (s *Session) ValidateHashValue(ctx context.Context, key string, props map[s
 	if err != nil {
 		return err
 	}
+	GetLogger().LogHGetKey(key, m, s.Correlator)
 	for key, expectedValue := range props {
 		value, found := m[key]
 		if !found {
@@ -139,6 +149,7 @@ func (s *Session) ValidateJSONValue(ctx context.Context, key string, props map[s
 	if err != nil {
 		return err
 	}
+	GetLogger().LogGetKey(key, value, s.Correlator)
 	m := golium.NewMapFromJSONBytes([]byte(value))
 	for key, expectedValue := range props {
 		value := m.Get(key)
@@ -158,6 +169,7 @@ func (s *Session) ValidateNonExistantKey(ctx context.Context, key string) error 
 		}
 		return err
 	}
+	GetLogger().LogExistsKey(key, int(exists), s.Correlator)
 	if exists == 0 {
 		return nil
 	}

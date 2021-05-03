@@ -57,6 +57,31 @@ func NewLogger(path string) (*Logger, error) {
 	}, nil
 }
 
+// LogSetKey logs a redis SET command.
+func (l Logger) LogSetKey(key, value, corr string) {
+	l.log.Printf("Set key %s to [%s]:\n%s\n\n", key, corr, value)
+}
+
+// LogHSetKey logs a redis HSET command.
+func (l Logger) LogHSetKey(key string, value interface{}, corr string) {
+	l.log.Printf("HSet key %s to [%s]:\n%+v\n\n", key, corr, value)
+}
+
+// LogGetKey logs a redis GET command.
+func (l Logger) LogGetKey(key, value string, corr string) {
+	l.log.Printf("Get key %s with value[%s]:\n%s\n\n", key, corr, value)
+}
+
+// LogHGetKey logs a redis HGET command.
+func (l Logger) LogHGetKey(key string, value interface{}, corr string) {
+	l.log.Printf("HGet key %s with value[%s]:\n%+v\n\n", key, corr, value)
+}
+
+// LogExistsKey logs a redis EXISTS command.
+func (l Logger) LogExistsKey(key string, exits int, corr string) {
+	l.log.Printf("Exists key %s with value[%s]:\n%d\n\n", key, corr, exits)
+}
+
 // LogPublishedMessage logs a redis message published to a topic.
 func (l Logger) LogPublishedMessage(msg, topic, corr string) {
 	l.log.Printf("Publish to %s [%s]:\n%s\n\n", topic, corr, msg)
