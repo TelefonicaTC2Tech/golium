@@ -92,6 +92,10 @@ func (s *Session) SetJSONValue(ctx context.Context, key string, props map[string
 // ValidateTextValue checks if the text value for a redis key equals the expected value.
 // It uses session TTL to establish an expiration time (no expiration if TTL is 0).
 func (s *Session) ValidateTextValue(ctx context.Context, key, expectedValue string) error {
+	err := s.ValidateNonExistantKey(ctx, key)
+	if err == nil {
+		return fmt.Errorf("failed validating key: key '%s' does not exist", key)
+	}
 	value, err := s.Client.Get(context.Background(), key).Result()
 	if err != nil {
 		return err
@@ -105,6 +109,10 @@ func (s *Session) ValidateTextValue(ctx context.Context, key, expectedValue stri
 // ValidateHashValue checks if the mapped value for a redis key equals the expected value.
 // It uses session TTL to establish an expiration time (no expiration if TTL is 0).
 func (s *Session) ValidateHashValue(ctx context.Context, key string, props map[string]interface{}) error {
+	err := s.ValidateNonExistantKey(ctx, key)
+	if err == nil {
+		return fmt.Errorf("failed validating key: key '%s' does not exist", key)
+	}
 	m, err := s.Client.HGetAll(context.Background(), key).Result()
 	if err != nil {
 		return err
@@ -123,6 +131,10 @@ func (s *Session) ValidateHashValue(ctx context.Context, key string, props map[s
 
 // ValidateJSONValue checks if the JSON value for a redis key complies with the table of properties.
 func (s *Session) ValidateJSONValue(ctx context.Context, key string, props map[string]interface{}) error {
+	err := s.ValidateNonExistantKey(ctx, key)
+	if err == nil {
+		return fmt.Errorf("failed validating key: key '%s' does not exist", key)
+	}
 	value, err := s.Client.Get(context.Background(), key).Result()
 	if err != nil {
 		return err
@@ -139,6 +151,10 @@ func (s *Session) ValidateJSONValue(ctx context.Context, key string, props map[s
 
 // ValidateNonExistantKey checks if the redis key has not value.
 func (s *Session) ValidateNonExistantKey(ctx context.Context, key string) error {
+	err := s.ValidateNonExistantKey(ctx, key)
+	if err == nil {
+		return fmt.Errorf("failed validating key: key '%s' does not exist", key)
+	}
 	exists, err := s.Client.Exists(context.Background(), key).Result()
 	if err != nil {
 		if err == redis.Nil {
