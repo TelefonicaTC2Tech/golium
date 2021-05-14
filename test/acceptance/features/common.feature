@@ -35,6 +35,5 @@ Feature: Common
       And the value "[CTXT:url.query.b]" must be equal to "test"
 
   @common
-  Scenario: Store my IP 192.168.0.14 in the context
-    Given I store my ip 192.168.0.14 in context "test.ip"
-     Then the value "[CTXT:test.ip]" must be equal to "192.168.0.14"
+  Scenario: Store own ip in context
+    Given I store own ip in context "context.ip"

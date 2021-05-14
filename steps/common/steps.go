@@ -25,7 +25,6 @@ import (
 	"github.com/Telefonica/golium"
 	"github.com/cucumber/godog"
 	"github.com/google/uuid"
-	"github.com/rs/zerolog/log"
 	"github.com/sirupsen/logrus"
 )
 
@@ -60,22 +59,17 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 		}
 		return fmt.Errorf("mismatch of values: expected '%s', actual '%s'", e, v)
 	})
-	scenCtx.Step(`^I store my ip( (?:[0-9]{1,3}\.){3}[0-9]{1,3})? in context "([^"]*)"$`, func(desiredIP, key string) error {
-		var ip string
-		if desiredIP == "" {
-			log := logrus.WithField("scenario", "ctx.Name")
-			log.Debug("saving ip in context")
-			cmd := exec.Command("hostname", "-i")
-			stdoutStderr, err := cmd.CombinedOutput()
-			if err != nil {
-				return fmt.Errorf("error executing `%s` command %v", cmd, string(stdoutStderr))
-			}
-			ip = strings.Trim(string(stdoutStderr), " \r\n")
-		} else {
-			ip = strings.Trim(desiredIP, " ")
+	scenCtx.Step(`^I store own ip in context "([^"]*)"$`, func(key string) error {
+		log := logrus.WithField("scenario", "ctx.Name")
+		log.Debug("saving ip in context")
+		cmd := exec.Command("hostname", "-i")
+		stdoutStderr, err := cmd.CombinedOutput()
+		if err != nil {
+			return fmt.Errorf("error executing `%s` command %v", cmd, string(stdoutStderr))
 		}
+		ip := strings.Trim(string(stdoutStderr), " \r\n")
 		golium.GetContext(ctx).Put(golium.ValueAsString(ctx, key), ip)
-		log.Debug().Msg("ip: '" + ip + "' | saved in context\n")
+		log.Debug("ip saved in context\n")
 		return nil
 	})
 	return ctx
