@@ -66,3 +66,8 @@ func (l Logger) LogPublishedMessage(msg, topic, corr string) {
 func (l Logger) LogReceivedMessage(msg, topic, corr string) {
 	l.log.Printf("Received from %s [%s]:\n%s\n\n", topic, corr, msg)
 }
+
+// LogSubscribedTopic logs the subscription to a rabbit topic.
+func (l Logger) LogSubscribedTopic(topic string) {
+	l.log.Printf("Subscribed to %s \n\n", topic)
+}
