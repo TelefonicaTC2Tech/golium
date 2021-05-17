@@ -18,6 +18,8 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"os/exec"
+	"strings"
 	"time"
 
 	"github.com/Telefonica/golium"
@@ -55,6 +57,16 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 			return nil
 		}
 		return fmt.Errorf("mismatch of values: expected '%s', actual '%s'", e, v)
+	})
+	scenCtx.Step(`^I store my local ip in context "([^"]*)"$`, func(key string) error {
+		cmd := exec.Command("hostname", "-i")
+		stdoutStderr, err := cmd.CombinedOutput()
+		if err != nil {
+			return fmt.Errorf("error executing `%s` command %v", cmd, string(stdoutStderr))
+		}
+		ip := strings.Trim(string(stdoutStderr), " \r\n")
+		golium.GetContext(ctx).Put(golium.ValueAsString(ctx, key), ip)
+		return nil
 	})
 	return ctx
 }

@@ -33,3 +33,7 @@ Feature: Common
       And the value "[CTXT:url.rawquery]" must be equal to "a=1&b=test"
       And the value "[CTXT:url.query.a]" must be equal to "1"
       And the value "[CTXT:url.query.b]" must be equal to "test"
+
+  @common
+  Scenario: Store my local ip in context
+    Given I store my local ip in context "context.ip"
