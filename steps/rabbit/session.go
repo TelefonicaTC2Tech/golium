@@ -78,6 +78,7 @@ func (s *Session) ConfigureStandardProperties(ctx context.Context, props amqp.Pu
 
 // SubscribeTopic subscribes to a rabbit topic to receive messages via a channel.
 func (s *Session) SubscribeTopic(ctx context.Context, topic string) error {
+	GetLogger().LogSubscribedTopic(topic)
 	var err error
 	s.channel, err = s.Connection.Channel()
 	if err != nil {
