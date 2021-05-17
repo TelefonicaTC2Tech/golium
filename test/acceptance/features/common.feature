@@ -35,5 +35,5 @@ Feature: Common
       And the value "[CTXT:url.query.b]" must be equal to "test"
 
   @common
-  Scenario: Store own ip in context
+  Scenario: Store my local ip in context
     Given I store my local ip in context "context.ip"
