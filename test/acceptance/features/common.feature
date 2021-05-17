@@ -36,4 +36,4 @@ Feature: Common
 
   @common
   Scenario: Store own ip in context
-    Given I store own ip in context "context.ip"
+    Given I store my local ip in context "context.ip"

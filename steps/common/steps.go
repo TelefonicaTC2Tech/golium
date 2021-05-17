@@ -25,7 +25,6 @@ import (
 	"github.com/Telefonica/golium"
 	"github.com/cucumber/godog"
 	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
 )
 
 // Steps to initialize common steps.
@@ -59,9 +58,7 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 		}
 		return fmt.Errorf("mismatch of values: expected '%s', actual '%s'", e, v)
 	})
-	scenCtx.Step(`^I store own ip in context "([^"]*)"$`, func(key string) error {
-		log := logrus.WithField("scenario", "ctx.Name")
-		log.Debug("saving ip in context")
+	scenCtx.Step(`^I store my local ip in context "([^"]*)"$`, func(key string) error {
 		cmd := exec.Command("hostname", "-i")
 		stdoutStderr, err := cmd.CombinedOutput()
 		if err != nil {
@@ -69,7 +66,6 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 		}
 		ip := strings.Trim(string(stdoutStderr), " \r\n")
 		golium.GetContext(ctx).Put(golium.ValueAsString(ctx, key), ip)
-		log.Debug("ip saved in context\n")
 		return nil
 	})
 	return ctx

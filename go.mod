@@ -12,7 +12,6 @@ require (
 	github.com/lestrrat-go/jwx v1.1.4
 	github.com/miekg/dns v1.1.40
 	github.com/pkg/errors v0.9.1
-	github.com/rs/zerolog v1.21.0
 	github.com/sirupsen/logrus v1.8.0
 	github.com/spf13/pflag v1.0.5
 	github.com/streadway/amqp v1.0.0
@@ -21,5 +20,6 @@ require (
 	github.com/tidwall/sjson v1.1.5
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0
+	golang.org/x/sys v0.0.0-20210119212857-b64e53b001e4 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 )
