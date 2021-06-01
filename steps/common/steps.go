@@ -79,7 +79,7 @@ func StoreValueInContext(ctx context.Context, name, value string) error {
 
 // GenerateUUIDInContext generates a UUID and stores it in golium.Context using the key name.
 func GenerateUUIDInContext(ctx context.Context, name string) error {
-	guid, err := uuid.NewUUID()
+	guid, err := uuid.NewRandom()
 	if err != nil {
 		return fmt.Errorf("failed generating UUID: %w", err)
 	}
