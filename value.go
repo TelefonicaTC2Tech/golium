@@ -73,7 +73,7 @@ var simpleTagFuncs = map[string]func(ctx context.Context) (interface{}, error){
 	"NOW":   func(ctx context.Context) (interface{}, error) { return time.Now().Unix(), nil },
 	"NULL":  func(ctx context.Context) (interface{}, error) { return nil, nil },
 	"UUID": func(ctx context.Context) (interface{}, error) {
-		guid, err := uuid.NewUUID()
+		guid, err := uuid.NewRandom()
 		if err != nil {
 			return "", err
 		}
