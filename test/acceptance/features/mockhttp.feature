@@ -94,7 +94,7 @@ Feature: HTTP Mock server
           | value | test mock response |
 
   @mockhttp
-  Scenario: Mock request with full configuration
+  Scenario: Mock request with full configuration and complex tag nesting
     Given I store "[UUID]" in context "id"
       And I mock the HTTP request at "[CONF:httpMockUrl]" with the JSON
       """
