@@ -23,6 +23,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/google/uuid"
 )
@@ -213,7 +214,7 @@ func NewComposedTag(s string) Tag {
 
 func (t ComposedTag) findSeparators() (separators []separator) {
 	for i, c := range t.s {
-		if c == '[' {
+		if c == '[' && unicode.IsUpper(rune(t.s[i+1])) {
 			sep := separator{opener: true, pos: i}
 			separators = append(separators, sep)
 		} else if c == ']' {

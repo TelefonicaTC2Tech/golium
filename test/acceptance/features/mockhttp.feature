@@ -94,6 +94,33 @@ Feature: HTTP Mock server
           | value | test mock response |
 
   @mockhttp
+  Scenario: Mock request with full configuration
+    Given I store "[UUID]" in context "id"
+      And I mock the HTTP request at "[CONF:httpMockUrl]" with the JSON
+      """
+      {
+        "request": {
+          "method": "POST",
+          "path": "/test/[CTXT:id]"
+        },
+        "response": {
+          "status": 201,
+          "headers": {
+            "Content-Type": ["application/json"]
+          },
+          "body": "{ \"values\": [ { \"type\": \"blacklist\", \"path\": \"/[CTXT:id]-[CTXT:id]\" } ] }"
+        }
+      }
+      """
+    Given the HTTP endpoint "[CONF:httpMockUrl]/test/[CTXT:id]"
+     When I send a HTTP "POST" request
+     Then the HTTP status code must be "201"
+      And the HTTP request headers
+          | Content-Type | application/json |
+      And the HTTP response body must have the JSON properties
+          | values.0.path | /[CTXT:id]-[CTXT:id] |
+
+  @mockhttp
   Scenario: Mock request with timeout
     Given I store "[UUID]" in context "id"
       And I mock the HTTP request at "[CONF:httpMockUrl]" with the JSON
