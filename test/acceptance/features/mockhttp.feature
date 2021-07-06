@@ -143,3 +143,32 @@ Feature: HTTP Mock server
     Given the HTTP endpoint "[CONF:httpMockUrl]/test/[UUID]"
      When I send a HTTP "GET" request
      Then the HTTP status code must be "404"
+
+  @mockhttp
+  Scenario: Mock request with text/plain content
+    Given I store "[UUID]" in context "id"
+      And I mock the HTTP request at "[CONF:httpMockUrl]" with the JSON
+      """
+      {
+        "request": {
+          "method": "GET",
+          "path": "/test/text-plain/[CTXT:id]"
+        },
+        "response": {
+          "status": 200,
+          "headers": {
+            "Content-Type": ["text/plain"]
+          },
+          "body": "Just a plain text format"
+        }
+      }
+      """
+    Given the HTTP endpoint "[CONF:httpMockUrl]/test/text-plain/[CTXT:id]"
+     When I send a HTTP "GET" request
+     Then the HTTP status code must be "200"
+      And the HTTP request headers
+          | Content-Type | text/plain |
+      And the HTTP response body must be the text
+          """
+          Just a plain text format
+          """

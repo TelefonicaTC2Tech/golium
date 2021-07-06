@@ -113,6 +113,9 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 	scenCtx.Step(`^the HTTP response body must be empty$`, func() error {
 		return session.ValidateResponseBodyEmpty(ctx)
 	})
+	scenCtx.Step(`^the HTTP response body must be the text$`, func(message *godog.DocString) error {
+		return session.ValidateResponseBodyText(ctx, golium.ValueAsString(ctx, message.Content))
+	})
 	scenCtx.Step(`^I store the element "([^"]*)" from the JSON HTTP response body in context "([^"]*)"$`, func(key string, ctxtKey string) error {
 		return session.StoreResponseBodyJSONPropertyInContext(ctx, golium.ValueAsString(ctx, key), golium.ValueAsString(ctx, ctxtKey))
 	})

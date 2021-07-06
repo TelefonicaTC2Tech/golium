@@ -281,6 +281,14 @@ func (s *Session) ValidateResponseBodyEmpty(ctx context.Context) error {
 	return errors.New("response body is not empty")
 }
 
+// ValidateResponseBodyText validates that the response body payload is the expected text.
+func (s *Session) ValidateResponseBodyText(ctx context.Context, expectedText string) error {
+	if expectedText == string(s.Response.ResponseBody) {
+		return nil
+	}
+	return fmt.Errorf("response payload: '%v' is not the expected: '%s'", s.Request.RequestBody, expectedText)
+}
+
 // StoreResponseBodyJSONPropertyInContext extracts a JSON property from the HTTP response body and stores it in the context.
 func (s *Session) StoreResponseBodyJSONPropertyInContext(ctx context.Context, key string, ctxtKey string) error {
 	m := golium.NewMapFromJSONBytes(s.Response.ResponseBody)
