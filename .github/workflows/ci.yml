@@ -44,6 +44,20 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+      minio:
+        image: minio/minio
+        ports:
+          - 9000:9000
+        env: 
+          MINIO_ACCESS_KEY: minioadmin
+          MINIO_SECRET_KEY: minioadmin
+        options: >-
+          --entrypoint "minio server" 
+          --health-cmd "curl -f http://localhost:9000/minio/health/live" 
+          --health-interval 10s 
+          --health-timeout 5s 
+          --health-retries 5
+
     steps:
     - uses: actions/checkout@v2
 
@@ -57,4 +71,3 @@ jobs:
 
     - name: Test
       run: go test -v ./...
-
