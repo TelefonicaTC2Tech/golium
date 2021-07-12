@@ -4,6 +4,7 @@ go 1.15
 
 require (
 	github.com/AdguardTeam/dnsproxy v0.37.0
+	github.com/aws/aws-sdk-go v1.38.71
 	github.com/cucumber/godog v0.11.0
 	github.com/elastic/go-elasticsearch/v7 v7.12.0
 	github.com/go-redis/redis/v8 v8.7.1
@@ -20,6 +21,7 @@ require (
 	github.com/tidwall/sjson v1.1.5
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0
+	go.mongodb.org/mongo-driver v1.5.4
 	golang.org/x/sys v0.0.0-20210119212857-b64e53b001e4 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 )

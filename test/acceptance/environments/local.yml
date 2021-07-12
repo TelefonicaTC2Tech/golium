@@ -101,3 +101,13 @@ httpMockUrl: http://localhost:9000
 elasticsearch:
   addresses:
     - http://localhost:9200
+
+# s3
+s3-autoclean: true
+minio: true
+bucket: golium-demo
+# Below config is only required by minio server
+minio-endpoint: https://play.min.io:9000
+minio-aws-access-key-id: Q3AM3UQ867SPQQA43P2F
+minio-aws-secret-access-key: zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG
+minio-aws-region: eu-west-1

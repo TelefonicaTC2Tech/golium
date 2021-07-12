@@ -27,6 +27,7 @@ import (
 	"github.com/Telefonica/golium/steps/jwt"
 	"github.com/Telefonica/golium/steps/rabbit"
 	"github.com/Telefonica/golium/steps/redis"
+	s3steps "github.com/Telefonica/golium/steps/s3"
 	"github.com/cucumber/godog"
 )
 
@@ -54,6 +55,7 @@ func InitializeScenario(ctx context.Context, scenarioCtx *godog.ScenarioContext)
 		rabbit.Steps{},
 		mockhttp.Steps{},
 		elasticsearch.Steps{},
+		s3steps.Steps{},
 	}
 	for _, stepsInitializer := range stepsInitializers {
 		ctx = stepsInitializer.InitializeSteps(ctx, scenarioCtx)
