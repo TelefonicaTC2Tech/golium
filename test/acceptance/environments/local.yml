@@ -103,8 +103,8 @@ elasticsearch:
     - http://localhost:9200
 
 # s3
-s3-autoclean: true
-bucket: golium-demo
+s3Autoclean: true
+s3Bucket: golium-demo
 minio: true
 # Below config is only required by minio server
 minioEndpoint: https://play.min.io:9000

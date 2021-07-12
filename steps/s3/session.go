@@ -26,7 +26,6 @@ import (
 	aws_s "github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/sirupsen/logrus"
 )
 
 type Session struct {
@@ -42,7 +41,6 @@ type CreatedDocument struct {
 // newS3Session initiates a new aws session.
 func (s *Session) newS3Session(ctx context.Context) error {
 	logger := GetLogger()
-	logger.LogMessage("Creating a new S3 session")
 	var err error
 
 	s3Config := &aws.Config{
@@ -59,7 +57,7 @@ func (s *Session) newS3Session(ctx context.Context) error {
 			S3ForcePathStyle: aws.Bool(true),
 		}
 	}
-
+	logger.LogMessage("Creating a new S3 session")
 	s.Client, err = aws_s.NewSession(s3Config)
 	if err != nil {
 		return fmt.Errorf("error creating s3 session. %v", err)
@@ -88,7 +86,8 @@ func (s *Session) uploadS3FileWithContent(ctx context.Context, bucket, key, mess
 
 // createBucket creates a new bucket.
 func (s *Session) createBucket(ctx context.Context, bucket string) error {
-	logrus.Debugf("Creating a new bucket: %s", bucket)
+	logger := GetLogger()
+	logger.LogMessage(fmt.Sprintf("Creating a new bucket: %s", bucket))
 	cparams := &s3.CreateBucketInput{
 		Bucket: aws.String(bucket),
 	}
@@ -96,13 +95,13 @@ func (s *Session) createBucket(ctx context.Context, bucket string) error {
 	s3Client := s3.New(s.Client)
 	_, err := s3Client.CreateBucket(cparams)
 	if err != nil {
-		logrus.Errorf("Error creating a new bucket: %s, err: %v", bucket, err)
+		logger.LogMessage(fmt.Sprintf("Error creating a new bucket: %s, err: %v", bucket, err))
 	}
 	return nil
 }
 
 // validateS3File checks the existence of a file in S3.
-func (s *Session) validateS3File(ctx context.Context, bucket, key string) error {
+func (s *Session) validateS3FileExists(ctx context.Context, bucket, key string) error {
 	logger := GetLogger()
 	logger.LogOperation("validate", bucket, key)
 	s3svc := s3.New(s.Client)
@@ -117,7 +116,7 @@ func (s *Session) validateS3File(ctx context.Context, bucket, key string) error 
 }
 
 // validateS3FileWithContent checks the existence of a file in S3 with the content specified.
-func (s *Session) validateS3FileWithContent(ctx context.Context, bucket, key, message string) error {
+func (s *Session) validateS3FileExistsWithContent(ctx context.Context, bucket, key, message string) error {
 	expected := strings.TrimSpace(message)
 	logger := GetLogger()
 	logger.LogOperation("validate", bucket, key)
@@ -178,7 +177,8 @@ func (s *Session) CleanUp(ctx context.Context) {
 	for _, file := range s.CreatedDocuments {
 		err := s.deleteS3File(ctx, file.bucket, file.key)
 		if err != nil {
-			logrus.Errorf("Failure on deletion of s3 file '%s' in bucket '%s', err %v", file.key, file.bucket, err)
+			logger := GetLogger()
+			logger.LogMessage(fmt.Sprintf("Failure on deletion of s3 file '%s' in bucket '%s', err %v", file.key, file.bucket, err))
 		}
 	}
 }
