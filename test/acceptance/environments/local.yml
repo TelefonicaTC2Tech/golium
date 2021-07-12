@@ -104,10 +104,10 @@ elasticsearch:
 
 # s3
 s3-autoclean: true
-minio: true
 bucket: golium-demo
+minio: true
 # Below config is only required by minio server
-minio-endpoint: http://localhost:9000
-minio-aws-access-key-id: minioadmin
-minio-aws-secret-access-key: minioadmin
-minio-aws-region: eu-west-1
+minioEndpoint: https://play.min.io:9000
+minioAwsAccessKeyId: Q3AM3UQ867SPQQA43P2F
+minioAwsSecretAccessKey: zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG
+minioAwsRegion: eu-west-1

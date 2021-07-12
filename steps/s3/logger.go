@@ -57,7 +57,12 @@ func NewLogger(path string) (*Logger, error) {
 	}, nil
 }
 
-// Log any S3 operation
-func (l Logger) Log(operation, bucket, key string) {
-	l.log.Printf("Operation: %s in bucket: %s for key: %s \n", operation, bucket, key)
+// Log a S3 operation
+func (l Logger) LogOperation(operation, bucket, key string) {
+	l.log.Printf("Operation: %s in bucket: %s for key: %s", operation, bucket, key)
+}
+
+// Log a S3 message
+func (l Logger) LogMessage(message string) {
+	l.log.Printf("%s", message)
 }

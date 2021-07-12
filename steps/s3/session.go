@@ -41,7 +41,8 @@ type CreatedDocument struct {
 
 // newS3Session initiates a new aws session.
 func (s *Session) newS3Session(ctx context.Context) error {
-	logrus.Debugf("Creating a new S3 session")
+	logger := GetLogger()
+	logger.LogMessage("Creating a new S3 session")
 	var err error
 
 	s3Config := &aws.Config{
@@ -51,9 +52,9 @@ func (s *Session) newS3Session(ctx context.Context) error {
 	minio := golium.Value(ctx, "[CONF:minio]").(bool)
 	if minio {
 		s3Config = &aws.Config{
-			Credentials:      credentials.NewStaticCredentials(golium.Value(ctx, "[CONF:minio-aws-access-key-id]").(string), golium.Value(ctx, "[CONF:minio-aws-secret-access-key]").(string), ""),
-			Endpoint:         aws.String(golium.Value(ctx, "[CONF:minio-endpoint]").(string)),
-			Region:           aws.String(golium.Value(ctx, "[CONF:minio-aws-region]").(string)),
+			Credentials:      credentials.NewStaticCredentials(golium.Value(ctx, "[CONF:minioAwsAccessKeyId]").(string), golium.Value(ctx, "[CONF:minioAwsSecretAccessKey]").(string), ""),
+			Endpoint:         aws.String(golium.Value(ctx, "[CONF:minioEndpoint]").(string)),
+			Region:           aws.String(golium.Value(ctx, "[CONF:minioAwsRegion]").(string)),
 			DisableSSL:       aws.Bool(true),
 			S3ForcePathStyle: aws.Bool(true),
 		}
@@ -68,6 +69,8 @@ func (s *Session) newS3Session(ctx context.Context) error {
 
 // uploadS3FileWithContent creates a new file in S3 with the content specified.
 func (s *Session) uploadS3FileWithContent(ctx context.Context, bucket, key, message string) error {
+	logger := GetLogger()
+	logger.LogOperation("upload", bucket, key)
 	uploader := s3manager.NewUploader(s.Client)
 	_, err := uploader.Upload(&s3manager.UploadInput{
 		Bucket: aws.String(bucket),
@@ -75,11 +78,11 @@ func (s *Session) uploadS3FileWithContent(ctx context.Context, bucket, key, mess
 		Body:   strings.NewReader(message),
 	})
 	if err != nil {
+		logger.LogMessage("unable to upload file")
 		return fmt.Errorf("unable to upload %q to %q, %v", key, bucket, err)
 	}
 
 	s.CreatedDocuments = append(s.CreatedDocuments, &CreatedDocument{bucket: bucket, key: key})
-	GetLogger().Log("upload", bucket, key)
 	return nil
 }
 
@@ -100,9 +103,10 @@ func (s *Session) createBucket(ctx context.Context, bucket string) error {
 
 // validateS3File checks the existence of a file in S3.
 func (s *Session) validateS3File(ctx context.Context, bucket, key string) error {
-	logrus.Debugf("Validating s3 file exists bucket '%s' key '%s'", bucket, key)
+	logger := GetLogger()
+	logger.LogOperation("validate", bucket, key)
 	s3svc := s3.New(s.Client)
-	exists, err := s3KeyExists(s3svc, bucket, key)
+	exists, err := s.s3KeyExists(s3svc, bucket, key)
 	if err != nil {
 		return err
 	}
@@ -115,7 +119,8 @@ func (s *Session) validateS3File(ctx context.Context, bucket, key string) error 
 // validateS3FileWithContent checks the existence of a file in S3 with the content specified.
 func (s *Session) validateS3FileWithContent(ctx context.Context, bucket, key, message string) error {
 	expected := strings.TrimSpace(message)
-	logrus.Debugf("Validating s3 file content bucket '%s' key '%s' content:\n%s", bucket, key, expected)
+	logger := GetLogger()
+	logger.LogOperation("validate", bucket, key)
 	downloader := s3manager.NewDownloader(s.Client)
 	buf := aws.NewWriteAtBuffer([]byte{})
 	_, err := downloader.Download(buf, &s3.GetObjectInput{
@@ -134,7 +139,8 @@ func (s *Session) validateS3FileWithContent(ctx context.Context, bucket, key, me
 
 // deleteS3File deletes the file in S3.
 func (s *Session) deleteS3File(ctx context.Context, bucket, key string) error {
-	logrus.Debugf("Delete s3 file in bucket '%s' key '%s'\n", bucket, key)
+	logger := GetLogger()
+	logger.LogOperation("delete", bucket, key)
 	s3svc := s3.New(s.Client)
 	input := &s3.DeleteObjectInput{
 		Bucket: aws.String(bucket),
@@ -148,7 +154,7 @@ func (s *Session) deleteS3File(ctx context.Context, bucket, key string) error {
 }
 
 // s3KeyExists checks the existence of a key in a S3 bucket.
-func s3KeyExists(s3svc *s3.S3, bucket string, key string) (bool, error) {
+func (s *Session) s3KeyExists(s3svc *s3.S3, bucket string, key string) (bool, error) {
 	_, err := s3svc.HeadObject(&s3.HeadObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
@@ -169,7 +175,6 @@ func s3KeyExists(s3svc *s3.S3, bucket string, key string) (bool, error) {
 
 // CleanUp cleans session by deleting all documents created in S3
 func (s *Session) CleanUp(ctx context.Context) {
-	//logger := GetLogger()
 	for _, file := range s.CreatedDocuments {
 		err := s.deleteS3File(ctx, file.bucket, file.key)
 		if err != nil {
