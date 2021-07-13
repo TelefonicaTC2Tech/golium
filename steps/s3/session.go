@@ -93,8 +93,8 @@ func (s *Session) CreateS3Bucket(ctx context.Context, bucket string) error {
 	}
 
 	s3Client := s3.New(s.Client)
-	_, err := s3Client.CreateBucket(cparams)
-	if err != nil {
+
+	if _, err := s3Client.CreateBucket(cparams); err != nil {
 		logger.LogMessage(fmt.Sprintf("error creating a new bucket: %s, err: %v", bucket, err))
 	}
 	return nil
@@ -110,17 +110,17 @@ func (s *Session) ValidateS3BucketExists(ctx context.Context, bucket string) err
 
 	s3Client := s3.New(s.Client)
 	_, err := s3Client.CreateBucket(cparams)
-	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok {
-			if aerr.Code() == s3.ErrCodeBucketAlreadyExists || aerr.Code() == s3.ErrCodeBucketAlreadyOwnedByYou {
-				logger.LogMessage(fmt.Sprintf("validated the existence of bucket: %s", bucket))
-				return nil
-			}
-		} else {
-			return fmt.Errorf("error validating the existence of bucket: %s", bucket)
+
+	if err == nil {
+		return fmt.Errorf("bucket: '%s' does not exists", bucket)
+	}
+	if aerr, ok := err.(awserr.Error); ok {
+		if aerr.Code() == s3.ErrCodeBucketAlreadyExists || aerr.Code() == s3.ErrCodeBucketAlreadyOwnedByYou {
+			logger.LogMessage(fmt.Sprintf("validated the existence of bucket: %s", bucket))
+			return nil
 		}
 	}
-	return fmt.Errorf("bucket: '%s' does not exists", bucket)
+	return fmt.Errorf("error validating the existence of bucket: %s", bucket)
 }
 
 // ValidateS3FileExists checks the existence of a file in S3.
@@ -181,25 +181,25 @@ func (s *Session) s3KeyExists(s3svc *s3.S3, bucket string, key string) (bool, er
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
 	})
-	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok {
-			switch aerr.Code() {
-			case "NotFound": // s3.ErrCodeNoSuchKey does not work, aws is missing this error code so we hardwire a string
-				return false, nil
-			default:
-				return false, err
-			}
-		}
+
+	if err == nil {
+		return true, nil
+	}
+	var aerr awserr.Error
+	var ok bool
+	if aerr, ok = err.(awserr.Error); !ok {
 		return false, err
 	}
-	return true, nil
+	if aerr.Code() == "NotFound" {
+		return false, nil
+	}
+	return false, err
 }
 
 // CleanUp cleans session by deleting all documents created in S3
 func (s *Session) CleanUp(ctx context.Context) {
 	for _, file := range s.CreatedDocuments {
-		err := s.DeleteS3File(ctx, file.bucket, file.key)
-		if err != nil {
+		if err := s.DeleteS3File(ctx, file.bucket, file.key); err != nil {
 			logger := GetLogger()
 			logger.LogMessage(fmt.Sprintf("Failure on deletion of s3 file '%s' in bucket '%s', err %v", file.key, file.bucket, err))
 		}
