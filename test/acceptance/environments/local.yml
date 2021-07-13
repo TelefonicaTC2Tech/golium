@@ -101,3 +101,14 @@ httpMockUrl: http://localhost:9000
 elasticsearch:
   addresses:
     - http://localhost:9200
+
+# s3
+s3Autoclean: true
+s3Bucket: golium-demo
+minio: true
+# Below config is only required by minio server
+# To grant access to AWS unset minio and configure env vars: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION
+minioEndpoint: https://play.min.io:9000
+minioAwsAccessKeyId: Q3AM3UQ867SPQQA43P2F
+minioAwsSecretAccessKey: zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG
+minioAwsRegion: eu-west-1
