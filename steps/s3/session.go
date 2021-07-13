@@ -41,7 +41,7 @@ type CreatedDocument struct {
 // NewS3Session initiates a new aws session.
 func (s *Session) NewS3Session(ctx context.Context) error {
 	logger := GetLogger()
-	var err error
+	logger.LogMessage("Creating a new S3 session")
 
 	s3Config := &aws.Config{
 		Region: aws.String("eu-west-1"),
@@ -57,7 +57,7 @@ func (s *Session) NewS3Session(ctx context.Context) error {
 			S3ForcePathStyle: aws.Bool(true),
 		}
 	}
-	logger.LogMessage("Creating a new S3 session")
+	var err error
 	s.Client, err = aws_s.NewSession(s3Config)
 	if err != nil {
 		return fmt.Errorf("error creating s3 session. %v", err)
@@ -100,8 +100,8 @@ func (s *Session) CreateS3Bucket(ctx context.Context, bucket string) error {
 	return nil
 }
 
-// ValidateS3Bucket verifies the existence of a bucket.
-func (s *Session) ValidateS3Bucket(ctx context.Context, bucket string) error {
+// ValidateS3BucketExists verifies the existence of a bucket.
+func (s *Session) ValidateS3BucketExists(ctx context.Context, bucket string) error {
 	logger := GetLogger()
 	logger.LogMessage(fmt.Sprintf("validating the existence of bucket: %s", bucket))
 	cparams := &s3.CreateBucketInput{
@@ -123,7 +123,7 @@ func (s *Session) ValidateS3Bucket(ctx context.Context, bucket string) error {
 	return fmt.Errorf("bucket: '%s' does not exists", bucket)
 }
 
-// ValidateS3File checks the existence of a file in S3.
+// ValidateS3FileExists checks the existence of a file in S3.
 func (s *Session) ValidateS3FileExists(ctx context.Context, bucket, key string) error {
 	logger := GetLogger()
 	logger.LogOperation("validate", bucket, key)

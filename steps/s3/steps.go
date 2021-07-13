@@ -52,7 +52,7 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 		if session.Client == nil {
 			return fmt.Errorf("failed creating S3 file: nil session: may forget step 'I create a new S3 session'")
 		}
-		return session.ValidateS3Bucket(ctx, golium.ValueAsString(ctx, bucket))
+		return session.ValidateS3BucketExists(ctx, golium.ValueAsString(ctx, bucket))
 	})
 	scenCtx.Step(`^the file "([^"]+)" exists in S3 bucket "([^"]+)"$`, func(key, bucket string) error {
 		if session.Client == nil {
