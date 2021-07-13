@@ -58,10 +58,10 @@ func (s *Session) NewS3Session(ctx context.Context) error {
 		}
 	}
 	var err error
-	s.Client, err = aws_s.NewSession(s3Config)
-	if err != nil {
+	if s.Client, err = aws_s.NewSession(s3Config); err != nil {
 		return fmt.Errorf("error creating s3 session. %v", err)
 	}
+
 	return nil
 }
 
@@ -109,11 +109,10 @@ func (s *Session) ValidateS3BucketExists(ctx context.Context, bucket string) err
 	}
 
 	s3Client := s3.New(s.Client)
-	_, err := s3Client.CreateBucket(cparams)
-
-	if err == nil {
+	if _, err := s3Client.CreateBucket(cparams); err != nil {
 		return fmt.Errorf("bucket: '%s' does not exists", bucket)
 	}
+
 	errorMsg := fmt.Sprintf("error validating the existence of bucket: %s", bucket)
 	var aerr awserr.Error
 	var ok bool
@@ -172,9 +171,8 @@ func (s *Session) DeleteS3File(ctx context.Context, bucket, key string) error {
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
 	}
-	_, err := s3svc.DeleteObject(input)
-	if err != nil {
-		return err
+	if _, err := s3svc.DeleteObject(input); err != nil {
+		return fmt.Errorf("error deleting file '%s' in s3 bucket '%s', err: %v", key, bucket, err)
 	}
 	return nil
 }
