@@ -104,26 +104,15 @@ func (s *Session) CreateS3Bucket(ctx context.Context, bucket string) error {
 func (s *Session) ValidateS3BucketExists(ctx context.Context, bucket string) error {
 	logger := GetLogger()
 	logger.LogMessage(fmt.Sprintf("validating the existence of bucket: %s", bucket))
-	cparams := &s3.CreateBucketInput{
+	// GetBucketLocation is used to validate whether the bucket exists
+	s3svc := s3.New(s.Client)
+	input := &s3.GetBucketLocationInput{
 		Bucket: aws.String(bucket),
 	}
-
-	s3Client := s3.New(s.Client)
-	if _, err := s3Client.CreateBucket(cparams); err != nil {
+	if _, err := s3svc.GetBucketLocation(input); err != nil {
 		return fmt.Errorf("bucket: '%s' does not exists", bucket)
 	}
-
-	errorMsg := fmt.Sprintf("error validating the existence of bucket: %s", bucket)
-	var aerr awserr.Error
-	var ok bool
-	if aerr, ok = err.(awserr.Error); !ok {
-		return fmt.Errorf(errorMsg)
-	}
-	if aerr.Code() == s3.ErrCodeBucketAlreadyExists || aerr.Code() == s3.ErrCodeBucketAlreadyOwnedByYou {
-		logger.LogMessage(fmt.Sprintf("validated the existence of bucket: %s", bucket))
-		return nil
-	}
-	return fmt.Errorf(errorMsg)
+	return nil
 }
 
 // ValidateS3FileExists checks the existence of a file in S3.
