@@ -9,6 +9,7 @@ Feature: S3 client
 
   @s3
   Scenario: Upload file to S3 with content
+     Given the S3 bucket "[CONF:s3Bucket]" exists
      When I create a file in S3 bucket "[CONF:s3Bucket]" with key "[CTXT:key]" and the content
       """
       Document content line 1

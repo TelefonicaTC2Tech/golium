@@ -38,8 +38,8 @@ type CreatedDocument struct {
 	key    string
 }
 
-// newS3Session initiates a new aws session.
-func (s *Session) newS3Session(ctx context.Context) error {
+// NewS3Session initiates a new aws session.
+func (s *Session) NewS3Session(ctx context.Context) error {
 	logger := GetLogger()
 	var err error
 
@@ -65,8 +65,8 @@ func (s *Session) newS3Session(ctx context.Context) error {
 	return nil
 }
 
-// uploadS3FileWithContent creates a new file in S3 with the content specified.
-func (s *Session) uploadS3FileWithContent(ctx context.Context, bucket, key, message string) error {
+// UploadS3FileWithContent creates a new file in S3 with the content specified.
+func (s *Session) UploadS3FileWithContent(ctx context.Context, bucket, key, message string) error {
 	logger := GetLogger()
 	logger.LogOperation("upload", bucket, key)
 	uploader := s3manager.NewUploader(s.Client)
@@ -84,10 +84,10 @@ func (s *Session) uploadS3FileWithContent(ctx context.Context, bucket, key, mess
 	return nil
 }
 
-// createBucket creates a new bucket.
-func (s *Session) createBucket(ctx context.Context, bucket string) error {
+// CreateS3Bucket creates a new bucket.
+func (s *Session) CreateS3Bucket(ctx context.Context, bucket string) error {
 	logger := GetLogger()
-	logger.LogMessage(fmt.Sprintf("Creating a new bucket: %s", bucket))
+	logger.LogMessage(fmt.Sprintf("creating a new bucket: %s", bucket))
 	cparams := &s3.CreateBucketInput{
 		Bucket: aws.String(bucket),
 	}
@@ -95,13 +95,36 @@ func (s *Session) createBucket(ctx context.Context, bucket string) error {
 	s3Client := s3.New(s.Client)
 	_, err := s3Client.CreateBucket(cparams)
 	if err != nil {
-		logger.LogMessage(fmt.Sprintf("Error creating a new bucket: %s, err: %v", bucket, err))
+		logger.LogMessage(fmt.Sprintf("error creating a new bucket: %s, err: %v", bucket, err))
 	}
 	return nil
 }
 
-// validateS3File checks the existence of a file in S3.
-func (s *Session) validateS3FileExists(ctx context.Context, bucket, key string) error {
+// ValidateS3Bucket verifies the existence of a bucket.
+func (s *Session) ValidateS3Bucket(ctx context.Context, bucket string) error {
+	logger := GetLogger()
+	logger.LogMessage(fmt.Sprintf("validating the existence of bucket: %s", bucket))
+	cparams := &s3.CreateBucketInput{
+		Bucket: aws.String(bucket),
+	}
+
+	s3Client := s3.New(s.Client)
+	_, err := s3Client.CreateBucket(cparams)
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			if aerr.Code() == s3.ErrCodeBucketAlreadyExists || aerr.Code() == s3.ErrCodeBucketAlreadyOwnedByYou {
+				logger.LogMessage(fmt.Sprintf("validated the existence of bucket: %s", bucket))
+				return nil
+			}
+		} else {
+			return fmt.Errorf("error validating the existence of bucket: %s", bucket)
+		}
+	}
+	return fmt.Errorf("bucket: '%s' does not exists", bucket)
+}
+
+// ValidateS3File checks the existence of a file in S3.
+func (s *Session) ValidateS3FileExists(ctx context.Context, bucket, key string) error {
 	logger := GetLogger()
 	logger.LogOperation("validate", bucket, key)
 	s3svc := s3.New(s.Client)
@@ -115,8 +138,8 @@ func (s *Session) validateS3FileExists(ctx context.Context, bucket, key string) 
 	return nil
 }
 
-// validateS3FileWithContent checks the existence of a file in S3 with the content specified.
-func (s *Session) validateS3FileExistsWithContent(ctx context.Context, bucket, key, message string) error {
+// ValidateS3FileWithContent checks the existence of a file in S3 with the content specified.
+func (s *Session) ValidateS3FileExistsWithContent(ctx context.Context, bucket, key, message string) error {
 	expected := strings.TrimSpace(message)
 	logger := GetLogger()
 	logger.LogOperation("validate", bucket, key)
@@ -136,8 +159,8 @@ func (s *Session) validateS3FileExistsWithContent(ctx context.Context, bucket, k
 	return nil
 }
 
-// deleteS3File deletes the file in S3.
-func (s *Session) deleteS3File(ctx context.Context, bucket, key string) error {
+// DeleteS3File deletes the file in S3.
+func (s *Session) DeleteS3File(ctx context.Context, bucket, key string) error {
 	logger := GetLogger()
 	logger.LogOperation("delete", bucket, key)
 	s3svc := s3.New(s.Client)
@@ -175,7 +198,7 @@ func (s *Session) s3KeyExists(s3svc *s3.S3, bucket string, key string) (bool, er
 // CleanUp cleans session by deleting all documents created in S3
 func (s *Session) CleanUp(ctx context.Context) {
 	for _, file := range s.CreatedDocuments {
-		err := s.deleteS3File(ctx, file.bucket, file.key)
+		err := s.DeleteS3File(ctx, file.bucket, file.key)
 		if err != nil {
 			logger := GetLogger()
 			logger.LogMessage(fmt.Sprintf("Failure on deletion of s3 file '%s' in bucket '%s', err %v", file.key, file.bucket, err))
