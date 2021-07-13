@@ -114,13 +114,17 @@ func (s *Session) ValidateS3BucketExists(ctx context.Context, bucket string) err
 	if err == nil {
 		return fmt.Errorf("bucket: '%s' does not exists", bucket)
 	}
-	if aerr, ok := err.(awserr.Error); ok {
-		if aerr.Code() == s3.ErrCodeBucketAlreadyExists || aerr.Code() == s3.ErrCodeBucketAlreadyOwnedByYou {
-			logger.LogMessage(fmt.Sprintf("validated the existence of bucket: %s", bucket))
-			return nil
-		}
+	errorMsg := fmt.Sprintf("error validating the existence of bucket: %s", bucket)
+	var aerr awserr.Error
+	var ok bool
+	if aerr, ok = err.(awserr.Error); !ok {
+		return fmt.Errorf(errorMsg)
 	}
-	return fmt.Errorf("error validating the existence of bucket: %s", bucket)
+	if aerr.Code() == s3.ErrCodeBucketAlreadyExists || aerr.Code() == s3.ErrCodeBucketAlreadyOwnedByYou {
+		logger.LogMessage(fmt.Sprintf("validated the existence of bucket: %s", bucket))
+		return nil
+	}
+	return fmt.Errorf(errorMsg)
 }
 
 // ValidateS3FileExists checks the existence of a file in S3.
