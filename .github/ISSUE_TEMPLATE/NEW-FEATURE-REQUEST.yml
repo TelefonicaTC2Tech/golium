@@ -1,0 +1,18 @@
+name: Feature Request
+description: File a feature request
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this feature request report!
+  - type: textarea
+    id: what-is-your-suggestion
+    attributes:
+      label: What is your suggestion?
+      description: Also tell us, how do you expect to use golium?
+      placeholder: Tell us what do you want to see!
+      value: "This would be great!"
+    validations:
+      required: true
