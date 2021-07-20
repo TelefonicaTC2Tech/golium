@@ -111,3 +111,27 @@ Feature: Redis client
           | id       | abc        |
           | name     | unexpected |
      And I unsubscribe from the redis topic "test-topic"
+
+  @redis
+  Scenario: Select database, set and get a text message
+     Given I generate a UUID and store it in context "key"
+      When I select the redis database "1"
+       And I set the redis key "golium:key:text:[CTXT:key]" with the text
+           """
+           This is a test value with id: [CTXT:key]
+           """
+      Then the redis key "golium:key:text:[CTXT:key]" must have the text
+           """
+           This is a test value with id: [CTXT:key]
+           """
+
+  @redis
+  Scenario: Select database, set key, select previous database and key must not exists
+     Given I generate a UUID and store it in context "key"
+      When I select the redis database "1"
+       And I set the redis key "golium:key:text:[CTXT:key]" with the text
+           """
+           This is a test value with id: [CTXT:key]
+           """
+       And I select the redis database "0"
+      Then the redis key "golium:key:text:[CTXT:key]" must not exists

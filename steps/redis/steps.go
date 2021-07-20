@@ -41,6 +41,13 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 		}
 		return session.ConfigureClient(ctx, &options)
 	})
+	scenCtx.Step(`^I select the redis database "([^"]+)"$`, func(id string) error {
+		dbId, err := golium.ValueAsInt(ctx, id)
+		if err != nil {
+			return err
+		}
+		return session.SelectDatabase(ctx, dbId)
+	})
 	scenCtx.Step(`^the redis TTL of "(\d+)" millis`, func(ttl int) error {
 		return session.ConfigureTTL(ctx, ttl)
 	})
