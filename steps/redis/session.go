@@ -50,6 +50,14 @@ func (s *Session) ConfigureClient(ctx context.Context, options *redis.Options) e
 	return nil
 }
 
+// SelectDatabase select redis database for current connection
+func (s *Session) SelectDatabase(ctx context.Context, db int) error {
+	if err := s.Client.Do(ctx, "select", db).Err(); err != nil {
+		return err
+	}
+	return nil
+}
+
 // ConfigureTTL saves TTL (in milliseconds) to apply when setting a value in redis.
 func (s *Session) ConfigureTTL(ctx context.Context, ttl int) error {
 	s.TTL = ttl
