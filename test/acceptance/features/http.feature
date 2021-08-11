@@ -155,3 +155,10 @@ Feature: HTTP client
       And the HTTP status code must be "200"
       And the HTTP response body must have the JSON properties
           | headers.Host | example.com |
+
+  @http
+  Scenario: Validate Not found path with trailing slash
+    Given the HTTP endpoint "[CONF:url]/image"
+      And the HTTP path "/jpeg/"
+     When I send a HTTP "POST" request
+     Then the HTTP status code must be "404"
