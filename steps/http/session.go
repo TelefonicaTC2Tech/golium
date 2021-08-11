@@ -75,7 +75,11 @@ func (s *Session) URL() (*url.URL, error) {
 	if err != nil {
 		return nil, fmt.Errorf("invalid endpoint URL '%s': %w", s.Request.Endpoint, err)
 	}
-	u.Path = path.Join(u.Path, s.Request.Path)
+	u, err = u.Parse(s.Request.Path)
+	if err != nil {
+		return nil, fmt.Errorf("invalid path URL '%s': %w", s.Request.Path, err)
+	}
+
 	params := url.Values(s.Request.QueryParams)
 	u.RawQuery = params.Encode()
 	return u, nil
