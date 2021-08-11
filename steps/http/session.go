@@ -23,7 +23,6 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"path"
 	"time"
 
 	"github.com/Telefonica/golium"
