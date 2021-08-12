@@ -19,11 +19,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
 	"time"
+	"path"
 
 	"github.com/Telefonica/golium"
 	"github.com/google/uuid"
@@ -31,6 +33,10 @@ import (
 	"github.com/xeipuuv/gojsonschema"
 )
 
+const (
+	slash string = "/"
+ )
+ 
 // Request information of the Session.
 type Request struct {
 	// Endpoint of the HTTP server. It might include a base path.
@@ -74,11 +80,10 @@ func (s *Session) URL() (*url.URL, error) {
 	if err != nil {
 		return nil, fmt.Errorf("invalid endpoint URL '%s': %w", s.Request.Endpoint, err)
 	}
-	u, err = u.Parse(s.Request.Path)
-	if err != nil {
-		return nil, fmt.Errorf("invalid path URL '%s': %w", s.Request.Path, err)
+	u.Path = path.Join(u.Path, s.Request.Path)
+	if strings.HasSuffix(s.Request.Path, slash) {
+		u.Path = u.Path + slash
 	}
-
 	params := url.Values(s.Request.QueryParams)
 	u.RawQuery = params.Encode()
 	return u, nil
