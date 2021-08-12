@@ -81,6 +81,7 @@ func (s *Session) URL() (*url.URL, error) {
 		return nil, fmt.Errorf("invalid endpoint URL '%s': %w", s.Request.Endpoint, err)
 	}
 	u.Path = path.Join(u.Path, s.Request.Path)
+	// NOTE: Join removes trailing slash using Clean thus, we need to add it if is s.Request.Path
 	if strings.HasSuffix(s.Request.Path, slash) {
 		u.Path = u.Path + slash
 	}
