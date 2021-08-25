@@ -19,12 +19,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
-	"path"
 	"time"
+	"path"
 
 	"github.com/Telefonica/golium"
 	"github.com/google/uuid"
@@ -32,6 +33,10 @@ import (
 	"github.com/xeipuuv/gojsonschema"
 )
 
+const (
+	slash string = "/"
+ )
+ 
 // Request information of the Session.
 type Request struct {
 	// Endpoint of the HTTP server. It might include a base path.
@@ -76,6 +81,15 @@ func (s *Session) URL() (*url.URL, error) {
 		return nil, fmt.Errorf("invalid endpoint URL '%s': %w", s.Request.Endpoint, err)
 	}
 	u.Path = path.Join(u.Path, s.Request.Path)
+	/*
+	 * NOTE: path.Join removes trailing slash using Clean thus, 
+	 * we need to add it if is in s.Request.Path
+	 * - Reference: https://forum.golangbridge.org/t/how-to-concatenate-paths-for-api-request/5791
+	 * - Docs: https://pkg.go.dev/path#Join
+	 */
+	if strings.HasSuffix(s.Request.Path, slash) {
+		u.Path = u.Path + slash
+	}
 	params := url.Values(s.Request.QueryParams)
 	u.RawQuery = params.Encode()
 	return u, nil
