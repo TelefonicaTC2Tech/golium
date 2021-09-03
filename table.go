@@ -45,6 +45,23 @@ func ConvertTableToMap(ctx context.Context, t *godog.Table) (map[string]interfac
 	return m, nil
 }
 
+// ConvertTableColumnToArray converts a godog table with 1 column into a []string.
+func ConvertTableColumnToArray(ctx context.Context, t *godog.Table) ([]string, error) {
+	m := []string{}
+	if len(t.Rows) == 0 {
+		return m, nil
+	}
+	for i := 0; i < len(t.Rows); i++ {
+		cells := t.Rows[i].Cells
+		if len(cells) > 1 {
+			return m, errors.New("table must have 1 unique column")
+		}
+		propKey := cells[0].Value
+		m = append(m, propKey)
+	}
+	return m, nil
+}
+
 // ConvertTableToMultiMap converts a godog table with 2 columns into a map[string][]string.
 // The multimap is using url.Values.
 // The multimap is useful to support multiple values for the same key (e.g. for query parameters

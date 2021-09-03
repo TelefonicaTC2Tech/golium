@@ -100,6 +100,13 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 		}
 		return session.ValidateResponseHeaders(ctx, headers)
 	})
+	scenCtx.Step(`^the HTTP response must not contain the headers$`, func(t *godog.Table) error {
+		headers, err := golium.ConvertTableColumnToArray(ctx, t)
+		if err != nil {
+			return fmt.Errorf("failed processing HTTP headers from table: %w", err)
+		}
+		return session.ValidateNotResponseHeaders(ctx, headers)
+	})
 	scenCtx.Step(`^the HTTP response body must comply with the JSON schema "([^"]*)"$`, func(schema string) error {
 		return session.ValidateResponseBodyJSONSchema(ctx, golium.ValueAsString(ctx, schema))
 	})
