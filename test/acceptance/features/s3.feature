@@ -21,3 +21,4 @@ Feature: S3 client
       Document content line 2
       """
       And I delete the file in S3 bucket "[CONF:s3Bucket]" with key "[CTXT:key]"
+      And I delete the S3 bucket "[CONF:s3Bucket]"

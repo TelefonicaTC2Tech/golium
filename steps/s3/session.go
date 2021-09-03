@@ -30,7 +30,12 @@ import (
 
 type Session struct {
 	Client           *aws_s.Session
+	CreatedBuckets   []*CreatedBucket
 	CreatedDocuments []*CreatedDocument
+}
+
+type CreatedBucket struct {
+	bucket string
 }
 
 type CreatedDocument struct {
@@ -76,7 +81,6 @@ func (s *Session) UploadS3FileWithContent(ctx context.Context, bucket, key, mess
 		Body:   strings.NewReader(message),
 	})
 	if err != nil {
-		logger.LogMessage("unable to upload file")
 		return fmt.Errorf("unable to upload %q to %q, %v", key, bucket, err)
 	}
 
@@ -95,9 +99,27 @@ func (s *Session) CreateS3Bucket(ctx context.Context, bucket string) error {
 	s3Client := s3.New(s.Client)
 
 	if _, err := s3Client.CreateBucket(cparams); err != nil {
-		logger.LogMessage(fmt.Sprintf("error creating a new bucket: %s, err: %v", bucket, err))
-		return err
+		return fmt.Errorf("error creating a new bucket: %s, err: %v", bucket, err)
 	}
+
+	s.CreatedBuckets = append(s.CreatedBuckets, &CreatedBucket{bucket: bucket})
+	return nil
+}
+
+// DeleteS3Bucket deletes the bucket in S3.
+func (s *Session) DeleteS3Bucket(ctx context.Context, bucket string) error {
+	logger := GetLogger()
+	logger.LogMessage(fmt.Sprintf("deleting bucket: %s", bucket))
+	cparams := &s3.DeleteBucketInput{
+		Bucket: aws.String(bucket),
+	}
+
+	s3Client := s3.New(s.Client)
+
+	if _, err := s3Client.DeleteBucket(cparams); err != nil {
+		return fmt.Errorf("error deleting bucket: %s, err: %v", bucket, err)
+	}
+
 	return nil
 }
 
@@ -111,7 +133,7 @@ func (s *Session) ValidateS3BucketExists(ctx context.Context, bucket string) err
 		Bucket: aws.String(bucket),
 	}
 	if _, err := s3svc.GetBucketLocation(input); err != nil {
-		return fmt.Errorf("bucket: '%s' does not exists", bucket)
+		return fmt.Errorf("bucket: '%s' does not exist", bucket)
 	}
 	return nil
 }
@@ -126,7 +148,7 @@ func (s *Session) ValidateS3FileExists(ctx context.Context, bucket, key string) 
 		return err
 	}
 	if !exists {
-		return fmt.Errorf("failed validating s3 file exits: no file exists in bucket '%s' with name '%s' ", bucket, key)
+		return fmt.Errorf("failed validating s3 file exists: file '%s' does not exist in bucket '%s', err %v ", key, bucket, err)
 	}
 	return nil
 }
@@ -190,10 +212,17 @@ func (s *Session) s3KeyExists(s3svc *s3.S3, bucket string, key string) (bool, er
 
 // CleanUp cleans session by deleting all documents created in S3
 func (s *Session) CleanUp(ctx context.Context) {
+	logger := GetLogger()
+	// Remove keys
 	for _, file := range s.CreatedDocuments {
 		if err := s.DeleteS3File(ctx, file.bucket, file.key); err != nil {
-			logger := GetLogger()
-			logger.LogMessage(fmt.Sprintf("Failure on deletion of s3 file '%s' in bucket '%s', err %v", file.key, file.bucket, err))
+			logger.LogMessage(fmt.Sprintf("failure on deletion of s3 file '%s' in bucket '%s', err %v", file.key, file.bucket, err))
+		}
+	}
+	// Remove buckets
+	for _, file := range s.CreatedBuckets {
+		if err := s.DeleteS3Bucket(ctx, file.bucket); err != nil {
+			logger.LogMessage(fmt.Sprintf("failure on deletion of s3 bucket '%s', err %v", file.bucket, err))
 		}
 	}
 }
