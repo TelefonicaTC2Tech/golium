@@ -96,6 +96,7 @@ func (s *Session) CreateS3Bucket(ctx context.Context, bucket string) error {
 
 	if _, err := s3Client.CreateBucket(cparams); err != nil {
 		logger.LogMessage(fmt.Sprintf("error creating a new bucket: %s, err: %v", bucket, err))
+		return err
 	}
 	return nil
 }
