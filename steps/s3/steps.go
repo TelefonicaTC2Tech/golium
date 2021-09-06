@@ -38,19 +38,25 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 	})
 	scenCtx.Step(`^I create a file in S3 bucket "([^"]+)" with key "([^"]+)" and the content$`, func(bucket, key string, message *godog.DocString) error {
 		if session.Client == nil {
-			return fmt.Errorf("failed creating S3 file: nil session: may forget step 'I create a new S3 session'")
+			return fmt.Errorf("failed creating S3 session: nil session: may forget step 'I create a new S3 session'")
 		}
 		return session.UploadS3FileWithContent(ctx, golium.ValueAsString(ctx, bucket), golium.ValueAsString(ctx, key), golium.ValueAsString(ctx, message.Content))
 	})
 	scenCtx.Step(`^I create the S3 bucket "([^"]+)"$`, func(bucket string) error {
 		if session.Client == nil {
-			return fmt.Errorf("failed creating S3 file: nil session: may forget step 'I create a new S3 session'")
+			return fmt.Errorf("failed creating S3 session: nil session: may forget step 'I create a new S3 session'")
 		}
 		return session.CreateS3Bucket(ctx, golium.ValueAsString(ctx, bucket))
 	})
+	scenCtx.Step(`^I delete the S3 bucket "([^"]+)"$`, func(bucket string) error {
+		if session.Client == nil {
+			return fmt.Errorf("failed creating S3 session: nil session: may forget step 'I create a new S3 session'")
+		}
+		return session.DeleteS3Bucket(ctx, golium.ValueAsString(ctx, bucket))
+	})
 	scenCtx.Step(`^the S3 bucket "([^"]+)" exists$`, func(bucket string) error {
 		if session.Client == nil {
-			return fmt.Errorf("failed creating S3 file: nil session: may forget step 'I create a new S3 session'")
+			return fmt.Errorf("failed creating S3 session: nil session: may forget step 'I create a new S3 session'")
 		}
 		return session.ValidateS3BucketExists(ctx, golium.ValueAsString(ctx, bucket))
 	})

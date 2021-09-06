@@ -162,3 +162,17 @@ Feature: HTTP client
       And the HTTP path "/jpeg/"
      When I send a HTTP "POST" request
      Then the HTTP status code must be "404"
+
+  @http1
+    Scenario: Send a GET request and check if a specific header is not in response headers
+      Given the HTTP endpoint "[CONF:url]/anything"
+        And the HTTP path "/test-query"
+        And the HTTP query parameters
+            | exists | true |
+            | sort   | name |
+        And the HTTP request headers
+            | Authorization | Bearer access-token |
+      When I send a HTTP "GET" request
+      Then the HTTP status code must be "200"
+        And the HTTP response must not contain the headers
+            | non-existent-header |

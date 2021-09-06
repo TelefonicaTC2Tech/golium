@@ -19,13 +19,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
-	"time"
 	"path"
+	"strings"
+	"time"
 
 	"github.com/Telefonica/golium"
 	"github.com/google/uuid"
@@ -35,8 +35,8 @@ import (
 
 const (
 	slash string = "/"
- )
- 
+)
+
 // Request information of the Session.
 type Request struct {
 	// Endpoint of the HTTP server. It might include a base path.
@@ -82,7 +82,7 @@ func (s *Session) URL() (*url.URL, error) {
 	}
 	u.Path = path.Join(u.Path, s.Request.Path)
 	/*
-	 * NOTE: path.Join removes trailing slash using Clean thus, 
+	 * NOTE: path.Join removes trailing slash using Clean thus,
 	 * we need to add it if is in s.Request.Path
 	 * - Reference: https://forum.golangbridge.org/t/how-to-concatenate-paths-for-api-request/5791
 	 * - Docs: https://pkg.go.dev/path#Join
@@ -254,6 +254,16 @@ func (s *Session) ValidateResponseHeaders(ctx context.Context, expectedHeaders m
 			if !golium.ContainsString(expectedHeaderValue, s.Response.Response.Header.Values(expectedHeader)) {
 				return fmt.Errorf("HTTP response does not have the header '%s' with value '%s'", expectedHeader, expectedHeaderValue)
 			}
+		}
+	}
+	return nil
+}
+
+// ValidateNotResponseHeaders checks that a set of response headers are not included in HTTP response.
+func (s *Session) ValidateNotResponseHeaders(ctx context.Context, expectedHeaders []string) error {
+	for _, expectedHeader := range expectedHeaders {
+		if len(s.Response.Response.Header.Values(expectedHeader)) > 0 {
+			return fmt.Errorf("HTTP response includes the header '%s'", expectedHeader)
 		}
 	}
 	return nil
