@@ -259,11 +259,11 @@ func (s *Session) ValidateResponseHeaders(ctx context.Context, expectedHeaders m
 	return nil
 }
 
-// ValidateNotResponseHeaders checks that there is no set of response headers.
+// ValidateNotResponseHeaders checks that a set of response headers are not included in HTTP response.
 func (s *Session) ValidateNotResponseHeaders(ctx context.Context, expectedHeaders []string) error {
 	for _, expectedHeader := range expectedHeaders {
 		if len(s.Response.Response.Header.Values(expectedHeader)) > 0 {
-			return fmt.Errorf("HTTP response have the header '%s'", expectedHeader)
+			return fmt.Errorf("HTTP response includes the header '%s'", expectedHeader)
 		}
 	}
 	return nil
