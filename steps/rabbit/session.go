@@ -257,17 +257,16 @@ func matchMessage(msg string, expectedProps map[string]interface{}) bool {
 // WaitForMessagesWithStandardProperties waits for 'count' messages with standard rabbit properties that are equal to the expected values.
 func (s *Session) WaitForMessagesWithStandardProperties(ctx context.Context, timeout time.Duration, count int, props amqp.Delivery) error {
 	return waitUpTo(timeout, func() error {
-		n := count
 		err := fmt.Errorf("no message(s) received match(es) the standard properties")
-		if n < 0 {
+		if count < 0 {
 			return err
 		}
 		for _, msg := range s.Messages {
 			logrus.Debugf("Checking message: %s", msg.Body)
 			s.msg = msg
 			if err := s.ValidateMessageStandardProperties(ctx, props); err == nil {
-				n--
-				if n == 0 {
+				count--
+				if count == 0 {
 					return nil
 				}
 			}
@@ -309,7 +308,7 @@ func (s *Session) ValidateMessageHeaders(ctx context.Context, headers map[string
 	return nil
 }
 
-// ValidateMessageTextBody checks if the message text body is equal the expected value.
+// ValidateMessageTextBody checks if the message text body is equal to the expected value.
 func (s *Session) ValidateMessageTextBody(ctx context.Context, expectedMsg string) error {
 	msg := string(s.msg.Body)
 	if msg != expectedMsg {

@@ -27,7 +27,7 @@ Feature: Rabbit client
           | id       | abc    |
           | name     | Golium |
 
-  @rabbit1
+  @rabbit
   Scenario: Publish and subscribe a JSON message. Use standard properties
     Given I generate a UUID and store it in context "CorrelationId"
     Given the rabbit endpoint "[CONF:rabbitmq]"
@@ -46,7 +46,7 @@ Feature: Rabbit client
           | name     | Golium |
 
   @rabbit
-  Scenario: Publish and subscribe three JSON message. Use standard properties
+  Scenario: Publish and subscribe three JSON messages. Use standard properties
     Given I generate a UUID and store it in context "CorrelationId"
     Given the rabbit endpoint "[CONF:rabbitmq]"
       And I subscribe to the rabbit topic "test-rabbit-json-properties-[CTXT:CorrelationId]"
