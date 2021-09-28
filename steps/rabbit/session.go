@@ -254,18 +254,25 @@ func matchMessage(msg string, expectedProps map[string]interface{}) bool {
 	return true
 }
 
-// WaitForMessageWithStandardProperties waits for a message with standard rabbit properties that are equal to the expected values.
-func (s *Session) WaitForMessageWithStandardProperties(ctx context.Context, timeout time.Duration, props amqp.Delivery) error {
+// WaitForMessagesWithStandardProperties waits for 'count' messages with standard rabbit properties that are equal to the expected values.
+func (s *Session) WaitForMessagesWithStandardProperties(ctx context.Context, timeout time.Duration, count int, props amqp.Delivery) error {
 	return waitUpTo(timeout, func() error {
+		n := count
+		err := fmt.Errorf("no message(s) received match(es) the standard properties")
+		if n < 0 {
+			return err
+		}
 		for _, msg := range s.Messages {
 			logrus.Debugf("Checking message: %s", msg.Body)
 			s.msg = msg
 			if err := s.ValidateMessageStandardProperties(ctx, props); err == nil {
-				s.Messages = []amqp.Delivery{msg}
-				return nil
+				n--
+				if n == 0 {
+					return nil
+				}
 			}
 		}
-		return fmt.Errorf("no message received matches the standard properties")
+		return err
 	})
 }
 
@@ -311,9 +318,13 @@ func (s *Session) ValidateMessageTextBody(ctx context.Context, expectedMsg strin
 	return nil
 }
 
-// ValidateMessageJSONBody checks if the message json body properties are equal the expected values.
-func (s *Session) ValidateMessageJSONBody(ctx context.Context, props map[string]interface{}) error {
-	m := golium.NewMapFromJSONBytes([]byte(s.msg.Body))
+// ValidateMessageJSONBody checks if the message json body properties of message in position 'pos' are equal the expected values.
+func (s *Session) ValidateMessageJSONBody(ctx context.Context, props map[string]interface{}, pos int) error {
+	nMessages := len(s.Messages)
+	if pos < 0 || pos >= nMessages {
+		return fmt.Errorf("trying to validate message in position: '%d', '%d' messages available", pos, nMessages)
+	}
+	m := golium.NewMapFromJSONBytes([]byte(s.Messages[pos].Body))
 	for key, expectedValue := range props {
 		value := m.Get(key)
 		if value != expectedValue {
