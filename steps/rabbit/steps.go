@@ -137,7 +137,7 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 		if err != nil {
 			return fmt.Errorf("failed processing table to a map for the rabbit message: %w", err)
 		}
-		return session.ValidateMessageJSONBody(ctx, props, 0)
+		return session.ValidateMessageJSONBody(ctx, props, -1)
 	})
 	scenCtx.Step(`^the body of the rabbit message in position "(\d+)" has the JSON properties$`, func(pos int, t *godog.Table) error {
 		props, err := golium.ConvertTableToMap(ctx, t)

@@ -318,12 +318,16 @@ func (s *Session) ValidateMessageTextBody(ctx context.Context, expectedMsg strin
 }
 
 // ValidateMessageJSONBody checks if the message json body properties of message in position 'pos' are equal the expected values.
+// if pos == -1 then it means last message stored, that is the one stored in s.msg
 func (s *Session) ValidateMessageJSONBody(ctx context.Context, props map[string]interface{}, pos int) error {
-	nMessages := len(s.Messages)
-	if pos < 0 || pos >= nMessages {
-		return fmt.Errorf("trying to validate message in position: '%d', '%d' messages available", pos, nMessages)
+	m := golium.NewMapFromJSONBytes([]byte(s.msg.Body))
+	if pos != -1 {
+		nMessages := len(s.Messages)
+		if pos < 0 || pos >= nMessages {
+			return fmt.Errorf("trying to validate message in position: '%d', '%d' messages available", pos, nMessages)
+		}
+		m = golium.NewMapFromJSONBytes([]byte(s.Messages[pos].Body))
 	}
-	m := golium.NewMapFromJSONBytes([]byte(s.Messages[pos].Body))
 	for key, expectedValue := range props {
 		value := m.Get(key)
 		if value != expectedValue {
