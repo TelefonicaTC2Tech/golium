@@ -320,10 +320,8 @@ func (s *Session) ValidateMessageTextBody(ctx context.Context, expectedMsg strin
 // ValidateMessageJSONBody checks if the message json body properties of message in position 'pos' are equal the expected values.
 // if pos == -1 then it means last message stored, that is the one stored in s.msg
 func (s *Session) ValidateMessageJSONBody(ctx context.Context, props map[string]interface{}, pos int) error {
-	logrus.Debugf("pos: %d", pos)
 	m := golium.NewMapFromJSONBytes([]byte(s.msg.Body))
 	if pos != -1 {
-		logrus.Debugf("inside wrong")
 		nMessages := len(s.Messages)
 		if pos < 0 || pos >= nMessages {
 			return fmt.Errorf("trying to validate message in position: '%d', '%d' messages available", pos, nMessages)
