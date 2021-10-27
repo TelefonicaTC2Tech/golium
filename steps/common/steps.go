@@ -72,7 +72,7 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 		if domain == "" {
 			return nil
 		}
-		command := fmt.Sprintf("ping -c 1 %s | head -1 | grep -oP '(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)'", domain)
+		command := fmt.Sprintf("ping -c 1 %s | head -1 | grep -oe '[0-9]*\\.[0-9]*\\.[0-9]*\\.[0-9]'", domain)
 		cmd := exec.Command("/bin/sh", "-c", command)
 		stdoutStderr, err := cmd.CombinedOutput()
 		if err != nil {
