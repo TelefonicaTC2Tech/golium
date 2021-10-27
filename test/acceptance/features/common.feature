@@ -37,3 +37,7 @@ Feature: Common
   @common
   Scenario: Store my local ip in context
     Given I store my local ip in context "context.ip"
+
+  @common
+  Scenario: Store domain ip in context
+    Given I store domain "www.google.es" ip in context "context.ip"

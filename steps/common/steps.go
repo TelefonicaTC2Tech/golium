@@ -68,6 +68,20 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 		golium.GetContext(ctx).Put(golium.ValueAsString(ctx, key), ip)
 		return nil
 	})
+	scenCtx.Step(`^I store domain "([^"]*)" ip in context "([^"]*)"$`, func(domain, key string) error {
+		if domain == "" {
+			return nil
+		}
+		command := fmt.Sprintf("ping -c 1 %s | head -1 | grep -oP '(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)'", domain)
+		cmd := exec.Command("/bin/sh", "-c", command)
+		stdoutStderr, err := cmd.CombinedOutput()
+		if err != nil {
+			return fmt.Errorf("error executing `%s` command %v", cmd, string(stdoutStderr))
+		}
+		ip := strings.Trim(string(stdoutStderr), " \r\n")
+		golium.GetContext(ctx).Put(golium.ValueAsString(ctx, key), ip)
+		return nil
+	})
 	return ctx
 }
 
