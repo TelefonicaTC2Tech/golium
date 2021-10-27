@@ -111,4 +111,4 @@ minio: true
 minioEndpoint: https://play.min.io:9000
 minioAwsAccessKeyId: Q3AM3UQ867SPQQA43P2F
 minioAwsSecretAccessKey: zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG
-minioAwsRegion: us-west-2
+minioAwsRegion: us-east-1
