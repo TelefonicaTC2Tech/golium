@@ -49,7 +49,7 @@ func (s *Session) NewS3Session(ctx context.Context) error {
 	logger.LogMessage("Creating a new S3 session")
 
 	s3Config := &aws.Config{
-		Region: aws.String("eu-west-1"),
+		Region: aws.String("eu-west-2"),
 	}
 	// Check minio
 	minio := golium.Value(ctx, "[CONF:minio]").(bool)
