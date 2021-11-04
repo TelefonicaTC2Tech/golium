@@ -73,7 +73,7 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 			return nil
 		}
 		domain := golium.ValueAsString(ctx, domainParam)
-		command := fmt.Sprintf("ping -c 1 %s | head -1 | grep -oe '[0-9]*\\.[0-9]*\\.[0-9]*\\.[0-9]'", domain)
+		command := fmt.Sprintf("ping -c 1 %s | head -1 | grep -oe '[0-9]*\\.[0-9]*\\.[0-9]*\\.[0-9]*'", domain)
 		cmd := exec.Command("/bin/sh", "-c", command)
 		stdoutStderr, err := cmd.CombinedOutput()
 		if err != nil {
