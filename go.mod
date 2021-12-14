@@ -16,9 +16,8 @@ require (
 	github.com/sirupsen/logrus v1.8.0
 	github.com/spf13/pflag v1.0.5
 	github.com/streadway/amqp v1.0.0
-	github.com/tidwall/gjson v1.6.8
-	github.com/tidwall/pretty v1.1.0 // indirect
-	github.com/tidwall/sjson v1.1.5
+	github.com/tidwall/gjson v1.12.1
+	github.com/tidwall/sjson v1.2.4
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0
 	golang.org/x/sys v0.0.0-20210119212857-b64e53b001e4 // indirect
