@@ -12,7 +12,7 @@ Feature: HTTP Mock server
     Given the HTTP endpoint "[CONF:httpMockUrl]/test/[CTXT:id]"
      When I send a HTTP "GET" request
      Then the HTTP status code must be "200"
-      And the HTTP request headers
+      And the HTTP response must contain the headers
           | Content-Type | application/json |
       And the HTTP response body must have the JSON properties
           | value | test mock response |
@@ -88,7 +88,7 @@ Feature: HTTP Mock server
     Given the HTTP endpoint "[CONF:httpMockUrl]/test/[CTXT:id]"
      When I send a HTTP "POST" request
      Then the HTTP status code must be "201"
-      And the HTTP request headers
+      And the HTTP response must contain the headers
           | Content-Type | application/json |
       And the HTTP response body must have the JSON properties
           | value | test mock response |
@@ -115,7 +115,7 @@ Feature: HTTP Mock server
     Given the HTTP endpoint "[CONF:httpMockUrl]/test/[CTXT:id]"
      When I send a HTTP "POST" request
      Then the HTTP status code must be "201"
-      And the HTTP request headers
+      And the HTTP response must contain the headers
           | Content-Type | application/json |
       And the HTTP response body must have the JSON properties
           | values.0.path | /[CTXT:id]-[CTXT:id] |
@@ -166,7 +166,7 @@ Feature: HTTP Mock server
     Given the HTTP endpoint "[CONF:httpMockUrl]/test/text-plain/[CTXT:id]"
      When I send a HTTP "GET" request
      Then the HTTP status code must be "200"
-      And the HTTP request headers
+      And the HTTP response must contain the headers
           | Content-Type | text/plain |
       And the HTTP response body must be the text
           """
