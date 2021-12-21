@@ -108,7 +108,7 @@ s3Bucket: golium-demo
 minio: true
 # Below config is only required by minio server
 # To grant access to AWS unset minio and configure env vars: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION
-minioEndpoint: https://localhost:9000
+minioEndpoint: https://localhost:9999
 minioAwsAccessKeyId: minioadmin
 minioAwsSecretAccessKey: minioadmin
 #minioAwsRegion: us-west-2

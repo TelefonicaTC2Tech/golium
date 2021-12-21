@@ -48,7 +48,7 @@ jobs:
       minio:
         image: lazybit/minio
         ports:
-          - 9000:9000
+          - 9999:9000
         env:
           MINIO_ACCESS_KEY: minioadmin
           MINIO_SECRET_KEY: minioadmin
