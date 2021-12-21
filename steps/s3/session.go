@@ -57,7 +57,6 @@ func (s *Session) NewS3Session(ctx context.Context) error {
 		s3Config = &aws.Config{
 			Credentials:      credentials.NewStaticCredentials(golium.Value(ctx, "[CONF:minioAwsAccessKeyId]").(string), golium.Value(ctx, "[CONF:minioAwsSecretAccessKey]").(string), ""),
 			Endpoint:         aws.String(golium.Value(ctx, "[CONF:minioEndpoint]").(string)),
-			Region:           aws.String(golium.Value(ctx, "[CONF:minioAwsRegion]").(string)),
 			DisableSSL:       aws.Bool(true),
 			S3ForcePathStyle: aws.Bool(true),
 		}

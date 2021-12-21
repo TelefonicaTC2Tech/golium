@@ -111,4 +111,3 @@ minio: true
 minioEndpoint: https://localhost:9999
 minioAwsAccessKeyId: minioadmin
 minioAwsSecretAccessKey: minioadmin
-#minioAwsRegion: us-west-2
