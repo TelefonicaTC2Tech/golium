@@ -49,7 +49,7 @@ func (s *Session) NewS3Session(ctx context.Context) error {
 	logger.LogMessage("Creating a new S3 session")
 
 	s3Config := &aws.Config{
-		Region: aws.String("eu-west-1"),
+		Region: aws.String(golium.Value(ctx, "[CONF:s3Region]").(string)),
 	}
 	// Check minio
 	minio := golium.Value(ctx, "[CONF:minio]").(bool)
@@ -57,6 +57,7 @@ func (s *Session) NewS3Session(ctx context.Context) error {
 		s3Config = &aws.Config{
 			Credentials:      credentials.NewStaticCredentials(golium.Value(ctx, "[CONF:minioAwsAccessKeyId]").(string), golium.Value(ctx, "[CONF:minioAwsSecretAccessKey]").(string), ""),
 			Endpoint:         aws.String(golium.Value(ctx, "[CONF:minioEndpoint]").(string)),
+			Region:           aws.String(golium.Value(ctx, "[CONF:s3Region]").(string)),
 			DisableSSL:       aws.Bool(true),
 			S3ForcePathStyle: aws.Bool(true),
 		}
