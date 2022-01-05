@@ -129,6 +129,30 @@ Feature: HTTP client
       And the HTTP response body must have the JSON properties
           | json.attribute | attribute0 |
           | json.value     | value0     |
+  
+  @http
+  Scenario: Send a POST request defined by a json string in file and check the response
+    Given the HTTP endpoint "[CONF:url]/anything"
+      And the HTTP path "/test-content"
+      And the HTTP request headers
+          | Content-Type | application/json |
+      And the HTTP request body with the JSON "example1" from "http" file
+     When I send a HTTP "POST" request
+      And the HTTP status code must be "200"
+      And the HTTP response body must match with the JSON "example1" from "http" file
+
+  @http
+  Scenario: Send a POST request defined by a json string in file removing parameters and check the response
+    Given the HTTP endpoint "[CONF:url]/anything"
+      And the HTTP path "/test-content"
+      And the HTTP request headers
+          | Content-Type | application/json |
+      And the HTTP request body with the JSON "example1" from "http" file without
+          | boolean |
+     When I send a HTTP "POST" request
+      And the HTTP status code must be "200"
+      And the HTTP response body must match with the JSON "example1" from "http" file without
+          | boolean |
 
   @http
   Scenario: Follow redirection
@@ -163,7 +187,7 @@ Feature: HTTP client
      When I send a HTTP "POST" request
      Then the HTTP status code must be "404"
 
-  @http1
+  @http
     Scenario: Send a GET request and check if a specific header is not in response headers
       Given the HTTP endpoint "[CONF:url]/anything"
         And the HTTP path "/test-query"
