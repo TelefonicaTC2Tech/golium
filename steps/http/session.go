@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"reflect"
 	"strings"
 	"time"
 
@@ -31,6 +32,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/tidwall/sjson"
 	"github.com/xeipuuv/gojsonschema"
+
+	"encoding/json"
 )
 
 const (
@@ -148,6 +151,40 @@ func (s *Session) ConfigureRequestBodyJSONProperties(ctx context.Context, props 
 // ConfigureRequestBodyJSONText writes the body in the HTTP request as a JSON from text.
 func (s *Session) ConfigureRequestBodyJSONText(ctx context.Context, message string) error {
 	s.Request.RequestBody = []byte(message)
+	if s.Request.Headers == nil {
+		s.Request.Headers = make(map[string][]string)
+	}
+	s.Request.Headers["Content-Type"] = []string{"application/json"}
+	return nil
+}
+
+// ConfigureRequestBodyJSONFile writes the body in the HTTP request as a JSON from file.
+func (s *Session) ConfigureRequestBodyJSONFile(ctx context.Context, code, file string) error {
+	message, err := getParamFromJSON(ctx, file, code, "body")
+	if err != nil {
+		return fmt.Errorf("error getting parameter from json: %w", err)
+	}
+	messageMarshal, _ := json.Marshal(message)
+	s.Request.RequestBody = []byte(string(messageMarshal))
+	if s.Request.Headers == nil {
+		s.Request.Headers = make(map[string][]string)
+	}
+	s.Request.Headers["Content-Type"] = []string{"application/json"}
+	return nil
+}
+
+// ConfigureRequestBodyJSONFileWithout writes the body in the HTTP request as a JSON from file without given values.
+func (s *Session) ConfigureRequestBodyJSONFileWithout(ctx context.Context, code, file string, params []string) error {
+	message, err := getParamFromJSON(ctx, file, code, "body")
+	if err != nil {
+		return fmt.Errorf("error getting parameter from json: %w", err)
+	}
+	messageMap, _ := message.(map[string]interface{})
+	for _, removeParams := range params {
+		delete(messageMap, removeParams)
+	}
+	messageMarshal, _ := json.Marshal(message)
+	s.Request.RequestBody = []byte(string(messageMarshal))
 	if s.Request.Headers == nil {
 		s.Request.Headers = make(map[string][]string)
 	}
@@ -282,6 +319,53 @@ func (s *Session) ValidateResponseBodyJSONSchema(ctx context.Context, schema str
 		return nil
 	}
 	return fmt.Errorf("invalid response body according to schema '%s': %+v", schema, result.Errors())
+}
+
+// ValidateResponseBodyJSONFile validates the response body against the JSON in File.
+func (s *Session) ValidateResponseBodyJSONFile(ctx context.Context, code, file string) error {
+	jsonResponseBody, err := getParamFromJSON(ctx, file, code, "response")
+	if err != nil {
+		return fmt.Errorf("error getting parameter from json: %w", err)
+	}
+
+	responseBody := golium.NewMapFromJSONBytes(s.Response.ResponseBody)
+	realResponseBodyJSON := responseBody.Get("json")
+	var realResponseBody interface{}
+	if err = json.Unmarshal([]byte(fmt.Sprint(realResponseBodyJSON)), &realResponseBody); err != nil {
+		return fmt.Errorf("error Unmarshaling response body: %w", err)
+	}
+
+	if !reflect.DeepEqual(jsonResponseBody, realResponseBody) {
+		return fmt.Errorf("expected JSON does not match response JSON, \n%v\n vs \n%s", jsonResponseBody,
+			realResponseBody)
+	}
+
+	return nil
+}
+
+// ValidateResponseBodyJSONFileWithout validates the response body against the JSON in File without params.
+func (s *Session) ValidateResponseBodyJSONFileWithout(ctx context.Context, code, file string, params []string) error {
+	jsonResponseBody, err := getParamFromJSON(ctx, file, code, "response")
+	if err != nil {
+		return fmt.Errorf("error getting parameter from json: %w", err)
+	}
+	jsonResponseBodyMap, _ := jsonResponseBody.(map[string]interface{})
+	for _, removeParams := range params {
+		delete(jsonResponseBodyMap, removeParams)
+	}
+	responseBody := golium.NewMapFromJSONBytes(s.Response.ResponseBody)
+	realResponseBodyJSON := responseBody.Get("json")
+	var realResponseBody interface{}
+	if err = json.Unmarshal([]byte(fmt.Sprint(realResponseBodyJSON)), &realResponseBody); err != nil {
+		return fmt.Errorf("error Unmarshaling response body: %w", err)
+	}
+
+	if !reflect.DeepEqual(jsonResponseBodyMap, realResponseBody) {
+		return fmt.Errorf("expected JSON does not match response JSON, \n%v\n vs \n%s", jsonResponseBodyMap,
+			realResponseBody)
+	}
+
+	return nil
 }
 
 // ValidateResponseBodyJSONProperties validates a list of properties in the JSON body of the HTTP response.
