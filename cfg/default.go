@@ -23,7 +23,6 @@ var DefaultConfig = Config{
 		Config:       "./",
 		Schemas:      "./schemas",
 		Environments: "./environments",
-		Assets:       "./assets",
 	},
 	Log: LogConfig{
 		Directory: "./logs",

@@ -27,7 +27,6 @@ type DirConfig struct {
 	Config       string `yaml:"config" envconfig:"DIR_CONFIG"`
 	Schemas      string `yaml:"schemas" envconfig:"DIR_SCHEMAS"`
 	Environments string `yaml:"environments" envconfig:"DIR_ENVIRONMENTS"`
-	Assets       string `yaml:"assets" envconfig:"DIR_ASSETS"`
 }
 
 // LogConfig to configure logging.

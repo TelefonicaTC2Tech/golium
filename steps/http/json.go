@@ -26,8 +26,8 @@ import (
 )
 
 func getParamFromJSON(ctx context.Context, file, code, param string) (interface{}, error) {
-	assetsDir := golium.GetConfig().Dir.Assets
-	filePath := fmt.Sprintf("%s/%s.json", assetsDir, file)
+	assetsFolder := golium.Value(ctx, "[CONF:assetsFolder]").(string)
+	filePath := fmt.Sprintf("%s%s.json", assetsFolder, file)
 	absPath, _ := filepath.Abs(filePath)
 	if _, err := os.Stat(absPath); err != nil {
 		return nil, fmt.Errorf("file path does not exist: %v", absPath)
