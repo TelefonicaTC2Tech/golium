@@ -162,7 +162,7 @@ func (s *Session) SendDoTQuery(ctx context.Context, qtype uint16, qdomain string
 		Timeout:            s.Timeout,
 		InsecureSkipVerify: true,
 	}
-	u, err := upstream.AddressToUpstream(s.Server, opts)
+	u, err := upstream.AddressToUpstream(s.Server, &opts)
 	if err != nil {
 		logger.log.Fatalf("Cannot create an upstream: %s", err)
 	}
