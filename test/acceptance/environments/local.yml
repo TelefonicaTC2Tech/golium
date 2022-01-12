@@ -112,3 +112,6 @@ minio: true
 minioEndpoint: http://localhost:9999
 minioAwsAccessKeyId: minioadmin
 minioAwsSecretAccessKey: minioadmin
+
+# common
+defaultDelay: 1
