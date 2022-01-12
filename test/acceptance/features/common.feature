@@ -22,6 +22,8 @@ Feature: Common
   Scenario: Wait
     Given I wait for "2" millis
     Given I wait for "1" seconds
+    Given I wait for "[CONF:defaultDelay]" millis
+    Given I wait for "[CONF:defaultDelay]" seconds
 
   @common
   Scenario: Parse URL
