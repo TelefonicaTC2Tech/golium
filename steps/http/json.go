@@ -50,5 +50,5 @@ func getParamFromJSON(ctx context.Context, file, code, param string) (interface{
 		}
 	}
 
-	return nil, fmt.Errorf("code not found")
+	return nil, fmt.Errorf("code: '%s' not found in '%s'", code, filePath)
 }
