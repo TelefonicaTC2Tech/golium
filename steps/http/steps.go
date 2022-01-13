@@ -74,6 +74,16 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 	scenCtx.Step(`^the HTTP request body with the JSON$`, func(message *godog.DocString) error {
 		return session.ConfigureRequestBodyJSONText(ctx, golium.ValueAsString(ctx, message.Content))
 	})
+	scenCtx.Step(`^the HTTP request body with the JSON "([^"]*)" from "([^"]*)" file$`, func(code, file string) error {
+		return session.ConfigureRequestBodyJSONFile(ctx, code, file)
+	})
+	scenCtx.Step(`^the HTTP request body with the JSON "([^"]*)" from "([^"]*)" file without$`, func(code, file string, t *godog.Table) error {
+		params, err := golium.ConvertTableColumnToArray(ctx, t)
+		if err != nil {
+			return fmt.Errorf("failed processing table to a map for the request body: %w", err)
+		}
+		return session.ConfigureRequestBodyJSONFileWithout(ctx, code, file, params)
+	})
 	scenCtx.Step(`^the HTTP request body with the URL encoded properties$`, func(t *godog.Table) error {
 		props, err := golium.ConvertTableToMultiMap(ctx, t)
 		if err != nil {
@@ -109,6 +119,16 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 	})
 	scenCtx.Step(`^the HTTP response body must comply with the JSON schema "([^"]*)"$`, func(schema string) error {
 		return session.ValidateResponseBodyJSONSchema(ctx, golium.ValueAsString(ctx, schema))
+	})
+	scenCtx.Step(`^the HTTP response body must match with the JSON "([^"]*)" from "([^"]*)" file$`, func(code, file string) error {
+		return session.ValidateResponseBodyJSONFile(ctx, code, file)
+	})
+	scenCtx.Step(`^the HTTP response body must match with the JSON "([^"]*)" from "([^"]*)" file without$`, func(code, file string, t *godog.Table) error {
+		params, err := golium.ConvertTableColumnToArray(ctx, t)
+		if err != nil {
+			return fmt.Errorf("failed processing table to a map for the request body: %w", err)
+		}
+		return session.ValidateResponseBodyJSONFileWithout(ctx, code, file, params)
 	})
 	scenCtx.Step(`^the HTTP response body must have the JSON properties$`, func(t *godog.Table) error {
 		props, err := golium.ConvertTableToMap(ctx, t)
