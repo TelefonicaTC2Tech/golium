@@ -158,8 +158,8 @@ func (s *Session) ConfigureRequestBodyJSONText(ctx context.Context, message stri
 	return nil
 }
 
-// addToRequestMessageFromJSONFile adds to Request Body the message from JSON file
-func (s *Session) addToRequestMessageFromJSONFile(message interface{}) error {
+// AddToRequestMessageFromJSONFile adds to Request Body the message from JSON file
+func (s *Session) AddToRequestMessageFromJSONFile(message interface{}) error {
 	messageMarshal, _ := json.Marshal(message)
 	s.Request.RequestBody = []byte(string(messageMarshal))
 	if s.Request.Headers == nil {
@@ -176,7 +176,7 @@ func (s *Session) ConfigureRequestBodyJSONFile(ctx context.Context, code, file s
 		return fmt.Errorf("error getting parameter from json: %w", err)
 	}
 
-	return s.addToRequestMessageFromJSONFile(message)
+	return s.AddToRequestMessageFromJSONFile(message)
 }
 
 // ConfigureRequestBodyJSONFileWithout writes the body in the HTTP request as a JSON from file without given values.
@@ -189,7 +189,7 @@ func (s *Session) ConfigureRequestBodyJSONFileWithout(ctx context.Context, code,
 	for _, removeParams := range params {
 		delete(messageMap, removeParams)
 	}
-	return s.addToRequestMessageFromJSONFile(message)
+	return s.AddToRequestMessageFromJSONFile(message)
 }
 
 // ConfigureRequestBodyURLEncodedProperties writes the body in the HTTP request as x-www-form-urlencoded with properties.
