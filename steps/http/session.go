@@ -158,12 +158,8 @@ func (s *Session) ConfigureRequestBodyJSONText(ctx context.Context, message stri
 	return nil
 }
 
-// ConfigureRequestBodyJSONFile writes the body in the HTTP request as a JSON from file.
-func (s *Session) ConfigureRequestBodyJSONFile(ctx context.Context, code, file string) error {
-	message, err := getParamFromJSON(ctx, file, code, "body")
-	if err != nil {
-		return fmt.Errorf("error getting parameter from json: %w", err)
-	}
+// addToRequestMessageFromJSONFile adds to Request Body the message from JSON file
+func (s *Session) addToRequestMessageFromJSONFile(message interface{}) error {
 	messageMarshal, _ := json.Marshal(message)
 	s.Request.RequestBody = []byte(string(messageMarshal))
 	if s.Request.Headers == nil {
@@ -171,6 +167,16 @@ func (s *Session) ConfigureRequestBodyJSONFile(ctx context.Context, code, file s
 	}
 	s.Request.Headers["Content-Type"] = []string{"application/json"}
 	return nil
+}
+
+// ConfigureRequestBodyJSONFile writes the body in the HTTP request as a JSON from file.
+func (s *Session) ConfigureRequestBodyJSONFile(ctx context.Context, code, file string) error {
+	message, err := getParamFromJSON(ctx, file, code, "body")
+	if err != nil {
+		return fmt.Errorf("error getting parameter from json: %w", err)
+	}
+
+	return s.addToRequestMessageFromJSONFile(message)
 }
 
 // ConfigureRequestBodyJSONFileWithout writes the body in the HTTP request as a JSON from file without given values.
@@ -183,13 +189,7 @@ func (s *Session) ConfigureRequestBodyJSONFileWithout(ctx context.Context, code,
 	for _, removeParams := range params {
 		delete(messageMap, removeParams)
 	}
-	messageMarshal, _ := json.Marshal(message)
-	s.Request.RequestBody = []byte(string(messageMarshal))
-	if s.Request.Headers == nil {
-		s.Request.Headers = make(map[string][]string)
-	}
-	s.Request.Headers["Content-Type"] = []string{"application/json"}
-	return nil
+	return s.addToRequestMessageFromJSONFile(message)
 }
 
 // ConfigureRequestBodyURLEncodedProperties writes the body in the HTTP request as x-www-form-urlencoded with properties.
@@ -321,26 +321,30 @@ func (s *Session) ValidateResponseBodyJSONSchema(ctx context.Context, schema str
 	return fmt.Errorf("invalid response body according to schema '%s': %+v", schema, result.Errors())
 }
 
+// ValidateResponseFromJSONFile validates the response body against the response from JSON File.
+func (s *Session) ValidateResponseFromJSONFile(response interface{}) error {
+	responseBody := golium.NewMapFromJSONBytes(s.Response.ResponseBody)
+	realResponseBodyJSON := responseBody.Get("json")
+	var realResponseBody interface{}
+	if err := json.Unmarshal([]byte(fmt.Sprint(realResponseBodyJSON)), &realResponseBody); err != nil {
+		return fmt.Errorf("error Unmarshaling response body: %w", err)
+	}
+
+	if !reflect.DeepEqual(response, realResponseBody) {
+		return fmt.Errorf("expected JSON does not match response JSON, \n%v\n vs \n%s", response,
+			realResponseBody)
+	}
+
+	return nil
+}
+
 // ValidateResponseBodyJSONFile validates the response body against the JSON in File.
 func (s *Session) ValidateResponseBodyJSONFile(ctx context.Context, code, file string) error {
 	jsonResponseBody, err := getParamFromJSON(ctx, file, code, "response")
 	if err != nil {
 		return fmt.Errorf("error getting parameter from json: %w", err)
 	}
-
-	responseBody := golium.NewMapFromJSONBytes(s.Response.ResponseBody)
-	realResponseBodyJSON := responseBody.Get("json")
-	var realResponseBody interface{}
-	if err = json.Unmarshal([]byte(fmt.Sprint(realResponseBodyJSON)), &realResponseBody); err != nil {
-		return fmt.Errorf("error Unmarshaling response body: %w", err)
-	}
-
-	if !reflect.DeepEqual(jsonResponseBody, realResponseBody) {
-		return fmt.Errorf("expected JSON does not match response JSON, \n%v\n vs \n%s", jsonResponseBody,
-			realResponseBody)
-	}
-
-	return nil
+	return s.ValidateResponseFromJSONFile(jsonResponseBody)
 }
 
 // ValidateResponseBodyJSONFileWithout validates the response body against the JSON in File without params.
@@ -353,19 +357,7 @@ func (s *Session) ValidateResponseBodyJSONFileWithout(ctx context.Context, code,
 	for _, removeParams := range params {
 		delete(jsonResponseBodyMap, removeParams)
 	}
-	responseBody := golium.NewMapFromJSONBytes(s.Response.ResponseBody)
-	realResponseBodyJSON := responseBody.Get("json")
-	var realResponseBody interface{}
-	if err = json.Unmarshal([]byte(fmt.Sprint(realResponseBodyJSON)), &realResponseBody); err != nil {
-		return fmt.Errorf("error Unmarshaling response body: %w", err)
-	}
-
-	if !reflect.DeepEqual(jsonResponseBodyMap, realResponseBody) {
-		return fmt.Errorf("expected JSON does not match response JSON, \n%v\n vs \n%s", jsonResponseBodyMap,
-			realResponseBody)
-	}
-
-	return nil
+	return s.ValidateResponseFromJSONFile(jsonResponseBody)
 }
 
 // ValidateResponseBodyJSONProperties validates a list of properties in the JSON body of the HTTP response.
