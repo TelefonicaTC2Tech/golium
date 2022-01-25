@@ -139,7 +139,7 @@ Feature: HTTP client
       And the HTTP request body with the JSON "example1" from "http" file
      When I send a HTTP "POST" request
       And the HTTP status code must be "200"
-      And the HTTP response body must match with the JSON "example1" from "http" file
+      And the HTTP response "json" must match with the JSON "example1" from "http" file
 
   @http
   Scenario: Send a POST request defined by a json string in file removing parameters and check the response
@@ -151,7 +151,7 @@ Feature: HTTP client
           | boolean |
      When I send a HTTP "POST" request
       And the HTTP status code must be "200"
-      And the HTTP response body must match with the JSON "example1" from "http" file without
+      And the HTTP response "json" must match with the JSON "example1" from "http" file without
           | boolean |
 
   @http
