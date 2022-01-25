@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/AdguardTeam/dnsproxy/upstream"
@@ -37,6 +38,8 @@ type Session struct {
 	Transport string
 	// DNS query options (EDNS0)
 	Options []dns.EDNS0
+	// Query parameters
+	DoHQueryParams map[string][]string
 	// Query contains the DNS request message.
 	Query *dns.Msg
 	// Response contains the DNS response message.
@@ -63,6 +66,12 @@ func (s *Session) SetDNSResponseTimeout(ctx context.Context, timeout int) error 
 // ConfigureOptions adds EDNS0 options to be included in the DNS query.
 func (s *Session) ConfigureOptions(ctx context.Context, options []dns.EDNS0) error {
 	s.Options = append(s.Options, options...)
+	return nil
+}
+
+// ConfigureDoHQueryParams stores a table of query parameters in the application context.
+func (s *Session) ConfigureDoHQueryParams(ctx context.Context, params map[string][]string) error {
+	s.DoHQueryParams = params
 	return nil
 }
 
@@ -109,6 +118,9 @@ func (s *Session) SendDoHQuery(ctx context.Context, method string, qtype uint16,
 	logger.LogRequest(m, corr)
 	// Pack the DNS query to convert to a DNS wireformat
 	data, err := s.Query.Pack()
+	if err != nil {
+		return err
+	}
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
@@ -122,10 +134,22 @@ func (s *Session) SendDoHQuery(ctx context.Context, method string, qtype uint16,
 	case "GET":
 		dq := base64.RawURLEncoding.EncodeToString(data)
 		request, err = http.NewRequest("GET", fmt.Sprintf("%s?dns=%s", s.Server, dq), nil)
+		if err != nil {
+			return err
+		}
 	case "POST":
-		request, err = http.NewRequest("POST", fmt.Sprintf("%s", s.Server), bytes.NewReader(data))
+		u, err := url.Parse(s.Server)
+		params := url.Values(s.DoHQueryParams)
+		u.RawQuery = params.Encode()
+		if err != nil {
+			return err
+		}
+		request, err = http.NewRequest("POST", u.String(), bytes.NewReader(data))
+		if err != nil {
+			return err
+		}
 	default:
-		return fmt.Errorf("Unsupported method. %s", method)
+		return fmt.Errorf("unsupported method. %s", method)
 	}
 
 	request.Header.Set("Content-Type", "application/dns-message")

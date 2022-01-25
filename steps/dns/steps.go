@@ -82,6 +82,13 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 			return fmt.Errorf("unsupported transport protocol. %s", session.Transport)
 		}
 	})
+	scenCtx.Step(`^the DoH query parameters$`, func(t *godog.Table) error {
+		params, err := golium.ConvertTableToMultiMap(ctx, t)
+		if err != nil {
+			return fmt.Errorf("failed processing query parameters from table: %w", err)
+		}
+		return session.ConfigureDoHQueryParams(ctx, params)
+	})
 	scenCtx.Step(`the DNS response must have the code "([^"]*)"$`, func(code string) error {
 		return session.ValidateResponseWithCode(ctx, golium.ValueAsString(ctx, code))
 	})
