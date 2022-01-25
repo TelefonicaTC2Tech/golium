@@ -17,7 +17,6 @@ jobs:
       AWS_SECRET_ACCESS_KEY: minioadmin
       AWS_REGION: eu-west-1
 
-
     services:
       redis:
         image: redis
