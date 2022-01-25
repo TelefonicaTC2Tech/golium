@@ -17,13 +17,11 @@ package s3steps
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/Telefonica/golium"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/aws/credentials"
 	aws_s "github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
@@ -49,29 +47,16 @@ func (s *Session) NewS3Session(ctx context.Context) error {
 	logger := GetLogger()
 	logger.LogMessage("Creating a new S3 session")
 
-	// Set aws region
-	var region string
-	if golium.GetEnvironment().Get("s3Region") == nil {
-		if region = os.Getenv("AWS_REGION"); len(region) == 0 {
-			return fmt.Errorf("error s3 region must be set via s3Region config parameter or AWS_REGION environment var")
-		}
-	} else {
-		region = golium.Value(ctx, "[CONF:s3Region]").(string)
-	}
+	s3Config := &aws.Config{}
 
-	s3Config := &aws.Config{
-		Region: aws.String(region),
-	}
-
-	// Check minio
-	minio := golium.Value(ctx, "[CONF:minio]").(bool)
-	if minio {
-		s3Config = &aws.Config{
-			Credentials:      credentials.NewStaticCredentials(golium.Value(ctx, "[CONF:minioAwsAccessKeyId]").(string), golium.Value(ctx, "[CONF:minioAwsSecretAccessKey]").(string), ""),
-			Endpoint:         aws.String(golium.Value(ctx, "[CONF:minioEndpoint]").(string)),
-			Region:           aws.String(region),
-			DisableSSL:       aws.Bool(true),
-			S3ForcePathStyle: aws.Bool(true),
+	// Check if minio and adapt s3 session properly
+	if golium.GetEnvironment().Get("minio") != nil {
+		if minio := golium.Value(ctx, "[CONF:minio]").(bool); minio {
+			s3Config = &aws.Config{
+				Endpoint:         aws.String(golium.Value(ctx, "[CONF:minioEndpoint]").(string)),
+				DisableSSL:       aws.Bool(true),
+				S3ForcePathStyle: aws.Bool(true),
+			}
 		}
 	}
 	var err error
