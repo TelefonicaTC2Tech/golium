@@ -139,11 +139,11 @@ func (s *Session) SendDoHQuery(ctx context.Context, method string, qtype uint16,
 		}
 	case "POST":
 		u, err := url.Parse(s.Server)
-		params := url.Values(s.DoHQueryParams)
-		u.RawQuery = params.Encode()
 		if err != nil {
 			return err
 		}
+		params := url.Values(s.DoHQueryParams)
+		u.RawQuery = params.Encode()
 		request, err = http.NewRequest("POST", u.String(), bytes.NewReader(data))
 		if err != nil {
 			return err
