@@ -120,15 +120,15 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 	scenCtx.Step(`^the HTTP response body must comply with the JSON schema "([^"]*)"$`, func(schema string) error {
 		return session.ValidateResponseBodyJSONSchema(ctx, golium.ValueAsString(ctx, schema))
 	})
-	scenCtx.Step(`^the HTTP response body must match with the JSON "([^"]*)" from "([^"]*)" file$`, func(code, file string) error {
-		return session.ValidateResponseBodyJSONFile(ctx, code, file)
+	scenCtx.Step(`^the HTTP response "([^"]*)" must match with the JSON "([^"]*)" from "([^"]*)" file$`, func(respDataLocation, code, file string) error {
+		return session.ValidateResponseBodyJSONFile(ctx, code, file, respDataLocation)
 	})
-	scenCtx.Step(`^the HTTP response body must match with the JSON "([^"]*)" from "([^"]*)" file without$`, func(code, file string, t *godog.Table) error {
+	scenCtx.Step(`^the HTTP response "([^"]*)" must match with the JSON "([^"]*)" from "([^"]*)" file without$`, func(respDataLocation, code, file string, t *godog.Table) error {
 		params, err := golium.ConvertTableColumnToArray(ctx, t)
 		if err != nil {
 			return fmt.Errorf("failed processing table to a map for the request body: %w", err)
 		}
-		return session.ValidateResponseBodyJSONFileWithout(ctx, code, file, params)
+		return session.ValidateResponseBodyJSONFileWithout(ctx, code, file, respDataLocation, params)
 	})
 	scenCtx.Step(`^the HTTP response body must have the JSON properties$`, func(t *godog.Table) error {
 		props, err := golium.ConvertTableToMap(ctx, t)

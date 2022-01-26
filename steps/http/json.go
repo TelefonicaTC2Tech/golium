@@ -25,7 +25,7 @@ import (
 	"github.com/Telefonica/golium"
 )
 
-func getParamFromJSON(ctx context.Context, file, code, param string) (interface{}, error) {
+func GetParamFromJSON(ctx context.Context, file, code, param string) (interface{}, error) {
 	assetsDir := golium.GetConfig().Dir.Schemas
 	filePath := fmt.Sprintf("%s/%s.json", assetsDir, file)
 	absPath, _ := filepath.Abs(filePath)
