@@ -19,7 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 	"net/url"
@@ -251,7 +251,7 @@ func (s *Session) SendHTTPRequest(ctx context.Context, method string) error {
 	defer resp.Body.Close()
 	// This is dangerous for big response bodies, but is read now to make sure that the body reader is closed.
 	// TODO: limit the max size of the response body.
-	respBodyBytes, err := ioutil.ReadAll(resp.Body)
+	respBodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return fmt.Errorf("failed reading the response body: %w", err)
 	}

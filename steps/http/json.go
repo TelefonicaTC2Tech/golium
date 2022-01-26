@@ -18,7 +18,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -70,7 +69,7 @@ func LoadJSONData(file string) ([]byte, error) {
 		return nil, fmt.Errorf("file path does not exist: %v", absPath)
 	}
 
-	data, readErr := ioutil.ReadFile(absPath)
+	data, readErr := os.ReadFile(absPath)
 	if readErr != nil {
 		return nil, fmt.Errorf("error reading file at %s due to error: %w", absPath, readErr)
 	}
