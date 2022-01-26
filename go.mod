@@ -1,6 +1,6 @@
 module github.com/TelefonicaTC2Tech/golium
 
-go 1.15
+go 1.16
 
 require (
 	github.com/AdguardTeam/dnsproxy v0.37.0
