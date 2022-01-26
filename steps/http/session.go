@@ -341,7 +341,7 @@ func (s *Session) ValidateResponseFromJSONFile(response interface{}, respDataLoc
 		var realResponse interface{}
 
 		if err := json.Unmarshal(respBody, &realResponse); err != nil {
-			return fmt.Errorf("error unmarshaling response body: %w", err)
+			return fmt.Errorf("error unmarshalling response body: %w", err)
 		}
 
 		if !reflect.DeepEqual(response, realResponse) {
