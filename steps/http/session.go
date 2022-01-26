@@ -325,7 +325,7 @@ func (s *Session) ValidateResponseBodyJSONSchema(ctx context.Context, schema str
 func (s *Session) ValidateResponseFromJSONFile(response interface{}, respDataLocation string) error {
 	respBody := s.Response.ResponseBody
 	if respDataLocation != "" {
-		respBodyAux := golium.NewMapFromJSONBytes(s.Response.ResponseBody)
+		respBodyAux := golium.NewMapFromJSONBytes(respBody)
 		respBodyDataLoc := respBodyAux.Get(respDataLocation)
 		respBody = []byte(fmt.Sprint(respBodyDataLoc))
 	}
@@ -338,15 +338,15 @@ func (s *Session) ValidateResponseFromJSONFile(response interface{}, respDataLoc
 		}
 	case map[string]interface{}:
 
-		var actual interface{}
+		var realResponse interface{}
 
-		if err := json.Unmarshal(respBody, &actual); err != nil {
-			return fmt.Errorf("error Unmarshaling response body: %w", err)
+		if err := json.Unmarshal(respBody, &realResponse); err != nil {
+			return fmt.Errorf("error unmarshaling response body: %w", err)
 		}
 
-		if !reflect.DeepEqual(response, actual) {
-			return fmt.Errorf("expected JSON does not match actual, \n%v\n vs \n%s", response,
-				actual)
+		if !reflect.DeepEqual(response, realResponse) {
+			return fmt.Errorf("expected JSON does not match real response, \n%v\n vs \n%s", response,
+				realResponse)
 		}
 	default:
 		return fmt.Errorf("body content should be string or map: %v", resp)
