@@ -22,7 +22,6 @@ import (
 	"github.com/Telefonica/golium"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/aws/credentials"
 	aws_s "github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
@@ -48,18 +47,16 @@ func (s *Session) NewS3Session(ctx context.Context) error {
 	logger := GetLogger()
 	logger.LogMessage("Creating a new S3 session")
 
-	s3Config := &aws.Config{
-		Region: aws.String(golium.Value(ctx, "[CONF:s3Region]").(string)),
-	}
-	// Check minio
-	minio := golium.Value(ctx, "[CONF:minio]").(bool)
-	if minio {
-		s3Config = &aws.Config{
-			Credentials:      credentials.NewStaticCredentials(golium.Value(ctx, "[CONF:minioAwsAccessKeyId]").(string), golium.Value(ctx, "[CONF:minioAwsSecretAccessKey]").(string), ""),
-			Endpoint:         aws.String(golium.Value(ctx, "[CONF:minioEndpoint]").(string)),
-			Region:           aws.String(golium.Value(ctx, "[CONF:s3Region]").(string)),
-			DisableSSL:       aws.Bool(true),
-			S3ForcePathStyle: aws.Bool(true),
+	s3Config := &aws.Config{}
+
+	// Check if minio and adapt s3 session properly
+	if golium.GetEnvironment().Get("minio") != nil {
+		if minio := golium.Value(ctx, "[CONF:minio]").(bool); minio {
+			s3Config = &aws.Config{
+				Endpoint:         aws.String(golium.Value(ctx, "[CONF:minioEndpoint]").(string)),
+				DisableSSL:       aws.Bool(true),
+				S3ForcePathStyle: aws.Bool(true),
+			}
 		}
 	}
 	var err error

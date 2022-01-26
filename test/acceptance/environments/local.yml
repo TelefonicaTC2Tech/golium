@@ -104,14 +104,11 @@ elasticsearch:
 
 # s3
 s3Autoclean: true
-s3Region: eu-west-1
 s3Bucket: golium-demo
+# Set minio to true to run test against minio server deployed locally otherwise set it to false or remove it
 minio: true
-# Below config is only required by minio server
-# To grant access to AWS set minio parameter to false and configure the env vars: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION
 minioEndpoint: http://localhost:9999
-minioAwsAccessKeyId: minioadmin
-minioAwsSecretAccessKey: minioadmin
+# Use AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION env vars to define aws or minio credentials
 
 # common
 defaultDelay: 1
