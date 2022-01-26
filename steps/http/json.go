@@ -21,8 +21,10 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"reflect"
 
 	"github.com/Telefonica/golium"
+	"github.com/tidwall/gjson"
 )
 
 func GetParamFromJSON(ctx context.Context, file, code, param string) (interface{}, error) {
@@ -51,4 +53,38 @@ func GetParamFromJSON(ctx context.Context, file, code, param string) (interface{
 	}
 
 	return nil, fmt.Errorf("code: '%s' not found in '%s'", code, filePath)
+}
+
+func GetParamFromJSONFile(ctx context.Context, file, code, param string) (interface{}, error) {
+	logger := GetLogger()
+	// Retrive relative filepath
+	assetsDir := golium.GetConfig().Dir.Schemas
+	relativeFilePath := fmt.Sprintf("%s/%s.json", assetsDir, file)
+
+	data, readErr := os.ReadFile(relativeFilePath)
+	if readErr != nil {
+		return nil, fmt.Errorf("error reading file at %s due to error: %w", relativeFilePath, readErr)
+	}
+
+	value := gjson.Get(string(data), fmt.Sprintf("#(code==%s).%s", code, param))
+
+	if value.Exists() {
+		var paramResponse interface{}
+		if err := json.Unmarshal([]byte(fmt.Sprint(value.String())), &paramResponse); err != nil {
+			return nil, fmt.Errorf("error Unmarshaling expected response body: %w", err)
+		}
+		logger.log.Printf("Value found: %v", value)
+		return paramResponse, nil
+	}
+
+	return nil, fmt.Errorf("code: '%s' not found in '%s'", code, relativeFilePath)
+}
+
+// JSONEquals Check if JSON interfaces are equals using reflect.DeepEqual
+func JSONEquals(expectedJSON interface{}, currentJSON interface{}) error {
+	if !reflect.DeepEqual(expectedJSON, currentJSON) {
+		return fmt.Errorf("expected JSON does not match current JSON, \n%v\n vs \n%s", expectedJSON,
+			currentJSON)
+	}
+	return nil
 }

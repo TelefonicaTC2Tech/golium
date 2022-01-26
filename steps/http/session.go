@@ -151,21 +151,21 @@ func (s *Session) ConfigureRequestBodyJSONProperties(ctx context.Context, props 
 // ConfigureRequestBodyJSONText writes the body in the HTTP request as a JSON from text.
 func (s *Session) ConfigureRequestBodyJSONText(ctx context.Context, message string) error {
 	s.Request.RequestBody = []byte(message)
-	if s.Request.Headers == nil {
-		s.Request.Headers = make(map[string][]string)
-	}
-	s.Request.Headers["Content-Type"] = []string{"application/json"}
-	return nil
+	return s.Request.AddJSONHeaders()
 }
 
 // AddToRequestMessageFromJSONFile adds to Request Body the message from JSON file
 func (s *Session) AddToRequestMessageFromJSONFile(message interface{}) error {
-	messageMarshal, _ := json.Marshal(message)
-	s.Request.RequestBody = []byte(string(messageMarshal))
-	if s.Request.Headers == nil {
-		s.Request.Headers = make(map[string][]string)
+	s.Request.RequestBody, _ = json.Marshal(message)
+	return s.Request.AddJSONHeaders()
+}
+
+// AddJSONHeaders adds json headers to Request if they are null
+func (r *Request) AddJSONHeaders() error {
+	if r.Headers == nil {
+		r.Headers = make(map[string][]string)
 	}
-	s.Request.Headers["Content-Type"] = []string{"application/json"}
+	r.Headers["Content-Type"] = []string{"application/json"}
 	return nil
 }
 
@@ -351,7 +351,6 @@ func (s *Session) ValidateResponseFromJSONFile(response interface{}, respDataLoc
 	default:
 		return fmt.Errorf("body content should be string or map: %v", resp)
 	}
-
 	return nil
 }
 
