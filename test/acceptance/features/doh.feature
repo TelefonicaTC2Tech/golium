@@ -17,6 +17,8 @@ Feature: DOH client
   @doh
   Scenario Outline: DoH Query domain with recursion
     Given the DNS server "[CONF:doh]" on "DoH with <method>"
+      And the DoH query parameters
+        | test-param    | test-value |
       And a DNS timeout of "[CONF:timeout]" milliseconds
      When I send a DNS query of type "<type>" for "<domain>"
      Then the DNS response must have the code "<code>"
