@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/Telefonica/golium"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGetParamFromJSON(t *testing.T) {
@@ -70,10 +71,9 @@ func TestGetParamFromJSON(t *testing.T) {
 			t.Errorf("error loading parameter from file %s due to error: %v", fileName, paramFromJSONErr)
 		}
 
-		if !reflect.DeepEqual(resultParam, expectedParam) {
-			t.Errorf("expected JSON parameter does not match response JSON parametr, \n%v\n vs \n%s", resultParam,
-				JSON)
-		}
+		assert.True(t, 
+			reflect.DeepEqual(resultParam, expectedParam), 
+			fmt.Sprintf("expected JSON parameter does not match response JSON parametr, \n%v\n vs \n%s", resultParam, JSON))
 	})
 }
 
@@ -134,9 +134,8 @@ func TestGetParamFromJSONFile(t *testing.T) {
 			t.Errorf("error loading parameter from file %s due to error: %v", fileName, paramFromJSONErr)
 		}
 
-		if !reflect.DeepEqual(resultParam, expectedParam) {
-			t.Errorf("expected JSON parameter does not match response JSON parametr, \n%v\n vs \n%s", resultParam,
-				JSON)
-		}
+		assert.True(t, 
+			reflect.DeepEqual(resultParam, expectedParam), 
+			fmt.Sprintf("expected JSON parameter does not match response JSON parametr, \n%v\n vs \n%s", resultParam, JSON))
 	})
 }
