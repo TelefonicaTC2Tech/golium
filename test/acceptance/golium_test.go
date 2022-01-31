@@ -20,6 +20,7 @@ import (
 
 	"github.com/Telefonica/golium"
 	mockhttp "github.com/Telefonica/golium/mock/http"
+	"github.com/Telefonica/golium/steps/aggregate"
 	"github.com/Telefonica/golium/steps/common"
 	"github.com/Telefonica/golium/steps/dns"
 	"github.com/Telefonica/golium/steps/elasticsearch"
@@ -49,13 +50,14 @@ func InitializeScenario(ctx context.Context, scenarioCtx *godog.ScenarioContext)
 	stepsInitializers := []golium.StepsInitializer{
 		common.Steps{},
 		jwt.Steps{},
-		http.Steps{},
 		dns.Steps{},
 		redis.Steps{},
 		rabbit.Steps{},
 		mockhttp.Steps{},
 		elasticsearch.Steps{},
 		s3steps.Steps{},
+		http.Steps{},
+		aggregate.Steps{},
 	}
 	for _, stepsInitializer := range stepsInitializers {
 		ctx = stepsInitializer.InitializeSteps(ctx, scenarioCtx)

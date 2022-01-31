@@ -149,5 +149,8 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 	scenCtx.Step(`^I store the header "([^"]*)" from the HTTP response in context "([^"]*)"$`, func(key string, ctxtKey string) error {
 		return session.StoreResponseHeaderInContext(ctx, golium.ValueAsString(ctx, key), golium.ValueAsString(ctx, ctxtKey))
 	})
+	scenCtx.Step(`^validate the code "(\d+)" on parent session$`, func(code int) error {
+		return session.ValidateSharedStatusCode(ctx, code)
+	})
 	return ctx
 }
