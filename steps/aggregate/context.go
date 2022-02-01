@@ -20,7 +20,7 @@ import (
 	"github.com/Telefonica/golium/steps/http"
 )
 
-// ContextKey defines a type to store the HTTP session in context.Context.
+// ContextKey defines a type to store the aggregate session in context.Context.
 type ContextKey string
 
 var contextKey ContextKey = "sharedSession"
@@ -29,7 +29,7 @@ var contextKey ContextKey = "sharedSession"
 // The new context is returned because context is immutable.
 func InitializeContext(ctx context.Context) context.Context {
 	sessionRestored := ctx.Value(http.ContextKey("httpSession")).(*http.Session)
-	var aggregateSession *AggregateSession = &AggregateSession{Session: sessionRestored}
+	var aggregateSession *AggregateSession = &AggregateSession{session: sessionRestored}
 	return context.WithValue(ctx, contextKey, aggregateSession)
 }
 

@@ -22,10 +22,10 @@ import (
 
 // AggregateSession contains the information of shared session
 type AggregateSession struct {
-	Session *http.Session
+	session *http.Session
 }
 
 // SaveStatusCode saves code in shared session.
-func (s *AggregateSession) SaveStatusCode(ctx context.Context, code int) error {
-	return s.Session.SaveStatusCode(ctx, code)
+func (ags *AggregateSession) SaveStatusCode(ctx context.Context, code int) error {
+	return ags.session.SaveStatusCode(ctx, code)
 }
