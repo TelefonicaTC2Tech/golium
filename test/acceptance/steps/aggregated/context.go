@@ -20,20 +20,20 @@ import (
 	"github.com/Telefonica/golium/test/acceptance/steps/shared"
 )
 
-// ContextKey defines a type to store the aggregate session in context.Context.
+// ContextKey defines a type to store the aggregated session in context.Context.
 type ContextKey string
 
-var contextKey ContextKey = "aggregateSession"
+var contextKey ContextKey = "aggregatedSession"
 
-// InitializeContext adds the Aggregate session to the context.
+// InitializeContext adds the Aggregated session to the context.
 // The new context is returned because context is immutable.
 func InitializeContext(ctx context.Context) context.Context {
 	sessionRestored := ctx.Value(shared.ContextKey("sharedSession")).(*shared.Session)
-	var aggregateSession *AggregatedSession = &AggregatedSession{session: sessionRestored}
-	return context.WithValue(ctx, contextKey, aggregateSession)
+	var aggregatedSession *AggregatedSession = &AggregatedSession{session: sessionRestored}
+	return context.WithValue(ctx, contextKey, aggregatedSession)
 }
 
-// GetSession returns the Aggregate session stored in context.
+// GetSession returns the Aggregated session stored in context.
 // Note that the context should be previously initialized with InitializeContext function.
 func GetSession(ctx context.Context) *AggregatedSession {
 	return ctx.Value(contextKey).(*AggregatedSession)

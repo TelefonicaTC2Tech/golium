@@ -20,20 +20,20 @@ import (
 	"github.com/cucumber/godog"
 )
 
-// Steps type is responsible to initialize the HTTP client steps in godog framework.
+// Steps type is responsible to initialize aggregated steps in godog framework.
 type Steps struct {
 }
 
-// InitializeSteps adds client HTTP steps to the scenario context.
+// InitializeSteps adds aggregated steps to the scenario context.
 // It implements StepsInitializer interface.
 // It returns a new context (context is immutable) with the HTTP Context.
 func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioContext) context.Context {
-	// Initialize the HTTP session in shared context
+	// Initialize the aggregated session in shared context
 	ctx = InitializeContext(ctx)
-	aggregadteSession := GetSession(ctx)
+	aggregatedSession := GetSession(ctx)
 	// Initialize the steps
 	scenCtx.Step(`^save the code "(\d+)" from aggregated to shared session$`, func(code int) error {
-		return aggregadteSession.SaveStatusCode(ctx, code)
+		return aggregatedSession.SaveStatusCode(ctx, code)
 	})
 	return ctx
 }
