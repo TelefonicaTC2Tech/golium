@@ -4,7 +4,7 @@ Sample path test project with some scenarios using defined steps at Golium and c
 
 ## Structure
 
-The examples contains the following directories:
+The examples folder contains the following directories:
 
 - `features`. Features for the test suite in BDD.
 - `environments`. It contains the configuration for each environment in a specific yml file. This directory is configured with the environment variable: `DIR_ENVIRONMENTS`.

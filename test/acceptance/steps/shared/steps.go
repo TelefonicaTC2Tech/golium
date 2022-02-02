@@ -32,7 +32,7 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 	ctx = InitializeContext(ctx)
 	session := GetSession(ctx)
 	// Initialize the steps
-	scenCtx.Step(`^validate the code "(\d+)" on shared session$`, func(code int) error {
+	scenCtx.Step(`^validate the code "(\d+)" in shared session$`, func(code int) error {
 		return session.ValidateSharedStatusCode(ctx, code)
 	})
 	return ctx

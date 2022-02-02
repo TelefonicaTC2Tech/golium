@@ -1,4 +1,4 @@
-package aggregate
+package aggregated
 
 import (
 	"context"
@@ -14,12 +14,12 @@ func TestInitializeContext(t *testing.T) {
 	var ctx = context.Background()
 	var contextKeyValue = "aggregateSession"
 	sharedContext := shared.InitializeContext(ctx)
-	aggregateContext := InitializeContext(sharedContext)
+	aggregatedContext := InitializeContext(sharedContext)
 
-	aggregatedContextGenerated := aggregateContext.Value(ContextKey(contextKeyValue))
+	aggregatedContextGenerated := aggregatedContext.Value(ContextKey(contextKeyValue))
 
 	assert.True(t,
 		aggregatedContextGenerated != nil,
-		fmt.Sprintf("expected Aggregate context Couldn't be loaded with value \n%s", contextKeyValue),
+		fmt.Sprintf("expected aggregated context could not be loaded with value \n%s", contextKeyValue),
 	)
 }

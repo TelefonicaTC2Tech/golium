@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package aggregate
+package aggregated
 
 import (
 	"context"
@@ -29,12 +29,12 @@ var contextKey ContextKey = "aggregateSession"
 // The new context is returned because context is immutable.
 func InitializeContext(ctx context.Context) context.Context {
 	sessionRestored := ctx.Value(shared.ContextKey("sharedSession")).(*shared.Session)
-	var aggregateSession *AggregateSession = &AggregateSession{session: sessionRestored}
+	var aggregateSession *AggregatedSession = &AggregatedSession{session: sessionRestored}
 	return context.WithValue(ctx, contextKey, aggregateSession)
 }
 
 // GetSession returns the Aggregate session stored in context.
 // Note that the context should be previously initialized with InitializeContext function.
-func GetSession(ctx context.Context) *AggregateSession {
-	return ctx.Value(contextKey).(*AggregateSession)
+func GetSession(ctx context.Context) *AggregatedSession {
+	return ctx.Value(contextKey).(*AggregatedSession)
 }

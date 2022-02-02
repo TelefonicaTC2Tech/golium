@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package aggregate
+package aggregated
 
 import (
 	"context"
@@ -20,12 +20,12 @@ import (
 	"github.com/Telefonica/golium/test/acceptance/steps/shared"
 )
 
-// AggregateSession contains the information of shared session
-type AggregateSession struct {
+// AggregatedSession contains the information of shared session
+type AggregatedSession struct {
 	session *shared.Session
 }
 
 // SaveStatusCode saves code in shared session.
-func (a *AggregateSession) SaveStatusCode(ctx context.Context, code int) error {
+func (a *AggregatedSession) SaveStatusCode(ctx context.Context, code int) error {
 	return a.session.SaveStatusCode(ctx, code)
 }

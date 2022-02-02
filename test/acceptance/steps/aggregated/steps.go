@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package aggregate
+package aggregated
 
 import (
 	"context"
@@ -30,10 +30,10 @@ type Steps struct {
 func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioContext) context.Context {
 	// Initialize the HTTP session in shared context
 	ctx = InitializeContext(ctx)
-	aggregateSession := GetSession(ctx)
+	aggregadteSession := GetSession(ctx)
 	// Initialize the steps
-	scenCtx.Step(`^save the code "(\d+)" from aggregate to shared session$`, func(code int) error {
-		return aggregateSession.SaveStatusCode(ctx, code)
+	scenCtx.Step(`^save the code "(\d+)" from aggregated to shared session$`, func(code int) error {
+		return aggregadteSession.SaveStatusCode(ctx, code)
 	})
 	return ctx
 }
