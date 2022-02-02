@@ -27,7 +27,6 @@ Run specific tag `@shared` from feature file:
 go test -v --godog.tags="shared"
 ```
 
-
 ## License
 
 ```
