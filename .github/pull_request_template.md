@@ -8,6 +8,12 @@ Explain the **details** for making this change. What existing problem does the p
 
 <!-- Example: When "Adding a function to do X", explain why it is necessary to have a way to do X. -->
 
+**Documentation**
+
+Update Readme docs if needed-
+
+<!-- Make sure Readme is updated if needed. -->
+
 **Test plan (required)**
 
 Demonstrate the code is solid. Example: The exact commands you ran and their output, screenshots / videos if the pull request changes UI.
