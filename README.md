@@ -24,7 +24,7 @@ The library has a default configuration. However, these settings can be changed 
 
 ## Example
 
-The library includes a complete example with some scenarios for HTTP and DNS protocols in the directory `test/acceptance`.
+The library includes a complete example with some scenarios for HTTP and DNS protocols in the directory [test/acceptance](test/acceptance).
 
 For testing:
 

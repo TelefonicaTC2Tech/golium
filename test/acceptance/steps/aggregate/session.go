@@ -26,6 +26,6 @@ type AggregateSession struct {
 }
 
 // SaveStatusCode saves code in shared session.
-func (ags *AggregateSession) SaveStatusCode(ctx context.Context, code int) error {
-	return ags.session.SaveStatusCode(ctx, code)
+func (a *AggregateSession) SaveStatusCode(ctx context.Context, code int) error {
+	return a.session.SaveStatusCode(ctx, code)
 }
