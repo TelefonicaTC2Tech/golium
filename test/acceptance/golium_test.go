@@ -20,7 +20,6 @@ import (
 
 	"github.com/Telefonica/golium"
 	mockhttp "github.com/Telefonica/golium/mock/http"
-	"github.com/Telefonica/golium/steps/aggregate"
 	"github.com/Telefonica/golium/steps/common"
 	"github.com/Telefonica/golium/steps/dns"
 	"github.com/Telefonica/golium/steps/elasticsearch"
@@ -29,6 +28,7 @@ import (
 	"github.com/Telefonica/golium/steps/rabbit"
 	"github.com/Telefonica/golium/steps/redis"
 	s3steps "github.com/Telefonica/golium/steps/s3"
+	"github.com/Telefonica/golium/test/acceptance/steps/aggregate"
 	"github.com/cucumber/godog"
 )
 
