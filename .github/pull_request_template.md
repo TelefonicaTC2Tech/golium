@@ -10,7 +10,7 @@ Explain the **details** for making this change. What existing problem does the p
 
 **Documentation**
 
-Update Readme docs if needed-
+Update Readme docs if needed.
 
 <!-- Make sure Readme is updated if needed. -->
 
