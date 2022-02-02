@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package aggregate
+package shared
 
 import (
 	"context"
@@ -24,16 +24,16 @@ import (
 type Steps struct {
 }
 
-// InitializeSteps adds client HTTP steps to the scenario context.
+// InitializeSteps adds base steps to the scenario context.
 // It implements StepsInitializer interface.
 // It returns a new context (context is immutable) with the HTTP Context.
 func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioContext) context.Context {
-	// Initialize the HTTP session in shared context
+	// Initialize the Base session in shared context
 	ctx = InitializeContext(ctx)
-	aggregateSession := GetSession(ctx)
+	session := GetSession(ctx)
 	// Initialize the steps
-	scenCtx.Step(`^save the code "(\d+)" from aggregate to shared session$`, func(code int) error {
-		return aggregateSession.SaveStatusCode(ctx, code)
+	scenCtx.Step(`^validate the code "(\d+)" on shared session$`, func(code int) error {
+		return session.ValidateSharedStatusCode(ctx, code)
 	})
 	return ctx
 }

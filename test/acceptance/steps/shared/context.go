@@ -12,29 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package aggregate
+package shared
 
 import (
 	"context"
-
-	"github.com/Telefonica/golium/test/acceptance/steps/shared"
 )
 
-// ContextKey defines a type to store the aggregate session in context.Context.
+// ContextKey defines a type to store the shared session in context.Context.
 type ContextKey string
 
-var contextKey ContextKey = "aggregateSession"
+var contextKey ContextKey = "sharedSession"
 
-// InitializeContext adds the Aggregate session to the context.
+// InitializeContext adds the shared session to the context.
 // The new context is returned because context is immutable.
 func InitializeContext(ctx context.Context) context.Context {
-	sessionRestored := ctx.Value(shared.ContextKey("sharedSession")).(*shared.Session)
-	var aggregateSession *AggregateSession = &AggregateSession{session: sessionRestored}
-	return context.WithValue(ctx, contextKey, aggregateSession)
+	var session Session
+	return context.WithValue(ctx, contextKey, &session)
 }
 
-// GetSession returns the Aggregate session stored in context.
+// GetSession returns the shared session stored in context.
 // Note that the context should be previously initialized with InitializeContext function.
-func GetSession(ctx context.Context) *AggregateSession {
-	return ctx.Value(contextKey).(*AggregateSession)
+func GetSession(ctx context.Context) *Session {
+	return ctx.Value(contextKey).(*Session)
 }

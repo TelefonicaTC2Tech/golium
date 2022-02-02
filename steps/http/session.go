@@ -75,7 +75,6 @@ type Session struct {
 	NoRedirect bool
 	Timeout    time.Duration
 	Timedout   bool
-	StatusCode int
 }
 
 // URL composes the endpoint, the resource, and query parameters to build a URL.
@@ -421,19 +420,5 @@ func (s *Session) StoreResponseBodyJSONPropertyInContext(ctx context.Context, ke
 func (s *Session) StoreResponseHeaderInContext(ctx context.Context, header string, ctxtKey string) error {
 	h := s.Response.Response.Header.Get(header)
 	golium.GetContext(ctx).Put(ctxtKey, h)
-	return nil
-}
-
-// ValidateStatusCode validates the status code from the HTTP response.
-func (s *Session) SaveStatusCode(ctx context.Context, code int) error {
-	s.StatusCode = code
-	return nil
-}
-
-// ValidateStatusCode validates the status code from the HTTP response.
-func (s *Session) ValidateSharedStatusCode(ctx context.Context, expectedCode int) error {
-	if expectedCode != s.StatusCode {
-		return fmt.Errorf("status code mismatch: expected '%d', actual '%d'", expectedCode, s.Response.Response.StatusCode)
-	}
 	return nil
 }

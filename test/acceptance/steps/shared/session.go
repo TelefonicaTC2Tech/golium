@@ -12,20 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package aggregate
+package shared
 
 import (
 	"context"
-
-	"github.com/Telefonica/golium/test/acceptance/steps/shared"
+	"fmt"
 )
 
-// AggregateSession contains the information of shared session
-type AggregateSession struct {
-	session *shared.Session
+// Session contains the information of shared session
+type Session struct {
+	StatusCode int
 }
 
-// SaveStatusCode saves code in shared session.
-func (a *AggregateSession) SaveStatusCode(ctx context.Context, code int) error {
-	return a.session.SaveStatusCode(ctx, code)
+// SaveStatusCode save the status code.
+func (s *Session) SaveStatusCode(ctx context.Context, code int) error {
+	s.StatusCode = code
+	return nil
+}
+
+// ValidateStatusCode validates the status code from the base response.
+func (s *Session) ValidateSharedStatusCode(ctx context.Context, expectedCode int) error {
+	if expectedCode != s.StatusCode {
+		return fmt.Errorf("status code mismatch: expected '%d', actual '%d'", expectedCode, s.StatusCode)
+	}
+	return nil
 }

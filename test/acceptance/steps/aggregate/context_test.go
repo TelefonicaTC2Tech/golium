@@ -5,21 +5,21 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Telefonica/golium/steps/http"
+	"github.com/Telefonica/golium/test/acceptance/steps/shared"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestInitializeContext(t *testing.T) {
 
 	var ctx = context.Background()
-	var contextKeyValue = "sharedSession"
-	httpContext := http.InitializeContext(ctx)
-	aggregateContext := InitializeContext(httpContext)
+	var contextKeyValue = "aggregateSession"
+	sharedContext := shared.InitializeContext(ctx)
+	aggregateContext := InitializeContext(sharedContext)
 
-	httpContextGenerated := aggregateContext.Value(ContextKey(contextKeyValue))
+	aggregatedContextGenerated := aggregateContext.Value(ContextKey(contextKeyValue))
 
 	assert.True(t,
-		httpContextGenerated != nil,
+		aggregatedContextGenerated != nil,
 		fmt.Sprintf("expected Aggregate context Couldn't be loaded with value \n%s", contextKeyValue),
 	)
 }
