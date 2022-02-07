@@ -37,12 +37,20 @@ func GetParamFromJSON(ctx context.Context, file, code, param string) (interface{
 		return nil, fmt.Errorf("error unmarsharlling JSON file at %s due to error: %w", file, err)
 	}
 
+	paramValue, err := FindValueByCode(dataStruct, code, param)
+	if err != nil {
+		return nil, fmt.Errorf("Param value: '%s' not found in '%v' due to error: %w", param, dataStruct, err)
+	}
+	return paramValue, nil
+}
+
+func FindValueByCode(dataStruct []map[string]interface{}, code string, param string) (interface{}, error) {
 	for _, response := range dataStruct {
 		if fmt.Sprint(response["code"]) == code {
 			return response[param], nil
 		}
 	}
-	return nil, fmt.Errorf("code: '%s' not found in '%s'", code, file)
+	return nil, fmt.Errorf("value for param: '%s' with code: '%s' not found", param, code)
 }
 
 func LoadJSONData(file string) ([]byte, error) {
