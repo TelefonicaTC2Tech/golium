@@ -78,11 +78,7 @@ func UnmarshalJSONData(data []byte) ([]map[string]interface{}, error) {
 	return dataStruct, nil
 }
 
-// JSONEquals Check if JSON interfaces are equals using reflect.DeepEqual
-func JSONEquals(expectedJSON interface{}, currentJSON interface{}) error {
-	if !reflect.DeepEqual(expectedJSON, currentJSON) {
-		return fmt.Errorf("expected JSON does not match current JSON, \n%v\n vs \n%s", expectedJSON,
-			currentJSON)
-	}
-	return nil
+// JSONEquals Check if JSON are equal
+func JSONEquals(expected interface{}, current interface{}) bool {
+	return reflect.DeepEqual(expected, current)
 }
