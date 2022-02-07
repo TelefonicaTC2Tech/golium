@@ -47,7 +47,9 @@ func GetParamFromJSON(ctx context.Context, file, code, param string) (interface{
 func FindValueByCode(dataStruct []map[string]interface{}, code string, param string) (interface{}, error) {
 	for _, response := range dataStruct {
 		if fmt.Sprint(response["code"]) == code {
-			return response[param], nil
+			if value, ok := response[param]; ok {
+				return value, nil
+			}
 		}
 	}
 	return nil, fmt.Errorf("value for param: '%s' with code: '%s' not found", param, code)

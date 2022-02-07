@@ -66,9 +66,9 @@ func TestGetParamFromJSON(t *testing.T) {
 		}
 
 		// Call function to test
-		resultParam, paramFromJSONErr := GetParamFromJSON(ctx, fileName, code, param)
-		if paramFromJSONErr != nil {
-			t.Errorf("error loading parameter from file %s due to error: %v", fileName, paramFromJSONErr)
+		resultParam, err := GetParamFromJSON(ctx, fileName, code, param)
+		if err != nil {
+			t.Errorf("error loading parameter from file %s due to error: %v", fileName, err)
 		}
 
 		assert.True(t,
@@ -78,6 +78,91 @@ func TestGetParamFromJSON(t *testing.T) {
 }
 
 func TestFindValueByCode(t *testing.T) {
+
+	var JSONhttpFileValues = `
+	[
+		{
+			"code": "example1",
+			"body": {
+				"empty": "",
+				"boolean": false,
+				"list": [
+				  { "attribute": "attribute0", "value": "value0"},
+				  { "attribute": "attribute1", "value": "value1"},
+				  { "attribute": "attribute2", "value": "value2"}
+				]
+			},
+			"response": {
+				"boolean": false, 
+				"empty": "", 
+				"list": [
+					{ "attribute": "attribute0", "value": "value0"},
+					{ "attribute": "attribute1", "value": "value1"},
+					{ "attribute": "attribute2", "value": "value2"}
+				]
+			}
+		}
+	]
+	`
+
+	var JSON = `{
+		"boolean": false, 
+		"empty": "", 
+		"list": [
+			{ "attribute": "attribute0", "value": "value0"},
+			{ "attribute": "attribute1", "value": "value1"},
+			{ "attribute": "attribute2", "value": "value2"}
+		]
+	}`
+	var expectedValue interface{}
+	if err := json.Unmarshal([]byte(fmt.Sprint(JSON)), &expectedValue); err != nil {
+		t.Error("error Unmarshaling expected response body: %w", err)
+	}
+
+	dataStruct := []map[string]interface{}{}
+	if err := json.Unmarshal([]byte(fmt.Sprint(JSONhttpFileValues)), &dataStruct); err != nil {
+		t.Error("error Unmarshaling expected response body: %w", err)
+	}
+
+	tcs := []struct {
+		name          string
+		code          string
+		param         string
+		expectedValue interface{}
+	}{
+		{
+			name:          "value found with code and param",
+			code:          "example1",
+			param:         "response",
+			expectedValue: expectedValue,
+		},
+		{
+			name:          "value not found due non existing param",
+			code:          "example1",
+			param:         "non-existing-param",
+			expectedValue: nil,
+		},
+		{
+			name:          "value not found due non existing code",
+			code:          "non-existing-code",
+			param:         "response",
+			expectedValue: nil,
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			value, err := FindValueByCode(dataStruct, tc.code, tc.param)
+			if err != nil {
+				if err.Error() != fmt.Sprintf("value for param: '%s' with code: '%s' not found", tc.param, tc.code) {
+					t.Errorf("error not expected with param '%s' and code '%s':\n%v", tc.param, tc.code, err)
+				}
+			}
+
+			if !JSONEquals(value, tc.expectedValue) {
+				t.Errorf("value %v for param %s and code %s is not expected: %v", value, tc.param, tc.code, tc.expectedValue)
+			}
+		})
+	}
 
 }
 
