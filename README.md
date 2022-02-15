@@ -1,3 +1,5 @@
+[![Build](https://github.com/Telefonica/golium/actions/workflows/ci.yml/badge.svg)](https://github.com/Telefonica/golium/actions/workflows/ci.yml)
+
 # Golium
 
 This library aims to speed up the generation of acceptance tests with [Cucumber](https://cucumber.io/) and Behaviour-Driven Development (BDD). It is based on [godog](https://github.com/cucumber/godog) which is the official Cucumber BDD framework for Golang.
