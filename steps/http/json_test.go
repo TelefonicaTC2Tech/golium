@@ -13,7 +13,6 @@ import (
 )
 
 func TestGetParamFromJSON(t *testing.T) {
-
 	t.Run("Should return selected value from JSON file", func(t *testing.T) {
 
 		var JSONhttpFileValues = `
@@ -78,7 +77,6 @@ func TestGetParamFromJSON(t *testing.T) {
 }
 
 func TestFindValueByCode(t *testing.T) {
-
 	var JSONhttpFileValues = `
 	[
 		{
@@ -171,11 +169,79 @@ func TestLoadJSONData(t *testing.T) {
 }
 
 func TestUnmarshalJSONData(t *testing.T) {
+	var expectedString = `[
+		{
+			"boolean": false, 
+			"empty": "", 
+			"list": [
+				{ "attribute": "attribute0", "value": "value0"},
+				{ "attribute": "attribute1", "value": "value1"},
+				{ "attribute": "attribute2", "value": "value2"}
+			]
+		}
+	]`
 
+	var current = `[
+		{
+			"boolean": false, 
+			"empty": "", 
+			"list": [
+				{ "attribute": "attribute0", "value": "value0"},
+				{ "attribute": "attribute1", "value": "value1"},
+				{ "attribute": "attribute2", "value": "value2"}
+			]
+		}
+	]`
+
+	var incorrect = `
+		{
+			"boolean": false, 
+			"empty": ""
+		}`
+
+	var message = "error unmarshalling JSON data due to error: json: cannot unmarshal object into Go value of type []map[string]interface {}"
+	formatError := fmt.Errorf(message)
+	var expected interface{}
+	if err := json.Unmarshal([]byte(expectedString), &expected); err != nil {
+		t.Error("error Unmarshaling expected response body: %w", err)
+	}
+
+	tcs := []struct {
+		name     string
+		expected interface{}
+		current  string
+		err      error
+	}{
+		{
+			name:     "equals JSON values from structure",
+			expected: expected,
+			current:  current,
+			err:      nil,
+		},
+		{
+			name:     "equals JSON values from structure",
+			expected: expected,
+			current:  incorrect,
+			err:      formatError,
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			unmarshalled, err := UnmarshalJSONData([]byte(tc.current))
+			if err != nil {
+				if err.Error() != tc.err.Error() {
+					t.Errorf("unexpected error unmarshalling data:\n%v\nexpected:\n%v", err, tc.err)
+				}
+			}
+			if JSONEquals(tc.expected, unmarshalled) {
+				t.Errorf("expected unmarshalled data error:\n%v", err)
+			}
+
+		})
+	}
 }
 
 func TestJSONEquals(t *testing.T) {
-
 	var expectedString = `{
 		"boolean": false, 
 		"empty": "", 
