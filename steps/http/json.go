@@ -26,6 +26,8 @@ import (
 	"github.com/Telefonica/golium"
 )
 
+// GetParamFromJSON
+// Retrieve values from JSON structure file assets
 func GetParamFromJSON(ctx context.Context, file, code, param string) (interface{}, error) {
 	data, err := LoadJSONData(file)
 	if err != nil {
@@ -44,6 +46,8 @@ func GetParamFromJSON(ctx context.Context, file, code, param string) (interface{
 	return paramValue, nil
 }
 
+// FindValueByCode
+// Find value by code and param from dataStruct
 func FindValueByCode(dataStruct []map[string]interface{}, code string, param string) (interface{}, error) {
 	for _, response := range dataStruct {
 		if fmt.Sprint(response["code"]) == code {
@@ -55,6 +59,8 @@ func FindValueByCode(dataStruct []map[string]interface{}, code string, param str
 	return nil, fmt.Errorf("value for param: '%s' with code: '%s' not found", param, code)
 }
 
+// LoadJSONData
+// Load file contents into bytes
 func LoadJSONData(file string) ([]byte, error) {
 	assetsDir := golium.GetConfig().Dir.Schemas
 	filePath := fmt.Sprintf("%s%s%s.json", assetsDir, string(os.PathSeparator), file)
@@ -71,6 +77,8 @@ func LoadJSONData(file string) ([]byte, error) {
 	return data, nil
 }
 
+// UnmarshalJSONData
+// Unmarshal bytes to json map struct
 func UnmarshalJSONData(data []byte) ([]map[string]interface{}, error) {
 	dataStruct := []map[string]interface{}{}
 	err := json.Unmarshal(data, &dataStruct)
@@ -80,7 +88,8 @@ func UnmarshalJSONData(data []byte) ([]map[string]interface{}, error) {
 	return dataStruct, nil
 }
 
-// JSONEquals Check if JSON are equal
+// JSONEquals
+// Check if unmarshalled JSON maps are equal
 func JSONEquals(expected interface{}, current interface{}) bool {
 	return reflect.DeepEqual(expected, current)
 }
