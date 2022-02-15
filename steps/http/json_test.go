@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"reflect"
 	"testing"
@@ -44,7 +45,7 @@ func TestGetParamFromJSON(t *testing.T) {
 		golium.GetConfig().Dir.Schemas = "./schemas"
 
 		os.MkdirAll("./schemas", os.ModePerm)
-		os.WriteFile("./schemas/http.json", []byte(JSONhttpFileValues), os.ModePerm)
+		ioutil.WriteFile("./schemas/http.json", []byte(JSONhttpFileValues), os.ModePerm)
 		defer os.RemoveAll("./schemas/")
 
 		var fileName = "http"
