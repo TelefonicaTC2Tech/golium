@@ -9,3 +9,5 @@ debug.test
 # Mac
 .DS_Store
 
+# Coverage
+coverage.*

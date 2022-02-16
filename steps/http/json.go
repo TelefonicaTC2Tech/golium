@@ -21,13 +21,50 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"reflect"
 
 	"github.com/Telefonica/golium"
 )
 
+// GetParamFromJSON
+// Retrieve values from JSON structure file assets
 func GetParamFromJSON(ctx context.Context, file, code, param string) (interface{}, error) {
+	data, err := LoadJSONData(file)
+	if err != nil {
+		return nil, fmt.Errorf("error loading file at %s due to error: %w", file, err)
+	}
+
+	dataStruct, err := UnmarshalJSONData(data)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarsharlling JSON file at %s due to error: %w", file, err)
+	}
+
+	paramValue, err := FindValueByCode(dataStruct, code, param)
+	if err != nil {
+		return nil, fmt.Errorf("Param value: '%s' not found in '%v' due to error: %w", param, dataStruct, err)
+	}
+	return paramValue, nil
+}
+
+// FindValueByCode
+// Find value by code and param from dataStruct
+func FindValueByCode(dataStruct []map[string]interface{}, code string, param string) (interface{}, error) {
+	for _, response := range dataStruct {
+		if fmt.Sprint(response["code"]) == code {
+			if value, ok := response[param]; ok {
+				return value, nil
+			}
+		}
+	}
+	return nil, fmt.Errorf("value for param: '%s' with code: '%s' not found", param, code)
+}
+
+// LoadJSONData
+// Load file contents into bytes
+func LoadJSONData(file string) ([]byte, error) {
 	assetsDir := golium.GetConfig().Dir.Schemas
-	filePath := fmt.Sprintf("%s/%s.json", assetsDir, file)
+	filePath := fmt.Sprintf("%s%s%s.json", assetsDir, string(os.PathSeparator), file)
+
 	absPath, _ := filepath.Abs(filePath)
 	if _, err := os.Stat(absPath); err != nil {
 		return nil, fmt.Errorf("file path does not exist: %v", absPath)
@@ -37,18 +74,22 @@ func GetParamFromJSON(ctx context.Context, file, code, param string) (interface{
 	if readErr != nil {
 		return nil, fmt.Errorf("error reading file at %s due to error: %w", absPath, readErr)
 	}
+	return data, nil
+}
+
+// UnmarshalJSONData
+// Unmarshal bytes to json map struct
+func UnmarshalJSONData(data []byte) ([]map[string]interface{}, error) {
 	dataStruct := []map[string]interface{}{}
-	readErr = json.Unmarshal(data, &dataStruct)
-	if readErr != nil {
-		return nil,
-			fmt.Errorf("error unmarshalling JSON at %s due to error: %w", absPath, readErr)
+	err := json.Unmarshal(data, &dataStruct)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarshalling JSON data due to error: %w", err)
 	}
+	return dataStruct, nil
+}
 
-	for _, response := range dataStruct {
-		if fmt.Sprint(response["code"]) == code {
-			return response[param], nil
-		}
-	}
-
-	return nil, fmt.Errorf("code: '%s' not found in '%s'", code, filePath)
+// JSONEquals
+// Check if unmarshalled JSON maps are equal
+func JSONEquals(expected interface{}, current interface{}) bool {
+	return reflect.DeepEqual(expected, current)
 }
