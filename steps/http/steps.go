@@ -34,35 +34,39 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 	ctx = InitializeContext(ctx)
 	session := GetSession(ctx)
 	// Initialize the steps
-	scenCtx.Step(`^the HTTP endpoint "([^"]*)"$`, func(endpoint string) error {
-		return session.ConfigureEndpoint(ctx, golium.ValueAsString(ctx, endpoint))
+	scenCtx.Step(`^the HTTP endpoint "([^"]*)"$`, func(endpoint string) {
+		session.ConfigureEndpoint(ctx, golium.ValueAsString(ctx, endpoint))
 	})
 	scenCtx.Step(`^an HTTP timeout of "([^"]*)" milliseconds$`, func(timeout string) error {
 		to, err := golium.ValueAsInt(ctx, timeout)
 		if err != nil {
 			return fmt.Errorf("invalid timeout '%s': %w", timeout, err)
 		}
-		return session.SetHTTPResponseTimeout(ctx, to)
+		session.SetHTTPResponseTimeout(ctx, to)
+		return nil
 	})
 	scenCtx.Step(`^the HTTP path "([^"]*)"$`, func(path string) error {
-		return session.ConfigurePath(ctx, golium.ValueAsString(ctx, path))
+		session.ConfigurePath(ctx, golium.ValueAsString(ctx, path))
+		return nil
 	})
 	scenCtx.Step(`^the HTTP query parameters$`, func(t *godog.Table) error {
 		params, err := golium.ConvertTableToMultiMap(ctx, t)
 		if err != nil {
 			return fmt.Errorf("failed processing query parameters from table: %w", err)
 		}
-		return session.ConfigureQueryParams(ctx, params)
+		session.ConfigureQueryParams(ctx, params)
+		return nil
 	})
 	scenCtx.Step(`^the HTTP request headers$`, func(t *godog.Table) error {
 		headers, err := golium.ConvertTableToMultiMap(ctx, t)
 		if err != nil {
 			return fmt.Errorf("failed processing HTTP headers from table: %w", err)
 		}
-		return session.ConfigureHeaders(ctx, headers)
+		session.ConfigureHeaders(ctx, headers)
+		return nil
 	})
-	scenCtx.Step(`^the HTTP request with username "([^"]*)" and password "([^"]*)"$`, func(username, password string) error {
-		return session.ConfigureCredentials(ctx, golium.ValueAsString(ctx, username), golium.ValueAsString(ctx, password))
+	scenCtx.Step(`^the HTTP request with username "([^"]*)" and password "([^"]*)"$`, func(username, password string) {
+		session.ConfigureCredentials(ctx, golium.ValueAsString(ctx, username), golium.ValueAsString(ctx, password))
 	})
 	scenCtx.Step(`^the JSON properties in the HTTP request body$`, func(t *godog.Table) error {
 		props, err := golium.ConvertTableToMap(ctx, t)
@@ -71,8 +75,8 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 		}
 		return session.ConfigureRequestBodyJSONProperties(ctx, props)
 	})
-	scenCtx.Step(`^the HTTP request body with the JSON$`, func(message *godog.DocString) error {
-		return session.ConfigureRequestBodyJSONText(ctx, golium.ValueAsString(ctx, message.Content))
+	scenCtx.Step(`^the HTTP request body with the JSON$`, func(message *godog.DocString) {
+		session.ConfigureRequestBodyJSONText(ctx, golium.ValueAsString(ctx, message.Content))
 	})
 	scenCtx.Step(`^the HTTP request body with the JSON "([^"]*)" from "([^"]*)" file$`, func(code, file string) error {
 		return session.ConfigureRequestBodyJSONFile(ctx, code, file)
@@ -91,8 +95,8 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 		}
 		return session.ConfigureRequestBodyURLEncodedProperties(ctx, props)
 	})
-	scenCtx.Step(`^the HTTP client does not follow any redirection$`, func() error {
-		return session.ConfigureNoRedirection(ctx)
+	scenCtx.Step(`^the HTTP client does not follow any redirection$`, func() {
+		session.ConfigureNoRedirection(ctx)
 	})
 	scenCtx.Step(`^I send a HTTP "([^"]*)" request$`, func(method string) error {
 		return session.SendHTTPRequest(ctx, golium.ValueAsString(ctx, method))
