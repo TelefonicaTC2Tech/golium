@@ -28,7 +28,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Telefonica/golium"
+	"github.com/TelefonicaTC2Tech/golium"
 	"github.com/google/uuid"
 	"github.com/tidwall/sjson"
 	"github.com/xeipuuv/gojsonschema"

@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/Telefonica/golium"
+	"github.com/TelefonicaTC2Tech/golium"
 )
 
 func TestStringTag(t *testing.T) {

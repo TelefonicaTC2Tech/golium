@@ -23,7 +23,7 @@ import (
 	"path/filepath"
 	"reflect"
 
-	"github.com/Telefonica/golium"
+	"github.com/TelefonicaTC2Tech/golium"
 )
 
 // GetParamFromJSON

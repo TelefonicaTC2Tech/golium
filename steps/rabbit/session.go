@@ -20,7 +20,7 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/Telefonica/golium"
+	"github.com/TelefonicaTC2Tech/golium"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"

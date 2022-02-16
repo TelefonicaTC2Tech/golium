@@ -18,7 +18,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Telefonica/golium"
+	"github.com/TelefonicaTC2Tech/golium"
 	"github.com/cucumber/godog"
 )
 

@@ -1,4 +1,4 @@
-module github.com/Telefonica/golium
+module github.com/TelefonicaTC2Tech/golium
 
 go 1.15
 

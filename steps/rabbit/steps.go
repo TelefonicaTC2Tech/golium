@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Telefonica/golium"
+	"github.com/TelefonicaTC2Tech/golium"
 	"github.com/cucumber/godog"
 	"github.com/streadway/amqp"
 )

@@ -17,7 +17,7 @@ package aggregated
 import (
 	"context"
 
-	"github.com/Telefonica/golium/test/acceptance/steps/shared"
+	"github.com/TelefonicaTC2Tech/golium/test/acceptance/steps/shared"
 )
 
 // ContextKey defines a type to store the aggregated session in context.Context.

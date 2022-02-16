@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Telefonica/golium/test/acceptance/steps/shared"
+	"github.com/TelefonicaTC2Tech/golium/test/acceptance/steps/shared"
 	"github.com/stretchr/testify/assert"
 )
 
