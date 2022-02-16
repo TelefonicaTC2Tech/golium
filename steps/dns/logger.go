@@ -19,7 +19,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/Telefonica/golium"
+	"github.com/TelefonicaTC2Tech/golium"
 	"github.com/miekg/dns"
 	"github.com/sirupsen/logrus"
 )

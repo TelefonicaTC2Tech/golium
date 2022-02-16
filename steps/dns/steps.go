@@ -21,7 +21,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/Telefonica/golium"
+	"github.com/TelefonicaTC2Tech/golium"
 	"github.com/cucumber/godog"
 	"github.com/miekg/dns"
 )

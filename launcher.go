@@ -20,7 +20,7 @@ import (
 	"path"
 	"time"
 
-	"github.com/Telefonica/golium/cfg"
+	"github.com/TelefonicaTC2Tech/golium/cfg"
 	"github.com/cucumber/godog"
 	"github.com/cucumber/godog/colors"
 	"github.com/sirupsen/logrus"

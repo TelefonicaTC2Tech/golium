@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"path"
 
-	"github.com/Telefonica/golium/cfg"
+	"github.com/TelefonicaTC2Tech/golium/cfg"
 	"github.com/sirupsen/logrus"
 )
 

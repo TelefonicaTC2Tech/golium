@@ -18,7 +18,7 @@ import (
 	"flag"
 	"log"
 
-	"github.com/Telefonica/golium/mock/http"
+	"github.com/TelefonicaTC2Tech/golium/mock/http"
 )
 
 func main() {

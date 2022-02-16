@@ -18,7 +18,7 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/Telefonica/golium"
+	"github.com/TelefonicaTC2Tech/golium"
 )
 
 type MockRequests struct {

@@ -1,5 +1,5 @@
-[![Build](https://github.com/Telefonica/golium/actions/workflows/ci.yml/badge.svg)](https://github.com/Telefonica/golium/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/Telefonica/golium/branch/master/graph/badge.svg?token=PM0Q683ZPP)](https://codecov.io/gh/Telefonica/golium)
+[![Build](https://github.com/TelefonicaTC2Tech/golium/actions/workflows/ci.yml/badge.svg)](https://github.com/TelefonicaTC2Tech/golium/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/TelefonicaTC2Tech/golium/branch/master/graph/badge.svg?token=PM0Q683ZPP)](https://codecov.io/gh/TelefonicaTC2Tech/golium)
 
 # Golium
 

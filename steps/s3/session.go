@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Telefonica/golium"
+	"github.com/TelefonicaTC2Tech/golium"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	aws_s "github.com/aws/aws-sdk-go/aws/session"

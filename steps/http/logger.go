@@ -22,7 +22,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/Telefonica/golium"
+	"github.com/TelefonicaTC2Tech/golium"
 	"github.com/sirupsen/logrus"
 )
 
