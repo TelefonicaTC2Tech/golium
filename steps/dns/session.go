@@ -26,7 +26,6 @@ import (
 	"time"
 
 	"github.com/AdguardTeam/dnsproxy/upstream"
-	"github.com/Telefonica/golium"
 	"github.com/google/uuid"
 	"github.com/miekg/dns"
 )
