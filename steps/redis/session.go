@@ -59,9 +59,8 @@ func (s *Session) SelectDatabase(ctx context.Context, db int) error {
 }
 
 // ConfigureTTL saves TTL (in milliseconds) to apply when setting a value in redis.
-func (s *Session) ConfigureTTL(ctx context.Context, ttl int) error {
+func (s *Session) ConfigureTTL(ctx context.Context, ttl int) {
 	s.TTL = ttl
-	return nil
 }
 
 // SetTextValue sets a redis key with a text value.

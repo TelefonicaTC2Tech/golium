@@ -39,27 +39,29 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 	session := GetSession(ctx)
 
 	// Initialize the steps
-	scenCtx.Step(`^the DNS server "([^"]*)"$`, func(svr string) error {
+	scenCtx.Step(`^the DNS server "([^"]*)"$`, func(svr string) {
 		// DNS transport protocol is set to UDP by default
 		transport := "UDP"
-		return session.ConfigureServer(ctx, golium.ValueAsString(ctx, svr), transport)
+		session.ConfigureServer(ctx, golium.ValueAsString(ctx, svr), transport)
 	})
-	scenCtx.Step(`^the DNS server "([^"]*)" on "([^"]*)"$`, func(svr, transport string) error {
-		return session.ConfigureServer(ctx, golium.ValueAsString(ctx, svr), golium.ValueAsString(ctx, transport))
+	scenCtx.Step(`^the DNS server "([^"]*)" on "([^"]*)"$`, func(svr, transport string) {
+		session.ConfigureServer(ctx, golium.ValueAsString(ctx, svr), golium.ValueAsString(ctx, transport))
 	})
 	scenCtx.Step(`^a DNS timeout of "([^"]*)" milliseconds$`, func(timeout string) error {
 		to, err := golium.ValueAsInt(ctx, timeout)
 		if err != nil {
 			return fmt.Errorf("invalid timeout '%s': %w", timeout, err)
 		}
-		return session.SetDNSResponseTimeout(ctx, to)
+		session.SetDNSResponseTimeout(ctx, to)
+		return nil
 	})
 	scenCtx.Step(`^the DNS query options$`, func(t *godog.Table) error {
 		options, err := parseOptionsTable(ctx, t)
 		if err != nil {
 			return fmt.Errorf("failed parsing DNS query options: %w", err)
 		}
-		return session.ConfigureOptions(ctx, options)
+		session.ConfigureOptions(ctx, options)
+		return nil
 	})
 	scenCtx.Step(`^I send a DNS query of type "([^"]*)" for "([^"]*)"(\s\bwithout recursion\b)?$`, func(qtype, qname, recursion string) error {
 		recursive := recursion == ""
@@ -87,7 +89,8 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 		if err != nil {
 			return fmt.Errorf("failed processing query parameters from table: %w", err)
 		}
-		return session.ConfigureDoHQueryParams(ctx, params)
+		session.ConfigureDoHQueryParams(ctx, params)
+		return nil
 	})
 	scenCtx.Step(`the DNS response must have the code "([^"]*)"$`, func(code string) error {
 		return session.ValidateResponseWithCode(ctx, golium.ValueAsString(ctx, code))

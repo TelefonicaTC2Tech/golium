@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/AdguardTeam/dnsproxy/upstream"
+	"github.com/Telefonica/golium"
 	"github.com/google/uuid"
 	"github.com/miekg/dns"
 )
@@ -51,28 +52,24 @@ type Session struct {
 }
 
 // ConfigureServer configures the DNS server location and the transport protocol.
-func (s *Session) ConfigureServer(ctx context.Context, svr string, transport string) error {
+func (s *Session) ConfigureServer(ctx context.Context, svr string, transport string) {
 	s.Server = svr
 	s.Transport = transport
-	return nil
 }
 
 // SetDNSResponseTimeout configures a DNS response timeout.
-func (s *Session) SetDNSResponseTimeout(ctx context.Context, timeout int) error {
+func (s *Session) SetDNSResponseTimeout(ctx context.Context, timeout int) {
 	s.Timeout = time.Duration(timeout) * time.Millisecond
-	return nil
 }
 
 // ConfigureOptions adds EDNS0 options to be included in the DNS query.
-func (s *Session) ConfigureOptions(ctx context.Context, options []dns.EDNS0) error {
+func (s *Session) ConfigureOptions(ctx context.Context, options []dns.EDNS0) {
 	s.Options = append(s.Options, options...)
-	return nil
 }
 
 // ConfigureDoHQueryParams stores a table of query parameters in the application context.
-func (s *Session) ConfigureDoHQueryParams(ctx context.Context, params map[string][]string) error {
+func (s *Session) ConfigureDoHQueryParams(ctx context.Context, params map[string][]string) {
 	s.DoHQueryParams = params
-	return nil
 }
 
 // SendUDPQuery sends a DNS query to resolve a domain.

@@ -52,7 +52,8 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 		if err := golium.ConvertTableWithoutHeaderToStruct(ctx, t, &props); err != nil {
 			return fmt.Errorf("failed configuring rabbit endpoint: %w", err)
 		}
-		return session.ConfigureStandardProperties(ctx, props)
+		session.ConfigureStandardProperties(ctx, props)
+		return nil
 	})
 	scenCtx.Step(`^I publish a message to the rabbit topic "([^"]*)" with the text$`, func(topic string, message *godog.DocString) error {
 		return session.PublishTextMessage(ctx, golium.ValueAsString(ctx, topic), golium.ValueAsString(ctx, message.Content))

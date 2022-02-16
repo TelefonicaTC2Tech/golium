@@ -71,10 +71,9 @@ func (s *Session) ConfigureContentEncryptionAlgorithm(ctx context.Context, alg s
 }
 
 // ConfigureSymmetricKey configures the symmetric key. It sets this key as public and private key.
-func (s *Session) ConfigureSymmetricKey(ctx context.Context, symmetricKey string) error {
+func (s *Session) ConfigureSymmetricKey(ctx context.Context, symmetricKey string) {
 	s.PublicKey = []byte(symmetricKey)
 	s.PrivateKey = s.PublicKey
-	return nil
 }
 
 // ConfigurePublicKey configures the public key to verify the signature of a JWT token or to encrypt a JWE token.
@@ -116,10 +115,9 @@ func (s *Session) ConfigurePrivateKey(ctx context.Context, privateKeyPEM string)
 }
 
 // ConfigurePayloadWithContentType configures the payload and the content type (cty header).
-func (s *Session) ConfigurePayloadWithContentType(ctx context.Context, payload, contentType string) error {
+func (s *Session) ConfigurePayloadWithContentType(ctx context.Context, payload, contentType string) {
 	s.Payload = []byte(payload)
 	s.ContentType = contentType
-	return nil
 }
 
 // ConfigureJSONPayload configures the JWT payload with a map of properties.
@@ -131,7 +129,8 @@ func (s *Session) ConfigureJSONPayload(ctx context.Context, props map[string]int
 			return fmt.Errorf("failed setting property '%s' with value '%s' in the request body: %w", key, value, err)
 		}
 	}
-	return s.ConfigurePayloadWithContentType(ctx, json, "JSON")
+	s.ConfigurePayloadWithContentType(ctx, json, "JSON")
+	return nil
 }
 
 // GenerateSignedJWTInContext builds a JWT with signed payload and stores it in the context.

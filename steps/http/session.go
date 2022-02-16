@@ -99,41 +99,35 @@ func (s *Session) URL() (*url.URL, error) {
 }
 
 // ConfigureEndpoint configures the HTTP endpoint.
-func (s *Session) ConfigureEndpoint(ctx context.Context, endpoint string) error {
+func (s *Session) ConfigureEndpoint(ctx context.Context, endpoint string) {
 	s.Request.Endpoint = endpoint
-	return nil
 }
 
 // SetHTTPResponseTimeout configures a response timeout in milliseconds.
-func (s *Session) SetHTTPResponseTimeout(ctx context.Context, timeout int) error {
+func (s *Session) SetHTTPResponseTimeout(ctx context.Context, timeout int) {
 	s.Timeout = time.Duration(timeout) * time.Millisecond
-	return nil
 }
 
 // ConfigurePath configures the path of the HTTP endpoint.
 // It configures a resource path in the application context.
 // The API endpoint and the resource path are composed when invoking the HTTP server.
-func (s *Session) ConfigurePath(ctx context.Context, path string) error {
+func (s *Session) ConfigurePath(ctx context.Context, path string) {
 	s.Request.Path = path
-	return nil
 }
 
 // ConfigureQueryParams stores a table of query parameters in the application context.
-func (s *Session) ConfigureQueryParams(ctx context.Context, params map[string][]string) error {
+func (s *Session) ConfigureQueryParams(ctx context.Context, params map[string][]string) {
 	s.Request.QueryParams = params
-	return nil
 }
 
 // ConfigureHeaders stores a table of HTTP headers in the application context.
-func (s *Session) ConfigureHeaders(ctx context.Context, headers map[string][]string) error {
+func (s *Session) ConfigureHeaders(ctx context.Context, headers map[string][]string) {
 	s.Request.Headers = headers
-	return nil
 }
 
-func (s *Session) ConfigureCredentials(ctx context.Context, username, password string) error {
+func (s *Session) ConfigureCredentials(ctx context.Context, username, password string) {
 	s.Request.Username = username
 	s.Request.Password = password
-	return nil
 }
 
 // ConfigureRequestBodyJSONProperties writes the body in the HTTP request as a JSON with properties.
@@ -145,28 +139,28 @@ func (s *Session) ConfigureRequestBodyJSONProperties(ctx context.Context, props 
 			return fmt.Errorf("failed setting property '%s' with value '%s' in the request body: %w", key, value, err)
 		}
 	}
-	return s.ConfigureRequestBodyJSONText(ctx, json)
+	s.ConfigureRequestBodyJSONText(ctx, json)
+	return nil
 }
 
-// ConfigureRequestBodyJSONText writes the body in the HTTP request as a JSON from text.
-func (s *Session) ConfigureRequestBodyJSONText(ctx context.Context, message string) error {
+// ConfigureRequestBodyJSONText // ConfigureRequestBodyJSONText writes the body in the HTTP request as a JSON from text.
+func (s *Session) ConfigureRequestBodyJSONText(ctx context.Context, message string) {
 	s.Request.RequestBody = []byte(message)
-	return s.Request.AddJSONHeaders()
+	s.Request.AddJSONHeaders()
 }
 
 // AddToRequestMessageFromJSONFile adds to Request Body the message from JSON file
-func (s *Session) AddToRequestMessageFromJSONFile(message interface{}) error {
+func (s *Session) AddToRequestMessageFromJSONFile(message interface{}) {
 	s.Request.RequestBody, _ = json.Marshal(message)
-	return s.Request.AddJSONHeaders()
+	s.Request.AddJSONHeaders()
 }
 
 // AddJSONHeaders adds json headers to Request if they are null
-func (r *Request) AddJSONHeaders() error {
+func (r *Request) AddJSONHeaders() {
 	if r.Headers == nil {
 		r.Headers = make(map[string][]string)
 	}
 	r.Headers["Content-Type"] = []string{"application/json"}
-	return nil
 }
 
 // ConfigureRequestBodyJSONFile writes the body in the HTTP request as a JSON from file.
@@ -209,9 +203,8 @@ func (s *Session) ConfigureRequestBodyURLEncodedProperties(ctx context.Context, 
 }
 
 // ConfigureNoRedirection configures no redirection for the HTTP client.
-func (s *Session) ConfigureNoRedirection(ctx context.Context) error {
+func (s *Session) ConfigureNoRedirection(ctx context.Context) {
 	s.NoRedirect = true
-	return nil
 }
 
 // SendHTTPRequest sends a HTTP request using the configuration in the application context.

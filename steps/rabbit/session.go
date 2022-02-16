@@ -71,9 +71,8 @@ func (s *Session) ConfigureHeaders(ctx context.Context, headers map[string]inter
 }
 
 // ConfigureStandardProperties stores a table of rabbit properties in the application context.
-func (s *Session) ConfigureStandardProperties(ctx context.Context, props amqp.Publishing) error {
+func (s *Session) ConfigureStandardProperties(ctx context.Context, props amqp.Publishing) {
 	s.publishing = props
-	return nil
 }
 
 // SubscribeTopic subscribes to a rabbit topic to receive messages via a channel.

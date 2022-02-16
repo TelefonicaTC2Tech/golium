@@ -48,8 +48,8 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 		}
 		return session.SelectDatabase(ctx, dbId)
 	})
-	scenCtx.Step(`^the redis TTL of "(\d+)" millis`, func(ttl int) error {
-		return session.ConfigureTTL(ctx, ttl)
+	scenCtx.Step(`^the redis TTL of "(\d+)" millis`, func(ttl int) {
+		session.ConfigureTTL(ctx, ttl)
 	})
 	scenCtx.Step(`^I set the redis key "([^"]*)" with the text`, func(key string, value *godog.DocString) error {
 		return session.SetTextValue(ctx, golium.ValueAsString(ctx, key), golium.ValueAsString(ctx, value.Content))
