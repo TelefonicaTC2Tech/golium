@@ -2,8 +2,8 @@ Feature: Redis client
 
   Background:
       Given the redis endpoint
-          | addr     | localhost:6379 |
-          | db       | 0              |
+          | addr     | [CONF:redis.endpoint] |
+          | db       | 0                     |
 
   @redis
   Scenario: Set and get a text message
