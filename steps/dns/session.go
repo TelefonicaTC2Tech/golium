@@ -20,7 +20,7 @@ import (
 	"crypto/tls"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"time"
@@ -157,7 +157,7 @@ func (s *Session) SendDoHQuery(ctx context.Context, method string, qtype uint16,
 	if response.Header.Get("Content-Type") != "application/dns-message" {
 		return fmt.Errorf("error in Content-Type Header. Value: %s, Expected: %s", response.Header.Get("Content-Type"), "application/dns-message")
 	}
-	body, err := ioutil.ReadAll(response.Body)
+	body, err := io.ReadAll(response.Body)
 	if err != nil {
 		return fmt.Errorf("error reading the response body. %s", err)
 	}
@@ -182,7 +182,7 @@ func (s *Session) SendDoTQuery(ctx context.Context, qtype uint16, qdomain string
 		Timeout:            s.Timeout,
 		InsecureSkipVerify: true,
 	}
-	u, err := upstream.AddressToUpstream(s.Server, opts)
+	u, err := upstream.AddressToUpstream(s.Server, &opts)
 	if err != nil {
 		logger.log.Fatalf("Cannot create an upstream: %s", err)
 	}
