@@ -25,7 +25,6 @@ import (
 	"net/url"
 	"path"
 	"reflect"
-	"strings"
 	"time"
 
 	"github.com/TelefonicaTC2Tech/golium"
@@ -83,16 +82,17 @@ func (s *Session) URL() (*url.URL, error) {
 	if err != nil {
 		return nil, fmt.Errorf("invalid endpoint URL '%s': %w", s.Request.Endpoint, err)
 	}
-	u.Path = path.Join(u.Path, s.Request.Path)
-	/*
-	 * NOTE: path.Join removes trailing slash using Clean thus,
-	 * we need to add it if is in s.Request.Path
-	 * - Reference: https://forum.golangbridge.org/t/how-to-concatenate-paths-for-api-request/5791
-	 * - Docs: https://pkg.go.dev/path#Join
-	 */
-	if strings.HasSuffix(s.Request.Path, slash) {
-		u.Path = u.Path + slash
+	if s.Request.Path != "" {
+		u.Path = path.Join(u.Path, s.Request.Path)
 	}
+
+	// /*
+	//  * NOTE: path.Join removes trailing slash using Clean thus,
+	//  * we need to add it if is in s.Request.Path
+	//  * - Reference: https://forum.golangbridge.org/t/how-to-concatenate-paths-for-api-request/5791
+	//  * - Docs: https://pkg.go.dev/path#Join
+	//  */
+
 	params := url.Values(s.Request.QueryParams)
 	u.RawQuery = params.Encode()
 	return u, nil
