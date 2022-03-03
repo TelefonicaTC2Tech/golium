@@ -9,7 +9,7 @@ dot: tls://dns.google:853
 timeout: 2000
 
 # RabbitMQ settings
-rabbitmq: amqp://guest:guest@rabbit:5672/
+rabbitmq: amqp://guest:guest@localhost:5672/
 
 # JWT settings
 signSymmetricKey: sign_symmetric_key_that_is_long_enough_for_algorithm_HS512_(with_more_than 256 bits!)
@@ -42,7 +42,6 @@ encryptPrivateKey: |
   5vEiKbAHyDTDPyoy0Zx8waMV6eAhZGxD65uqifsH8dj6ltMAGvOfHR9Cs1qD3TQt
   HippkcLN9e1ETEx1zNxmWAXFHOX2Ia2kSccmuuCKEzglN47DrJE5/Gs=
   -----END RSA PRIVATE KEY-----
-
 encryptPublicKey: |
   -----BEGIN PUBLIC KEY-----
   MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu+5LoHNwgUG8+bn5Mn51
@@ -53,7 +52,6 @@ encryptPublicKey: |
   CDRvfCc1KNcyPbJj8ZjrvamK16KbxBxwsMXBuRznKQufNx60+Ej63vwRBxcH+y7T
   MQIDAQAB
   -----END PUBLIC KEY-----
-
 signPrivateKey: |
   -----BEGIN RSA PRIVATE KEY-----
   MIIEowIBAAKCAQEAoNNaEB/t0c4kZNhoz9G5t5fq+1OQVl4szeB+MwicYdzf2Ho2
@@ -82,7 +80,6 @@ signPrivateKey: |
   pFUZU0CeuJcHF9D8VjnzjeisJW5uK/EEOVKaerTL01qjYE9nzOl18xvevKEgfD2l
   jXW8Z4nFjhcqsv1DlylqVga/B47YHfg0qTcfLJ78gMaiGMNaLQhF
   -----END RSA PRIVATE KEY-----
-
 signPublicKey: |
   -----BEGIN RSA PUBLIC KEY-----
   MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoNNaEB/t0c4kZNhoz9G5
@@ -93,24 +90,23 @@ signPublicKey: |
   tR5AcCFf3pG+oQ7Uq62idvjmKsCB96jkTfVidr19Rj03E1Lg+2RCuS+4Qtylnl4b
   RQIDAQAB
   -----END RSA PUBLIC KEY-----
-
 # HTTP mock settings
 httpMockUrl: http://localhost:9000
 
 # elasticsearch settings
 elasticsearch:
   addresses:
-    - http://elasticsearch:9200
+    - http://localhost:9200
 
 # Redis
 redis:
-  endpoint: redis:6379
+  endpoint: localhost:6379
 # s3
 s3Autoclean: true
 s3Bucket: golium-demo
 # Set minio to true to run test against minio server deployed locally otherwise set it to false or remove it
 minio: true
-minioEndpoint: http://minio:9000
+minioEndpoint: http://localhost:9999
 # Use AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION env vars to define aws or minio credentials
 
 # common
