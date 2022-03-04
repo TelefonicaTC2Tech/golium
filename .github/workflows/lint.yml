@@ -25,7 +25,7 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         with:
           version: v1.44.2
-          args: -c .golangci.yml --timeout 5m
+          args: -c .golangci.yml --timeout 5m --out-format checkstyle > golangci-report.xml
       - name: SonarCloud Scan
         uses: sonarsource/sonarcloud-github-action@master
         env:
