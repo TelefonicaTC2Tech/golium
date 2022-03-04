@@ -1,6 +1,6 @@
 [![Build](https://github.com/TelefonicaTC2Tech/golium/actions/workflows/ci.yml/badge.svg)](https://github.com/TelefonicaTC2Tech/golium/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/TelefonicaTC2Tech/golium/branch/master/graph/badge.svg?token=PM0Q683ZPP)](https://codecov.io/gh/TelefonicaTC2Tech/golium)
-[![Quality gate](https://sonarcloud.io/api/project_badges/quality_gate?project=golium)](https://sonarcloud.io/summary/new_code?id=golium)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=golium&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=golium)
 
 # Golium
 
