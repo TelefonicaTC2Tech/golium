@@ -32,8 +32,12 @@ jobs:
         with:
           version: v1.44.2
           args: -c .golangci.yml --timeout 5m
-      - name: Check filepath
-        run : "ls -la"
+      - name : machine echo $GITHUB_WORKSPACE
+        if: always()
+        run : "echo $GITHUB_WORKSPACE"
+      - name : machine ls $GITHUB_WORKSPACE
+        if: always()
+        run : "ls -la $GITHUB_WORKSPACE"
       - name: SonarCloud Scan
         if: always()
         uses: sonarsource/sonarcloud-github-action@master
