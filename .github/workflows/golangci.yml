@@ -17,9 +17,9 @@ jobs:
 
       - name: Golangci
         run: |
-        curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s -- -b $(go env GOPATH)/bin v1.44.2
-        golangci-lint --version
-        golangci-lint run -c .golangci.yml --timeout 5m 
+          curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s -- -b $(go env GOPATH)/bin v1.44.2
+          golangci-lint --version
+          golangci-lint run -c .golangci.yml --timeout 5m 
 
       - name: Check file
         if: always()
