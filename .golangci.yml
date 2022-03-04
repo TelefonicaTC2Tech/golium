@@ -139,6 +139,8 @@ issues:
 run:
   skip-dirs:
     - internal/cache
+output:
+  format: checkstyle:golangci-report.xml,colored-line-number
 
 # golangci.com configuration
 # https://github.com/golangci/golangci/wiki/Configuration

@@ -27,6 +27,7 @@ jobs:
           version: v1.44.2
           args: -c .golangci.yml --timeout 5m --out-format checkstyle > golangci-report.xml
       - name: SonarCloud Scan
+        if: always()
         uses: sonarsource/sonarcloud-github-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
