@@ -140,7 +140,7 @@ run:
   skip-dirs:
     - internal/cache
 output:
-  format: checkstyle:report.xml,colored-line-number
+  format: github-actions,checkstyle:report.xml
 
 # golangci.com configuration
 # https://github.com/golangci/golangci/wiki/Configuration
