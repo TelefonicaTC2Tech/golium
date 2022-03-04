@@ -26,13 +26,16 @@ jobs:
 
       - name: Coverage to Codecov
         uses: codecov/codecov-action@v2
-
+      - name: Golangci
+        run: |
+          curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s -- -b $(GOPATH)/bin v1.44.2
+          golangci-lint run -c .golangci.yml --timeout 5m 
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
           version: v1.44.2
           only-new-issues: true
-          args: -c .golangci.yml --timeout 5m --out-format=github-actions,checkstyle:report.xml
+          args: -c .golangci.yml --timeout 5m
       - name : machine echo $GITHUB_WORKSPACE
         if: always()
         run : "echo $GITHUB_WORKSPACE"
