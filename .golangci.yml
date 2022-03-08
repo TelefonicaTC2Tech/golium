@@ -135,12 +135,15 @@ issues:
     - linters:
         - gocritic
       text: "unnecessaryDefer:"
+  new: true
+  # Show only new issues created after git revision `REV`.
+  new-from-rev: origin/master
 
 run:
   skip-dirs:
     - internal/cache
 output:
-  format: checkstyle:golangci-report.xml
+  format: checkstyle:golangci-report.xml,colored-line-number,github-actions
 
 # golangci.com configuration
 # https://github.com/golangci/golangci/wiki/Configuration
