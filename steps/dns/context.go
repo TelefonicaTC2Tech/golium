@@ -23,7 +23,6 @@ type ContextKey string
 
 const contextKey ContextKey = "dnsSession"
 
-
 // InitializeContext adds the DNS Session to the context.
 // The new context is returned because context is immutable.
 func InitializeContext(ctx context.Context) context.Context {
