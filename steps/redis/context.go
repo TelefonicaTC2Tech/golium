@@ -21,13 +21,12 @@ import (
 // ContextKey defines a type to store the redis session in context.Context.
 type ContextKey string
 
-var contextKey ContextKey = "redisSession"
+const contextKey ContextKey = "redisSession"
 
 // InitializeContext adds the redis session to the context.
 // The new context is returned because context is immutable.
 func InitializeContext(ctx context.Context) context.Context {
-	var session Session
-	return context.WithValue(ctx, contextKey, &session)
+	return context.WithValue(ctx, contextKey, &Session{})
 }
 
 // GetSession returns the redis session stored in context.
