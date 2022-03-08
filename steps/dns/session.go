@@ -129,7 +129,7 @@ func (s *Session) SendDoHQuery(ctx context.Context, method string, qtype uint16,
 	switch method {
 	case "GET":
 		dq := base64.RawURLEncoding.EncodeToString(data)
-		request, err = http.NewRequest("GET", fmt.Sprintf("%s?dns=%s", s.Server, dq), http.NewRequest("GET", fmt.Sprintf("%s?dns=%s", s.Server, dq), http.NoBody))
+		request, err = http.NewRequest("GET", fmt.Sprintf("%s?dns=%s", s.Server, dq), nil)
 		if err != nil {
 			return err
 		}
