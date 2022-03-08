@@ -80,7 +80,9 @@ func (s *Session) NewDocument(ctx context.Context, index string, props map[strin
 	return nil
 }
 
-// SearchDocument searches in elasticsearch with given index and JSON body and saves the result in the application context.
+// SearchDocument
+// searches in elasticsearch with given index and JSON body
+// and saves the result in the application context.
 func (s *Session) SearchDocument(ctx context.Context, index string, body string) error {
 	logger := GetLogger()
 	res, err := s.Client.Search(
