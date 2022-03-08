@@ -1,5 +1,6 @@
 [![Build](https://github.com/TelefonicaTC2Tech/golium/actions/workflows/ci.yml/badge.svg)](https://github.com/TelefonicaTC2Tech/golium/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/TelefonicaTC2Tech/golium/branch/master/graph/badge.svg?token=PM0Q683ZPP)](https://codecov.io/gh/TelefonicaTC2Tech/golium)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=golium&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=golium)
 
 # Golium
 
@@ -28,12 +29,20 @@ The library has a default configuration. However, these settings can be changed 
 ## Example
 
 The library includes a complete example with some scenarios for HTTP and DNS protocols in the directory [test/acceptance](test/acceptance).
+### Environment
 
-For testing:
+Using `docker-compose` to build test environment with all dependent services for each example: redis, rabbit, elasticsearch and minio:
 
+```bash
+docker-compose build
 ```
-cd test/acceptance
-go test -v
+
+### Tests
+
+Run tests:
+
+```bash
+docker-compose run --rm golium sh -c "cd test/acceptance && go test -v ./..."
 ```
 
 The examples contains the following directories:

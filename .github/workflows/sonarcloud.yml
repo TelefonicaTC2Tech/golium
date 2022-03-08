@@ -1,0 +1,40 @@
+name: Code Analysis
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+permissions:
+  contents: read
+  # Optional: allow read access to pull request. Use with `only-new-issues` option.
+  # pull-requests: read
+jobs:
+  analysis:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          # Disabling shallow clone is recommended for improving relevancy of reporting
+          fetch-depth: 0
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.17
+      - name: Test
+        run: go test -v -coverprofile=coverage.txt -covermode=atomic `go list ./... | grep -v test/acceptance`
+
+      - name: Coverage to Codecov
+        uses: codecov/codecov-action@v2
+
+      - name: Golangci
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.44.2
+          golangci-lint run -c .golangci.yml --timeout 5m 
+
+      - name: SonarCloud Scan
+        if: always()
+        uses: sonarsource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
