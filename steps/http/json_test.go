@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"reflect"
 	"testing"
@@ -15,7 +14,6 @@ import (
 
 func TestGetParamFromJSON(t *testing.T) {
 	t.Run("Should return selected value from JSON file", func(t *testing.T) {
-
 		var JSONhttpFileValues = `
 		[
 			{
@@ -45,7 +43,7 @@ func TestGetParamFromJSON(t *testing.T) {
 		golium.GetConfig().Dir.Schemas = "./schemas"
 
 		os.MkdirAll("./schemas", os.ModePerm)
-		ioutil.WriteFile("./schemas/http.json", []byte(JSONhttpFileValues), os.ModePerm)
+		os.WriteFile("./schemas/http.json", []byte(JSONhttpFileValues), os.ModePerm)
 		defer os.RemoveAll("./schemas/")
 
 		var fileName = "http"
@@ -61,7 +59,7 @@ func TestGetParamFromJSON(t *testing.T) {
             ]
         }`
 		var expectedParam interface{}
-		if err := json.Unmarshal([]byte(fmt.Sprint(JSON)), &expectedParam); err != nil {
+		if err := json.Unmarshal([]byte(JSON), &expectedParam); err != nil {
 			t.Error("error Unmarshaling expected response body: %w", err)
 		}
 
@@ -114,7 +112,7 @@ func TestFindValueByCode(t *testing.T) {
 		]
 	}`
 	var expectedValue interface{}
-	if err := json.Unmarshal([]byte(fmt.Sprint(JSON)), &expectedValue); err != nil {
+	if err := json.Unmarshal([]byte(JSON), &expectedValue); err != nil {
 		t.Error("error Unmarshaling expected response body: %w", err)
 	}
 
@@ -273,17 +271,17 @@ func TestJSONEquals(t *testing.T) {
 		]
 	}`
 	var expected interface{}
-	if err := json.Unmarshal([]byte(fmt.Sprint(expectedString)), &expected); err != nil {
+	if err := json.Unmarshal([]byte(expectedString), &expected); err != nil {
 		t.Error("error Unmarshaling expected response body: %w", err)
 	}
 
 	var different interface{}
-	if err := json.Unmarshal([]byte(fmt.Sprint(differentString)), &different); err != nil {
+	if err := json.Unmarshal([]byte(differentString), &different); err != nil {
 		t.Error("error Unmarshaling expected response body: %w", err)
 	}
 
 	var current interface{}
-	if err := json.Unmarshal([]byte(fmt.Sprint(currentString)), &current); err != nil {
+	if err := json.Unmarshal([]byte(currentString), &current); err != nil {
 		t.Error("error Unmarshaling expected response body: %w", err)
 	}
 
