@@ -15,7 +15,7 @@
 package cfg
 
 // DefaultConfig is the default configuration for golium.
-// This default configuration can be overriden with environment variables.
+// This default configuration can be overridden with environment variables.
 var DefaultConfig = Config{
 	Suite:       "golium",
 	Environment: "local",

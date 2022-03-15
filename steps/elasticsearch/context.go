@@ -21,13 +21,12 @@ import (
 // ContextKey defines a type to store the elasticsearch session in context.Context.
 type ContextKey string
 
-var contextKey ContextKey = "elasticsearchSession"
+const contextKey ContextKey = "elasticsearchSession"
 
 // InitializeContext adds the elasticsearch session to the context.
 // The new context is returned because context is immutable.
 func InitializeContext(ctx context.Context) context.Context {
-	var session Session
-	return context.WithValue(ctx, contextKey, &session)
+	return context.WithValue(ctx, contextKey, &Session{})
 }
 
 // GetSession returns the elasticsearch session stored in context.

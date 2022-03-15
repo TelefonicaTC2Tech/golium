@@ -11,3 +11,6 @@ debug.test
 
 # Coverage
 coverage.*
+
+# Linter
+golangci-report.xml

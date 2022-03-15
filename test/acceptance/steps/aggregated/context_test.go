@@ -10,7 +10,6 @@ import (
 )
 
 func TestInitializeContext(t *testing.T) {
-
 	var ctx = context.Background()
 	var contextKeyValue = "aggregatedSession"
 	sharedContext := shared.InitializeContext(ctx)

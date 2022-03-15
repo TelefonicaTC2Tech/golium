@@ -21,13 +21,12 @@ import (
 // ContextKey defines a type to store the Context in context.Context.
 type ContextKey string
 
-var contextKey ContextKey = "dnsSession"
+const contextKey ContextKey = "dnsSession"
 
 // InitializeContext adds the DNS Session to the context.
 // The new context is returned because context is immutable.
 func InitializeContext(ctx context.Context) context.Context {
-	session := Session{}
-	return context.WithValue(ctx, contextKey, &session)
+	return context.WithValue(ctx, contextKey, &Session{})
 }
 
 // GetSession returns the DNS session stored in context.

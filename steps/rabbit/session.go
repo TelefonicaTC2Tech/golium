@@ -139,7 +139,7 @@ func (s *Session) SubscribeTopic(ctx context.Context, topic string) error {
 	return nil
 }
 
-// Unsubscribe unsubscribes from rabbit closing the channel asociated.
+// Unsubscribe unsubscribes from rabbit closing the channel associated.
 // If this method is not invoked, then the goroutine created with SubscribeTopic is never closed
 // and will permanently processing messages from the topic until the program is finished.
 func (s *Session) Unsubscribe(ctx context.Context) error {
