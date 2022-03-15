@@ -100,6 +100,9 @@ func (l *Launcher) initContext() context.Context {
 
 func (l *Launcher) configLogger() {
 	dir := GetConfig().Log.Directory
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		os.MkdirAll(dir, 0700)
+	}
 	path := path.Join(dir, "golium.log")
 	file, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {

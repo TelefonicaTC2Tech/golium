@@ -21,13 +21,12 @@ import (
 // ContextKey defines a type to store the rabbit session in context.Context.
 type ContextKey string
 
-var contextKey ContextKey = "rabbitSession"
+const contextKey ContextKey = "rabbitSession"
 
 // InitializeContext adds the rabbit session to the context.
 // The new context is returned because context is immutable.
 func InitializeContext(ctx context.Context) context.Context {
-	var session Session
-	return context.WithValue(ctx, contextKey, &session)
+	return context.WithValue(ctx, contextKey, &Session{})
 }
 
 // GetSession returns the rabbit session stored in context.

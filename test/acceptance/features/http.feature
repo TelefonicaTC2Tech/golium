@@ -182,8 +182,7 @@ Feature: HTTP client
 
   @http
   Scenario: Validate Not found path with trailing slash
-    Given the HTTP endpoint "[CONF:url]/image"
-      And the HTTP path "/jpeg/"
+    Given the HTTP endpoint "[CONF:url]/image/jpeg/"
      When I send a HTTP "POST" request
      Then the HTTP status code must be "404"
 

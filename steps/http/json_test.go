@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"reflect"
@@ -117,7 +118,7 @@ func TestFindValueByCode(t *testing.T) {
 	}
 
 	dataStruct := []map[string]interface{}{}
-	if err := json.Unmarshal([]byte(fmt.Sprint(JSONhttpFileValues)), &dataStruct); err != nil {
+	if err := json.Unmarshal([]byte(JSONhttpFileValues), &dataStruct); err != nil {
 		t.Error("error Unmarshaling expected response body: %w", err)
 	}
 
@@ -160,7 +161,6 @@ func TestFindValueByCode(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestLoadJSONData(t *testing.T) {
@@ -199,7 +199,7 @@ func TestUnmarshalJSONData(t *testing.T) {
 		}`
 
 	var message = "error unmarshalling JSON data due to error: json: cannot unmarshal object into Go value of type []map[string]interface {}"
-	formatError := fmt.Errorf(message)
+	formatError := errors.New(message)
 	var expected interface{}
 	if err := json.Unmarshal([]byte(expectedString), &expected); err != nil {
 		t.Error("error Unmarshaling expected response body: %w", err)
@@ -235,7 +235,6 @@ func TestUnmarshalJSONData(t *testing.T) {
 			if JSONEquals(tc.expected, unmarshalled) {
 				t.Errorf("expected unmarshalled data error:\n%v", err)
 			}
-
 		})
 	}
 }
@@ -310,8 +309,6 @@ func TestJSONEquals(t *testing.T) {
 				t.Errorf("expected JSON comparison should be %t \n%v\n vs \n%v", tc.equals, tc.expected,
 					tc.current)
 			}
-
 		})
 	}
-
 }

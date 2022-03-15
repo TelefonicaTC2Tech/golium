@@ -21,13 +21,12 @@ import (
 // ContextKey defines a type to store the s3 session in context.Context.
 type ContextKey string
 
-var contextKey ContextKey = "s3Session"
+const contextKey ContextKey = "s3Session"
 
 // InitializeContext adds the s3 session to the context.
 // The new context is returned because context is immutable.
 func InitializeContext(ctx context.Context) context.Context {
-	var session Session
-	return context.WithValue(ctx, contextKey, &session)
+	return context.WithValue(ctx, contextKey, &Session{})
 }
 
 // GetSession returns the s3 session stored in context.
