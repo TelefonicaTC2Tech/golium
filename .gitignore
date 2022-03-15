@@ -5,6 +5,7 @@ debug.test
 
 # Log files
 *.log
+/logs/*
 
 # Mac
 .DS_Store
