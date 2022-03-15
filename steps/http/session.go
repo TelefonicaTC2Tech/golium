@@ -35,10 +35,6 @@ import (
 	"encoding/json"
 )
 
-const (
-	slash string = "/"
-)
-
 // Request information of the Session.
 type Request struct {
 	// Endpoint of the HTTP server. It might include a base path.
