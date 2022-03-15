@@ -106,7 +106,7 @@ func (s *Session) SendUDPQuery(ctx context.Context, qtype uint16, qdomain string
 func (s *Session) SendDoHQuery(ctx context.Context, method string, qtype uint16, qdomain string, recursive bool) error {
 	logger := GetLogger()
 	corr := uuid.New().String()
-	//Set DNS query
+	// Set DNS query
 	m := &dns.Msg{}
 	m.SetQuestion(dns.Fqdn(qdomain), qtype)
 	m.RecursionDesired = recursive
@@ -177,7 +177,7 @@ func (s *Session) SendDoHQuery(ctx context.Context, method string, qtype uint16,
 func (s *Session) SendDoTQuery(ctx context.Context, qtype uint16, qdomain string, recursive bool) error {
 	logger := GetLogger()
 	corr := uuid.New().String()
-	//Set DNS query
+	// Set DNS query
 	opts := upstream.Options{
 		Timeout:            s.Timeout,
 		InsecureSkipVerify: true,

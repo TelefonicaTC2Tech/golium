@@ -23,7 +23,7 @@ import (
 // ContextKey defines a type to store the aggregated session in context.Context.
 type ContextKey string
 
-var contextKey ContextKey = "aggregatedSession"
+const contextKey ContextKey = "aggregatedSession"
 
 // InitializeContext adds the Aggregated session to the context.
 // The new context is returned because context is immutable.

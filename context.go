@@ -21,7 +21,7 @@ import (
 // ContextKey defines a type to store the Context in context.Context.
 type ContextKey string
 
-var contextKey ContextKey = "contextKey"
+const contextKey ContextKey = "contextKey"
 
 // Context contains the context required for common utilities.
 // It contains a map[string]interface{} to store global values and find them with [CTXT:xxx] tag.

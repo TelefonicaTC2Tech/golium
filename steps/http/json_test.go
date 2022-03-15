@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -15,7 +16,6 @@ import (
 
 func TestGetParamFromJSON(t *testing.T) {
 	t.Run("Should return selected value from JSON file", func(t *testing.T) {
-
 		var JSONhttpFileValues = `
 		[
 			{
@@ -61,7 +61,7 @@ func TestGetParamFromJSON(t *testing.T) {
             ]
         }`
 		var expectedParam interface{}
-		if err := json.Unmarshal([]byte(fmt.Sprint(JSON)), &expectedParam); err != nil {
+		if err := json.Unmarshal([]byte(JSON), &expectedParam); err != nil {
 			t.Error("error Unmarshaling expected response body: %w", err)
 		}
 
@@ -114,12 +114,12 @@ func TestFindValueByCode(t *testing.T) {
 		]
 	}`
 	var expectedValue interface{}
-	if err := json.Unmarshal([]byte(fmt.Sprint(JSON)), &expectedValue); err != nil {
+	if err := json.Unmarshal([]byte(JSON), &expectedValue); err != nil {
 		t.Error("error Unmarshaling expected response body: %w", err)
 	}
 
 	dataStruct := []map[string]interface{}{}
-	if err := json.Unmarshal([]byte(fmt.Sprint(JSONhttpFileValues)), &dataStruct); err != nil {
+	if err := json.Unmarshal([]byte(JSONhttpFileValues), &dataStruct); err != nil {
 		t.Error("error Unmarshaling expected response body: %w", err)
 	}
 
@@ -162,7 +162,6 @@ func TestFindValueByCode(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestLoadJSONData(t *testing.T) {
@@ -201,7 +200,7 @@ func TestUnmarshalJSONData(t *testing.T) {
 		}`
 
 	var message = "error unmarshalling JSON data due to error: json: cannot unmarshal object into Go value of type []map[string]interface {}"
-	formatError := fmt.Errorf(message)
+	formatError := errors.New(message)
 	var expected interface{}
 	if err := json.Unmarshal([]byte(expectedString), &expected); err != nil {
 		t.Error("error Unmarshaling expected response body: %w", err)
@@ -237,7 +236,6 @@ func TestUnmarshalJSONData(t *testing.T) {
 			if JSONEquals(tc.expected, unmarshalled) {
 				t.Errorf("expected unmarshalled data error:\n%v", err)
 			}
-
 		})
 	}
 }
@@ -273,17 +271,17 @@ func TestJSONEquals(t *testing.T) {
 		]
 	}`
 	var expected interface{}
-	if err := json.Unmarshal([]byte(fmt.Sprint(expectedString)), &expected); err != nil {
+	if err := json.Unmarshal([]byte(expectedString), &expected); err != nil {
 		t.Error("error Unmarshaling expected response body: %w", err)
 	}
 
 	var different interface{}
-	if err := json.Unmarshal([]byte(fmt.Sprint(differentString)), &different); err != nil {
+	if err := json.Unmarshal([]byte(differentString), &different); err != nil {
 		t.Error("error Unmarshaling expected response body: %w", err)
 	}
 
 	var current interface{}
-	if err := json.Unmarshal([]byte(fmt.Sprint(currentString)), &current); err != nil {
+	if err := json.Unmarshal([]byte(currentString), &current); err != nil {
 		t.Error("error Unmarshaling expected response body: %w", err)
 	}
 
@@ -312,8 +310,6 @@ func TestJSONEquals(t *testing.T) {
 				t.Errorf("expected JSON comparison should be %t \n%v\n vs \n%v", tc.equals, tc.expected,
 					tc.current)
 			}
-
 		})
 	}
-
 }
