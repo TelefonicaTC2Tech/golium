@@ -135,9 +135,6 @@ issues:
     - linters:
         - gocritic
       text: "unnecessaryDefer:"
-  new: true
-  # Show only new issues created after git revision `REV`.
-  new-from-rev: origin/master
 
 run:
   skip-dirs:
