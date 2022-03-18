@@ -27,11 +27,16 @@ jobs:
       - name: Coverage to Codecov
         uses: codecov/codecov-action@v2
 
-      - name: Golangci
+      - name: Golangci increment
+        if: "!contains(github.ref, 'master')"
         run: |
           curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.44.2
-          golangci-lint run -c .golangci.yml --timeout 5m 
-
+          golangci-lint run -c .golangci.yml --timeout 5m --new-from-rev origin/master
+      - name: Golangci main
+        if: contains(github.ref, 'master')
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.44.2
+          golangci-lint run -c .golangci.yml --timeout 5m
       - name: SonarCloud Scan
         if: always()
         uses: sonarsource/sonarcloud-github-action@master
