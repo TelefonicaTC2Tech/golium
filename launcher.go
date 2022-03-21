@@ -106,10 +106,10 @@ func (l *Launcher) configLogger() {
 	}
 	path := path.Join(dir, "golium.log")
 	file, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0766)
-	os.Chmod(file.Name(), 0766)
 	if err != nil {
 		logrus.Fatalf("Error preparing logging to file: '%s'. %s", path, err)
 	}
+	os.Chmod(file.Name(), 0766)
 	level, err := logrus.ParseLevel(config.Log.Level)
 	if err != nil {
 		logrus.Fatalf("Error configuring logging level: '%s'. %s", config.Log.Level, err)
