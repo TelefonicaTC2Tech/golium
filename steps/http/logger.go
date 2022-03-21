@@ -55,6 +55,7 @@ func NewLogger(path string) (*Logger, error) {
 	if err != nil {
 		return nil, err
 	}
+	os.Chmod(file.Name(), 0766)
 	return &Logger{
 		log: log.New(file, "", log.Ldate|log.Lmicroseconds|log.LUTC),
 	}, nil
