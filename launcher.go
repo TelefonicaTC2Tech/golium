@@ -101,10 +101,12 @@ func (l *Launcher) initContext() context.Context {
 func (l *Launcher) configLogger() {
 	dir := GetConfig().Log.Directory
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		os.MkdirAll(dir, 0777)
+		os.MkdirAll(dir, 0766)
+		os.Chmod(dir, 0766)
 	}
 	path := path.Join(dir, "golium.log")
-	file, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	file, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0766)
+	os.Chmod(file.Name(), 0766)
 	if err != nil {
 		logrus.Fatalf("Error preparing logging to file: '%s'. %s", path, err)
 	}
