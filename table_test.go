@@ -10,11 +10,11 @@ import (
 )
 
 var (
-	tablewithoutHeaders       = [][]string{{"John", "182"}}
-	tablewithName             = [][]string{{"name"}, {"John"}}
-	tablewithNameAndHeight    = [][]string{{"name", "height"}, {"John", "182"}}
-	tablewithNameHeightAndAge = [][]string{{"name", "height", "age"}, {"John", "182", "32"}}
-	tablewithParamAndValue    = [][]string{{"param", "value"}, {"Name", "182"}, {"Height", "162"}}
+	withoutHeaders       = [][]string{{"John", "182"}}
+	withName             = [][]string{{"name"}, {"John"}}
+	withNameAndHeight    = [][]string{{"name", "height"}, {"John", "182"}}
+	withNameHeightAndAge = [][]string{{"name", "height", "age"}, {"John", "182", "32"}}
+	withParamAndValue    = [][]string{{"param", "value"}, {"Name", "182"}, {"Height", "162"}}
 )
 
 type Headers struct {
@@ -30,13 +30,13 @@ func TestRemoveHeaders(t *testing.T) {
 	}{
 		{
 			name:  "Remove header expected error",
-			table: NewTable(tablewithoutHeaders),
+			table: NewTable(withoutHeaders),
 			expectedErr: errors.New(
 				"cannot remove header: table must have at least one header and one useful row"),
 		},
 		{
 			name:        "Remove header table ok",
-			table:       NewTable(tablewithNameAndHeight),
+			table:       NewTable(withNameAndHeight),
 			expectedErr: nil,
 		},
 	}
@@ -67,21 +67,21 @@ func TestColumnsChecker(t *testing.T) {
 	}{
 		{
 			name:  "Check columns less than n",
-			table: NewTable(tablewithName),
+			table: NewTable(withName),
 			n:     2,
 			expectedErr: errors.New(
 				"table must have 2 columns"),
 		},
 		{
 			name:  "Check columns more than n",
-			table: NewTable(tablewithNameHeightAndAge),
+			table: NewTable(withNameHeightAndAge),
 			n:     2,
 			expectedErr: errors.New(
 				"table must have 2 columns"),
 		},
 		{
 			name:        "Check columns ok",
-			table:       NewTable(tablewithNameAndHeight),
+			table:       NewTable(withNameAndHeight),
 			n:           2,
 			expectedErr: nil,
 		},
@@ -115,7 +115,7 @@ func TestConvertTableToMap(t *testing.T) {
 	}{
 		{
 			name:           "Convert table to map ok",
-			table:          NewTable(tablewithNameAndHeight),
+			table:          NewTable(withNameAndHeight),
 			expectedResult: expectedResult,
 			expectedErr:    nil,
 		},
@@ -144,7 +144,7 @@ func TestConvertTableColumnToArray(t *testing.T) {
 	}{
 		{
 			name:           "Convert table column to array ok",
-			table:          NewTable(tablewithName),
+			table:          NewTable(withName),
 			expectedResult: expectedResult,
 			expectedErr:    nil,
 		},
@@ -173,7 +173,7 @@ func TestConvertTableToMultiMap(t *testing.T) {
 	}{
 		{
 			name:           "Convert table to multi map ok",
-			table:          NewTable(tablewithNameAndHeight),
+			table:          NewTable(withNameAndHeight),
 			expectedResult: expectedResult,
 			expectedErr:    nil,
 		},
@@ -199,12 +199,12 @@ func TestConvertTableWithoutHeaderToStruct(t *testing.T) {
 	}{
 		{
 			name:        "Convert table wo header to struct ok",
-			table:       NewTable(tablewithParamAndValue),
+			table:       NewTable(withParamAndValue),
 			expectedErr: nil,
 		},
 		{
 			name:  "Convert table wo header to struct fail",
-			table: NewTable(tablewithNameAndHeight),
+			table: NewTable(withNameAndHeight),
 			expectedErr: errors.New("failed setting element 'John' in struct of type " +
 				"'golium.Headers': field 'John' is not valid"),
 		},
