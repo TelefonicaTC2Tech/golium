@@ -33,7 +33,7 @@ func RemoveHeaders(t *godog.Table) error {
 	rows := make([]*messages.PickleTableRow, len(t.Rows)-1)
 
 	if len(t.Rows) < 2 {
-		return errors.New("table must have at least one header and one useful row")
+		return errors.New("cannot remove header: table must have at least one header and one useful row")
 	}
 
 	for i := 1; i < len(t.Rows); i++ {
@@ -72,7 +72,7 @@ func NewTable(src [][]string) *godog.Table {
 func ConvertTableToMap(ctx context.Context, t *godog.Table) (map[string]interface{}, error) {
 	err := RemoveHeaders(t)
 	if err != nil {
-		return nil, fmt.Errorf("failed removing headers from table: %w", err)
+		return nil, err
 	}
 	m := make(map[string]interface{})
 	if len(t.Rows) == 0 {
@@ -94,7 +94,7 @@ func ConvertTableToMap(ctx context.Context, t *godog.Table) (map[string]interfac
 func ConvertTableColumnToArray(ctx context.Context, t *godog.Table) ([]string, error) {
 	err := RemoveHeaders(t)
 	if err != nil {
-		return nil, fmt.Errorf("failed removing headers from table: %w", err)
+		return nil, err
 	}
 	m := []string{}
 	if len(t.Rows) == 0 {
@@ -118,7 +118,7 @@ func ConvertTableColumnToArray(ctx context.Context, t *godog.Table) ([]string, e
 func ConvertTableToMultiMap(ctx context.Context, t *godog.Table) (map[string][]string, error) {
 	err := RemoveHeaders(t)
 	if err != nil {
-		return nil, fmt.Errorf("failed removing headers from table: %w", err)
+		return nil, err
 	}
 	m := url.Values{}
 	if len(t.Rows) == 0 {
@@ -224,7 +224,7 @@ func ConvertTableWithHeaderToStructSlice(ctx context.Context,
 func ConvertTableRemovingtHeaderToStruct(ctx context.Context, t *godog.Table, v interface{}) error {
 	err := RemoveHeaders(t)
 	if err != nil {
-		return fmt.Errorf("failed removing headers from table: %w", err)
+		return err
 	}
 	if len(t.Rows) == 0 {
 		return nil
