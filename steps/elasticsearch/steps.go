@@ -37,7 +37,7 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 	// Initialize the steps
 	scenCtx.Step(`^the elasticsearch server$`, func(t *godog.Table) error {
 		var options elasticsearch.Config
-		if err := golium.ConvertTableRemovingtHeaderToStruct(ctx, t, &options); err != nil {
+		if err := golium.ConvertTableWithoutHeaderToStruct(ctx, t, &options); err != nil {
 			return fmt.Errorf("failed configuring elasticsearch client: %w", err)
 		}
 		return session.ConfigureClient(ctx, options)
