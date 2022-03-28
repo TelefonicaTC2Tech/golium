@@ -5,16 +5,20 @@ Feature: HTTP client
     Given the HTTP endpoint "[CONF:url]/anything"
       And the HTTP path "/test-query"
       And the HTTP query parameters
-          | exists | true |
-          | sort   | name |
+          | param  | value |
+          | exists | true  |
+          | sort   | name  |
       And the HTTP request headers
+          | param         | value               |
           | Authorization | Bearer access-token |
      When I send a HTTP "GET" request
      Then the HTTP status code must be "200"
       And the HTTP response must contain the headers
+          | param        | value            |
           | Content-Type | application/json |
       And the HTTP response body must comply with the JSON schema "test-schema"
       And the HTTP response body must have the JSON properties
+          | param                 | value                                                |
           | headers.Authorization | Bearer access-token                                  |
           | headers.Content-Type  | [NULL]                                               |
           | headers.Host          | [CONF:host]                                          |
@@ -28,8 +32,10 @@ Feature: HTTP client
     Given the HTTP endpoint "[CONF:url]/anything"
       And the HTTP path "/test-json"
       And the HTTP request headers
+          | param         | value               |
           | Authorization | Bearer access-token |
       And the JSON properties in the HTTP request body
+          | param    | value          |
           | name     | golium         |
           | active   | [TRUE]         |
           | inactive | [FALSE]        |
@@ -40,9 +46,11 @@ Feature: HTTP client
      When I send a HTTP "POST" request
      Then the HTTP status code must be "200"
       And the HTTP response must contain the headers
+          | param        | value            |
           | Content-Type | application/json |
       And the HTTP response body must comply with the JSON schema "test-schema"
       And the HTTP response body must have the JSON properties
+          | param                 | value                         |
           | headers.Authorization | Bearer access-token           |
           | headers.Content-Type  | application/json              |
           | headers.Host          | [CONF:host]                   |
@@ -61,8 +69,10 @@ Feature: HTTP client
     Given the HTTP endpoint "[CONF:url]/anything"
       And the HTTP path "/test-urlencoded"
       And the HTTP request headers
+          | param         | value               |
           | Authorization | Bearer access-token |
       And the HTTP request body with the URL encoded properties
+          | param   | value          |
           | name    | test           |
           | surname | golium         |
           | boolean | [TRUE]         |
@@ -70,9 +80,11 @@ Feature: HTTP client
      When I send a HTTP "POST" request
      Then the HTTP status code must be "200"
       And the HTTP response must contain the headers
+          | param        | value            |
           | Content-Type | application/json |
       And the HTTP response body must comply with the JSON schema "test-schema"
       And the HTTP response body must have the JSON properties
+          | param                 | value                               |
           | headers.Authorization | Bearer access-token                 |
           | headers.Content-Type  | application/x-www-form-urlencoded   |
           | headers.Host          | [CONF:host]                         |
@@ -88,6 +100,7 @@ Feature: HTTP client
     Given the HTTP endpoint "[CONF:url]/anything"
       And the HTTP path "/test-content"
       And the HTTP request headers
+          | param        | value            |
           | Content-Type | application/json |
       And the HTTP request body with the JSON
       """
@@ -105,6 +118,7 @@ Feature: HTTP client
       And the HTTP status code must be "200"
       And the HTTP response body must comply with the JSON schema "test-schema"
       And the HTTP response body must have the JSON properties
+          | param                 | value      |
           | json.empty            | [EMPTY]    |
           | json.boolean          | [FALSE]    |
           | json.list.#           | [NUMBER:3] |
@@ -119,14 +133,17 @@ Feature: HTTP client
      Then the HTTP endpoint "[CONF:url]/anything"
       And the HTTP path "/test3-2"
       And the HTTP request headers
+          | param        | value            |
           | Content-Type | application/json |
       And the JSON properties in the HTTP request body
+          | param     | value       |
           | attribute | [CTXT:attr] |
           | value     | [CTXT:val]  |
       And I send a HTTP "POST" request
       And the HTTP status code must be "200"
       And the HTTP response body must comply with the JSON schema "test-schema"
       And the HTTP response body must have the JSON properties
+          | param          | value      |
           | json.attribute | attribute0 |
           | json.value     | value0     |
   
@@ -135,6 +152,7 @@ Feature: HTTP client
     Given the HTTP endpoint "[CONF:url]/anything"
       And the HTTP path "/test-content"
       And the HTTP request headers
+          | param        | value            |
           | Content-Type | application/json |
       And the HTTP request body with the JSON "example1" from "http" file
      When I send a HTTP "POST" request
@@ -146,12 +164,15 @@ Feature: HTTP client
     Given the HTTP endpoint "[CONF:url]/anything"
       And the HTTP path "/test-content"
       And the HTTP request headers
+          | param        | value            |
           | Content-Type | application/json |
       And the HTTP request body with the JSON "example1" from "http" file without
+          | param   |
           | boolean |
      When I send a HTTP "POST" request
       And the HTTP status code must be "200"
       And the HTTP response "json" must match with the JSON "example1" from "http" file without
+          | param   |
           | boolean |
 
   @http
@@ -167,6 +188,7 @@ Feature: HTTP client
      When I send a HTTP "GET" request
       And the HTTP status code must be "301"
       And the HTTP response must contain the headers
+          | param    | value                        |
           | Location | https://www.elevenpaths.com/ |
       And I store the header "Location" from the HTTP response in context "header.location"
 
@@ -174,10 +196,12 @@ Feature: HTTP client
   Scenario: Set HTTP request host
     Given the HTTP endpoint "[CONF:url]/headers"
       And the HTTP request headers
-          | Host | example.com |
+          | param | value       |
+          | Host  | example.com |
      When I send a HTTP "GET" request
       And the HTTP status code must be "200"
       And the HTTP response body must have the JSON properties
+          | param        | value       |
           | headers.Host | example.com |
 
   @http
@@ -191,11 +215,14 @@ Feature: HTTP client
       Given the HTTP endpoint "[CONF:url]/anything"
         And the HTTP path "/test-query"
         And the HTTP query parameters
-            | exists | true |
-            | sort   | name |
+            | param  | value |
+            | exists | true  |
+            | sort   | name  |
         And the HTTP request headers
+            | param         | value               |
             | Authorization | Bearer access-token |
       When I send a HTTP "GET" request
       Then the HTTP status code must be "200"
         And the HTTP response must not contain the headers
+            | param               |
             | non-existent-header |
