@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/cucumber/godog"
+	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -104,15 +105,19 @@ func TestColumnsChecker(t *testing.T) {
 }
 
 func TestConvertTableToMap(t *testing.T) {
+	expectedResult := make(map[string]interface{})
+	expectedResult["John"] = "182"
 	tcs := []struct {
-		name        string
-		table       *godog.Table
-		expectedErr error
+		name           string
+		table          *godog.Table
+		expectedResult interface{}
+		expectedErr    error
 	}{
 		{
-			name:        "Convert table to map ok",
-			table:       NewTable(table2x2),
-			expectedErr: nil,
+			name:           "Convert table to map ok",
+			table:          NewTable(table2x2),
+			expectedResult: expectedResult,
+			expectedErr:    nil,
 		},
 	}
 
@@ -120,30 +125,28 @@ func TestConvertTableToMap(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ctx := context.Background()
 			// Call the tested function
-			_, err := ConvertTableToMap(ctx, tc.table)
+			convertedTable, err := ConvertTableToMap(ctx, tc.table)
 
-			// Check expected behavior
-			if err != nil && err.Error() != tc.expectedErr.Error() {
-				t.Errorf("Expected error: %s, Error received: %s", tc.expectedErr, err)
-			}
-
-			if tc.expectedErr == nil && err != nil {
-				t.Errorf("Expected error: %s, Error received: %s", tc.expectedErr, err)
-			}
+			require.Equal(t, tc.expectedErr, err)
+			require.Equal(t, tc.expectedResult, convertedTable)
 		})
 	}
 }
 
 func TestConvertTableColumnToArray(t *testing.T) {
+	expectedResult := []string{}
+	expectedResult = append(expectedResult, "John")
 	tcs := []struct {
-		name        string
-		table       *godog.Table
-		expectedErr error
+		name           string
+		table          *godog.Table
+		expectedResult interface{}
+		expectedErr    error
 	}{
 		{
-			name:        "Convert table column to array ok",
-			table:       NewTable(table2x1),
-			expectedErr: nil,
+			name:           "Convert table column to array ok",
+			table:          NewTable(table2x1),
+			expectedResult: expectedResult,
+			expectedErr:    nil,
 		},
 	}
 
@@ -151,30 +154,28 @@ func TestConvertTableColumnToArray(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ctx := context.Background()
 			// Call the tested function
-			_, err := ConvertTableColumnToArray(ctx, tc.table)
+			convertedTable, err := ConvertTableColumnToArray(ctx, tc.table)
 
-			// Check expected behavior
-			if err != nil && err.Error() != tc.expectedErr.Error() {
-				t.Errorf("Expected error: %s, Error received: %s", tc.expectedErr, err)
-			}
-
-			if tc.expectedErr == nil && err != nil {
-				t.Errorf("Expected error: %s, Error received: %s", tc.expectedErr, err)
-			}
+			require.Equal(t, tc.expectedErr, err)
+			require.Equal(t, tc.expectedResult, convertedTable)
 		})
 	}
 }
 
 func TestConvertTableToMultiMap(t *testing.T) {
+	expectedResult := make(map[string][]string)
+	expectedResult["John"] = []string{"182"}
 	tcs := []struct {
-		name        string
-		table       *godog.Table
-		expectedErr error
+		name           string
+		table          *godog.Table
+		expectedResult interface{}
+		expectedErr    error
 	}{
 		{
-			name:        "Convert table to multi map ok",
-			table:       NewTable(table2x2),
-			expectedErr: nil,
+			name:           "Convert table to multi map ok",
+			table:          NewTable(table2x2),
+			expectedResult: expectedResult,
+			expectedErr:    nil,
 		},
 	}
 
@@ -182,16 +183,10 @@ func TestConvertTableToMultiMap(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ctx := context.Background()
 			// Call the tested function
-			_, err := ConvertTableToMultiMap(ctx, tc.table)
+			convertedTable, err := ConvertTableToMultiMap(ctx, tc.table)
 
-			// Check expected behavior
-			if err != nil && err.Error() != tc.expectedErr.Error() {
-				t.Errorf("Expected error: %s, Error received: %s", tc.expectedErr, err)
-			}
-
-			if tc.expectedErr == nil && err != nil {
-				t.Errorf("Expected error: %s, Error received: %s", tc.expectedErr, err)
-			}
+			require.Equal(t, tc.expectedErr, err)
+			require.Equal(t, tc.expectedResult, convertedTable)
 		})
 	}
 }
@@ -222,14 +217,7 @@ func TestConvertTableWithoutHeaderToStruct(t *testing.T) {
 			// Call the tested function
 			err := ConvertTableWithoutHeaderToStruct(ctx, tc.table, &props)
 
-			// Check expected behavior
-			if err != nil && err.Error() != tc.expectedErr.Error() {
-				t.Errorf("Expected error: %s, Error received: %s", tc.expectedErr, err)
-			}
-
-			if tc.expectedErr == nil && err != nil {
-				t.Errorf("Expected error: %s, Error received: %s", tc.expectedErr, err)
-			}
+			require.Equal(t, tc.expectedErr, err)
 		})
 	}
 }
