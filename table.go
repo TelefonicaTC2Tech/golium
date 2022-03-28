@@ -51,20 +51,6 @@ func RemoveHeaders(t *godog.Table) error {
 	return nil
 }
 
-// GetParamsFromTable Extracts parameters from godog table removing
-// headers and converting the output to f (conversion function provided
-// as input parameter) return type.
-func GetParamsFromTable(ctx context.Context,
-	t *godog.Table,
-	f func(ctx context.Context, t *godog.Table) (interface{}, error),
-) (interface{}, error) {
-	err := RemoveHeaders(t)
-	if err != nil {
-		return nil, fmt.Errorf("failed removing headers from table: %w", err)
-	}
-	return f(ctx, t)
-}
-
 // NewTable Aux function that creates a new table
 // from string matrix for testing purposes.
 func NewTable(src [][]string) *godog.Table {
