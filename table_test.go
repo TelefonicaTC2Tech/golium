@@ -18,7 +18,7 @@ func TestRemoveHeaders(t *testing.T) {
 			table: NewTable([][]string{
 				{"John", "182"}, //  | John   | 182 |
 			}),
-			expectedErr: errors.New("table must have at least one header and one useful row"),
+			expectedErr: errors.New("cannot remove header: table must have at least one header and one useful row"),
 		},
 		{
 			name: "Remove header table ok",
