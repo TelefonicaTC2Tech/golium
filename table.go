@@ -211,13 +211,14 @@ func ConvertTableWithHeaderToStructSlice(ctx context.Context,
 	return nil
 }
 
-// ConvertTableWithoutHeaderToStruct converts a godog table with two columns into a struct.
+// ConvertTableRemovingtHeaderToStruct converts a godog table with two columns into a struct.
 // The first column of the table corresponds to the struct property, and the seconds column
 // to the value to be assigned.
 //
 // With the following example table:
 //		Scenario: Table to struct test
 //			Given I configure my struct
+//              | param | value     |
 //				| Name  | 1         |
 //				| Value | example 1 |
 // And the code:
@@ -227,14 +228,18 @@ func ConvertTableWithHeaderToStructSlice(ctx context.Context,
 //      		Value int
 //    		}
 //			testElement := TestElement{}
-//			err := golium.ConvertTableWithoutHeaderToStruct(ctx, table, &testElement)
+//			err := golium.ConvertTableRemovingtHeaderToStruct(ctx, table, &testElement)
 // 		})
 // It will be equivalent to:
 //		testElement := TestElement{Name: "example 1", Value: 1}
 // Warning: still pending process values directly as arrays, i.e.: | addresses | ["http://localhost:8080"] |
 //          use by now a CONF tag, i.e.: | addresses | [CONF:elasticsearch.addresses] |
 
-func ConvertTableWithoutHeaderToStruct(ctx context.Context, t *godog.Table, v interface{}) error {
+func ConvertTableRemovingtHeaderToStruct(ctx context.Context, t *godog.Table, v interface{}) error {
+	err := RemoveHeaders(t)
+	if err != nil {
+		return fmt.Errorf("failed removing headers from table: %w", err)
+	}
 	if len(t.Rows) == 0 {
 		return nil
 	}

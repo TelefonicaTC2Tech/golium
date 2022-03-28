@@ -36,7 +36,7 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 	// Initialize the steps
 	scenCtx.Step(`^the redis endpoint$`, func(t *godog.Table) error {
 		var options redis.Options
-		if err := golium.ConvertTableWithoutHeaderToStruct(ctx, t, &options); err != nil {
+		if err := golium.ConvertTableRemovingtHeaderToStruct(ctx, t, &options); err != nil {
 			return fmt.Errorf("failed configuring redis endpoint: %w", err)
 		}
 		return session.ConfigureClient(ctx, &options)

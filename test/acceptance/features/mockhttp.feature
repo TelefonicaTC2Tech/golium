@@ -123,6 +123,7 @@ Feature: HTTP Mock server
           | param        | value            |
           | Content-Type | application/json |
       And the HTTP response body must have the JSON properties
+          | param         | value                |
           | values.0.path | /[CTXT:id]-[CTXT:id] |
 
   @mockhttp

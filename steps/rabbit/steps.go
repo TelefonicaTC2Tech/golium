@@ -49,7 +49,7 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 	})
 	scenCtx.Step(`^I set standard rabbit properties$`, func(t *godog.Table) error {
 		var props amqp.Publishing
-		if err := golium.ConvertTableWithoutHeaderToStruct(ctx, t, &props); err != nil {
+		if err := golium.ConvertTableRemovingtHeaderToStruct(ctx, t, &props); err != nil {
 			return fmt.Errorf("failed configuring rabbit endpoint: %w", err)
 		}
 		session.ConfigureStandardProperties(ctx, props)
@@ -91,7 +91,7 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 	scenCtx.Step(`^I wait up to "(\d+)" seconds? for a rabbit message with the standard properties$`, func(timeout int, t *godog.Table) error {
 		timeoutDuration := time.Duration(timeout) * time.Second
 		var props amqp.Delivery
-		if err := golium.ConvertTableWithoutHeaderToStruct(ctx, t, &props); err != nil {
+		if err := golium.ConvertTableRemovingtHeaderToStruct(ctx, t, &props); err != nil {
 			return fmt.Errorf("failed processing table to a map for the standard rabbit properties: %w", err)
 		}
 		return session.WaitForMessagesWithStandardProperties(ctx, timeoutDuration, 1, props)
@@ -99,7 +99,7 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 	scenCtx.Step(`^I wait up to "(\d+)" seconds? for "(\d+)" rabbit messages with the standard properties$`, func(timeout int, count int, t *godog.Table) error {
 		timeoutDuration := time.Duration(timeout) * time.Second
 		var props amqp.Delivery
-		if err := golium.ConvertTableWithoutHeaderToStruct(ctx, t, &props); err != nil {
+		if err := golium.ConvertTableRemovingtHeaderToStruct(ctx, t, &props); err != nil {
 			return fmt.Errorf("failed processing table to a map for the standard rabbit properties: %w", err)
 		}
 		return session.WaitForMessagesWithStandardProperties(ctx, timeoutDuration, count, props)
@@ -107,7 +107,7 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 	scenCtx.Step(`^I wait up to "(\d+)" seconds? without a rabbit message with the standard properties$`, func(timeout int, t *godog.Table) error {
 		timeoutDuration := time.Duration(timeout) * time.Second
 		var props amqp.Delivery
-		if err := golium.ConvertTableWithoutHeaderToStruct(ctx, t, &props); err != nil {
+		if err := golium.ConvertTableRemovingtHeaderToStruct(ctx, t, &props); err != nil {
 			return fmt.Errorf("failed processing table to a map for the standard rabbit properties: %w", err)
 		}
 		if err := session.WaitForMessagesWithStandardProperties(ctx, timeoutDuration, 1, props); err == nil {
@@ -124,7 +124,7 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 	})
 	scenCtx.Step(`^the rabbit message has the standard rabbit properties$`, func(t *godog.Table) error {
 		var props amqp.Delivery
-		if err := golium.ConvertTableWithoutHeaderToStruct(ctx, t, &props); err != nil {
+		if err := golium.ConvertTableRemovingtHeaderToStruct(ctx, t, &props); err != nil {
 			return fmt.Errorf("failed configuring rabbit endpoint: %w", err)
 		}
 		return session.ValidateMessageStandardProperties(ctx, props)
