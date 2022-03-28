@@ -51,6 +51,13 @@ func RemoveHeaders(t *godog.Table) error {
 	return nil
 }
 
+func ColumnsChecker(cells []*messages.PickleTableCell, n int) error {
+	if len(cells) != n {
+		return fmt.Errorf("table must have %d columns", n)
+	}
+	return nil
+}
+
 // NewTable Aux function that creates a new table
 // from string matrix for testing purposes.
 func NewTable(src [][]string) *godog.Table {
@@ -74,15 +81,19 @@ func ConvertTableToMap(ctx context.Context, t *godog.Table) (map[string]interfac
 	if err != nil {
 		return nil, err
 	}
+
 	m := make(map[string]interface{})
 	if len(t.Rows) == 0 {
 		return m, nil
 	}
+
+	err = ColumnsChecker(t.Rows[0].Cells, 2)
+	if err != nil {
+		return nil, err
+	}
+
 	for i := 0; i < len(t.Rows); i++ {
 		cells := t.Rows[i].Cells
-		if len(cells) != 2 {
-			return m, errors.New("table must have 2 columns")
-		}
 		propKey := cells[0].Value
 		propValue := cells[1].Value
 		m[propKey] = Value(ctx, propValue)
@@ -100,11 +111,14 @@ func ConvertTableColumnToArray(ctx context.Context, t *godog.Table) ([]string, e
 	if len(t.Rows) == 0 {
 		return m, nil
 	}
+
+	err = ColumnsChecker(t.Rows[0].Cells, 1)
+	if err != nil {
+		return nil, err
+	}
+
 	for i := 0; i < len(t.Rows); i++ {
 		cells := t.Rows[i].Cells
-		if len(cells) > 1 {
-			return m, errors.New("table must have 1 unique column")
-		}
 		propKey := cells[0].Value
 		m = append(m, propKey)
 	}
@@ -124,11 +138,14 @@ func ConvertTableToMultiMap(ctx context.Context, t *godog.Table) (map[string][]s
 	if len(t.Rows) == 0 {
 		return m, nil
 	}
+
+	err = ColumnsChecker(t.Rows[0].Cells, 2)
+	if err != nil {
+		return nil, err
+	}
+
 	for i := 0; i < len(t.Rows); i++ {
 		cells := t.Rows[i].Cells
-		if len(cells) != 2 {
-			return m, errors.New("table must have 2 columns")
-		}
 		propKey := ValueAsString(ctx, cells[0].Value)
 		propValue := ValueAsString(ctx, cells[1].Value)
 		m.Add(propKey, propValue)
@@ -229,13 +246,16 @@ func ConvertTableWithoutHeaderToStruct(ctx context.Context, t *godog.Table, v in
 	if len(t.Rows) == 0 {
 		return nil
 	}
+
+	err = ColumnsChecker(t.Rows[0].Cells, 2)
+	if err != nil {
+		return err
+	}
+
 	ptrValue := reflect.ValueOf(v)
 	value := ptrValue.Elem()
 	for i := 0; i < len(t.Rows); i++ {
 		cells := t.Rows[i].Cells
-		if len(cells) != 2 {
-			return fmt.Errorf("table must have 2 columns")
-		}
 		propKey := cells[0].Value
 		propValue := cells[1].Value
 		if err := assignFieldInStruct(value, propKey, Value(ctx, propValue)); err != nil {
