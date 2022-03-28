@@ -259,8 +259,9 @@ func ConvertTableWithoutHeaderToStruct(ctx context.Context, t *godog.Table, v in
 		propKey := cells[0].Value
 		propValue := cells[1].Value
 		if err := assignFieldInStruct(value, propKey, Value(ctx, propValue)); err != nil {
-			return fmt.Errorf("failed setting element '%s' in struct of type '%s': %w",
-				propKey, value.Type(), err)
+			errStr := fmt.Sprintf("failed setting element '%s' in struct of type '%s': %s",
+				propKey, value.Type(), err.Error())
+			return errors.New(errStr)
 		}
 	}
 	return nil
