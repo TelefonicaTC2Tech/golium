@@ -40,7 +40,7 @@ func GetParamFromJSON(ctx context.Context, file, code, param string) (interface{
 
 	paramValue, err := FindValueByCode(dataStruct, code, param)
 	if err != nil {
-		return nil, fmt.Errorf("Param value: '%s' not found in '%v' due to error: %w",
+		return nil, fmt.Errorf("param value: '%s' not found in '%v' due to error: %w",
 			param, dataStruct, err)
 	}
 	return paramValue, nil
