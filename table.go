@@ -24,20 +24,76 @@ import (
 	"strings"
 
 	"github.com/cucumber/godog"
+	"github.com/cucumber/messages-go/v16"
 	"github.com/tidwall/gjson"
 )
 
+// Remove headers form table
+func RemoveHeaders(t *godog.Table) error {
+	rows := make([]*messages.PickleTableRow, len(t.Rows)-1)
+
+	if len(t.Rows) < 2 {
+		return errors.New("cannot remove header: table must have at least one header and one useful row")
+	}
+
+	for i := 1; i < len(t.Rows); i++ {
+		pickleTableCells := make([]*messages.PickleTableCell, len(t.Rows[i].Cells))
+		for j, cell := range t.Rows[i].Cells {
+			pickleTableCells[j] = &messages.PickleTableCell{
+				Value: cell.Value,
+			}
+		}
+		rows[i-1] = &messages.PickleTableRow{Cells: pickleTableCells}
+	}
+
+	t.Rows = rows
+
+	return nil
+}
+
+func ColumnsChecker(cells []*messages.PickleTableCell, n int) error {
+	if len(cells) != n {
+		return fmt.Errorf("table must have %d columns", n)
+	}
+	return nil
+}
+
+// NewTable Aux function that creates a new table
+// from string matrix for testing purposes.
+func NewTable(src [][]string) *godog.Table {
+	rows := make([]*messages.PickleTableRow, len(src))
+
+	for i, row := range src {
+		cells := make([]*messages.PickleTableCell, len(row))
+
+		for j, value := range row {
+			cells[j] = &messages.PickleTableCell{Value: value}
+		}
+
+		rows[i] = &messages.PickleTableRow{Cells: cells}
+	}
+	return &godog.Table{Rows: rows}
+}
+
 // ConvertTableToMap converts a godog table with 2 columns into a map[string]interface{}.
 func ConvertTableToMap(ctx context.Context, t *godog.Table) (map[string]interface{}, error) {
+	err := RemoveHeaders(t)
+	if err != nil {
+		return nil, err
+	}
+
 	m := make(map[string]interface{})
 	if len(t.Rows) == 0 {
 		return m, nil
 	}
+
+	err = ColumnsChecker(t.Rows[0].Cells, 2)
+	if err != nil {
+		return nil, err
+	}
+
 	for i := 0; i < len(t.Rows); i++ {
 		cells := t.Rows[i].Cells
-		if len(cells) != 2 {
-			return m, errors.New("table must have 2 columns")
-		}
 		propKey := cells[0].Value
 		propValue := cells[1].Value
 		m[propKey] = Value(ctx, propValue)
@@ -47,15 +103,22 @@ func ConvertTableToMap(ctx context.Context, t *godog.Table) (map[string]interfac
 
 // ConvertTableColumnToArray converts a godog table with 1 column into a []string.
 func ConvertTableColumnToArray(ctx context.Context, t *godog.Table) ([]string, error) {
+	err := RemoveHeaders(t)
+	if err != nil {
+		return nil, err
+	}
 	m := []string{}
 	if len(t.Rows) == 0 {
 		return m, nil
 	}
+
+	err = ColumnsChecker(t.Rows[0].Cells, 1)
+	if err != nil {
+		return nil, err
+	}
+
 	for i := 0; i < len(t.Rows); i++ {
 		cells := t.Rows[i].Cells
-		if len(cells) > 1 {
-			return m, errors.New("table must have 1 unique column")
-		}
 		propKey := cells[0].Value
 		m = append(m, propKey)
 	}
@@ -67,15 +130,22 @@ func ConvertTableColumnToArray(ctx context.Context, t *godog.Table) ([]string, e
 // The multimap is useful to support multiple values for the same key (e.g. for query parameters
 // or HTTP headers).
 func ConvertTableToMultiMap(ctx context.Context, t *godog.Table) (map[string][]string, error) {
+	err := RemoveHeaders(t)
+	if err != nil {
+		return nil, err
+	}
 	m := url.Values{}
 	if len(t.Rows) == 0 {
 		return m, nil
 	}
+
+	err = ColumnsChecker(t.Rows[0].Cells, 2)
+	if err != nil {
+		return nil, err
+	}
+
 	for i := 0; i < len(t.Rows); i++ {
 		cells := t.Rows[i].Cells
-		if len(cells) != 2 {
-			return m, errors.New("table must have 2 columns")
-		}
 		propKey := ValueAsString(ctx, cells[0].Value)
 		propValue := ValueAsString(ctx, cells[1].Value)
 		m.Add(propKey, propValue)
@@ -109,7 +179,11 @@ func ConvertTableToMultiMap(ctx context.Context, t *godog.Table) (map[string][]s
 //			TestElement{Name: "example 1", Value: 1},
 //			TestElement{Name: "example 2", Value: 10},
 //		}
-func ConvertTableWithHeaderToStructSlice(ctx context.Context, t *godog.Table, slicePtr interface{}) error {
+
+func ConvertTableWithHeaderToStructSlice(ctx context.Context,
+	t *godog.Table,
+	slicePtr interface{},
+) error {
 	if len(t.Rows) == 0 {
 		return errors.New("table requires at least 1 row with the header")
 	}
@@ -147,6 +221,7 @@ func ConvertTableWithHeaderToStructSlice(ctx context.Context, t *godog.Table, sl
 // With the following example table:
 //		Scenario: Table to struct test
 //			Given I configure my struct
+//              | param | value     |
 //				| Name  | 1         |
 //				| Value | example 1 |
 // And the code:
@@ -162,22 +237,31 @@ func ConvertTableWithHeaderToStructSlice(ctx context.Context, t *godog.Table, sl
 //		testElement := TestElement{Name: "example 1", Value: 1}
 // Warning: still pending process values directly as arrays, i.e.: | addresses | ["http://localhost:8080"] |
 //          use by now a CONF tag, i.e.: | addresses | [CONF:elasticsearch.addresses] |
+
 func ConvertTableWithoutHeaderToStruct(ctx context.Context, t *godog.Table, v interface{}) error {
+	err := RemoveHeaders(t)
+	if err != nil {
+		return err
+	}
 	if len(t.Rows) == 0 {
 		return nil
 	}
+
+	err = ColumnsChecker(t.Rows[0].Cells, 2)
+	if err != nil {
+		return err
+	}
+
 	ptrValue := reflect.ValueOf(v)
 	value := ptrValue.Elem()
 	for i := 0; i < len(t.Rows); i++ {
 		cells := t.Rows[i].Cells
-		if len(cells) != 2 {
-			return fmt.Errorf("table must have 2 columns")
-		}
 		propKey := cells[0].Value
 		propValue := cells[1].Value
 		if err := assignFieldInStruct(value, propKey, Value(ctx, propValue)); err != nil {
-			return fmt.Errorf("failed setting element '%s' in struct of type '%s': %w",
-				propKey, value.Type(), err)
+			errStr := fmt.Sprintf("failed setting element '%s' in struct of type '%s': %s",
+				propKey, value.Type(), err.Error())
+			return errors.New(errStr)
 		}
 	}
 	return nil

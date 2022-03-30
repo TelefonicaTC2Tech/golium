@@ -3,8 +3,10 @@ Feature: Elasticsearch client
   @elasticsearch
   Scenario: Create and search a document
     Given the elasticsearch server
+          | param     | value                          |
           | addresses | [CONF:elasticsearch.addresses] |
      When I create the elasticsearch document with index "example" and the JSON properties
+          | param  | value                               |
           | name   | example                             |
           | number | [NUMBER:1]                          |
           | bool   | [TRUE]                              |
@@ -21,6 +23,7 @@ Feature: Elasticsearch client
           }
           """
       And the search result must have the JSON properties
+          | param                      | value                               |
           | hits.total.value           | [NUMBER:1]                          |
           | hits.hits.#                | [NUMBER:1]                          |
           | hits.hits.0._source.name   | example                             |
