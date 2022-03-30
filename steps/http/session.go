@@ -128,7 +128,7 @@ func (s *Session) ConfigureCredentials(ctx context.Context, username, password s
 	s.Request.Password = password
 }
 
-// ConfigureRequestBodyJSONProperties writes the body 
+// ConfigureRequestBodyJSONProperties writes the body
 // in the HTTP request as a JSON with properties.
 func (s *Session) ConfigureRequestBodyJSONProperties(
 	ctx context.Context,
@@ -143,7 +143,7 @@ func (s *Session) ConfigureRequestBodyJSONProperties(
 	s.ConfigureRequestBodyJSONText(ctx, jsonRequestBody)
 	return nil
 }
- 
+
 // ConfigureRequestBodyJSONText writes the body in the
 // HTTP request as a JSON from text.
 func (s *Session) ConfigureRequestBodyJSONText(ctx context.Context, message string) {
@@ -381,7 +381,7 @@ func (s *Session) ValidateResponseBodyJSONFile(
 	return s.ValidateResponseFromJSONFile(jsonResponseBody, respDataLocation)
 }
 
-// ValidateResponseBodyJSONFileWithout validates 
+// ValidateResponseBodyJSONFileWithout validates
 // the response body against the JSON in File without params.
 func (s *Session) ValidateResponseBodyJSONFileWithout(
 	ctx context.Context,
@@ -399,10 +399,10 @@ func (s *Session) ValidateResponseBodyJSONFileWithout(
 	return s.ValidateResponseFromJSONFile(jsonResponseBody, respDataLocation)
 }
 
-// ValidateResponseBodyJSONProperties validates a list 
+// ValidateResponseBodyJSONProperties validates a list
 // of properties in the JSON body of the HTTP response.
 func (s *Session) ValidateResponseBodyJSONProperties(
-	ctx context.Context, 
+	ctx context.Context,
 	props map[string]interface{}) error {
 	m := golium.NewMapFromJSONBytes(s.Response.ResponseBody)
 	for key, expectedValue := range props {

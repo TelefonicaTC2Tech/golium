@@ -74,7 +74,7 @@ func TestGetParamFromJSON(t *testing.T) {
 		assert.True(t,
 			reflect.DeepEqual(resultParam, expectedParam),
 			fmt.Sprintf("expected JSON parameter does not match response JSON parametr, \n%v\n vs \n%s",
-						 resultParam, JSON))
+				resultParam, JSON))
 	})
 }
 
@@ -153,16 +153,16 @@ func TestFindValueByCode(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			value, err := FindValueByCode(dataStruct, tc.code, tc.param)
 			if err != nil {
-				if err.Error() != fmt.Sprintf("value for param: '%s' with code: '%s' not found", 
+				if err.Error() != fmt.Sprintf("value for param: '%s' with code: '%s' not found",
 					tc.param, tc.code) {
-						t.Errorf("error not expected with param '%s' and code '%s':\n%v", 
-							tc.param, tc.code, err)
+					t.Errorf("error not expected with param '%s' and code '%s':\n%v",
+						tc.param, tc.code, err)
 				}
 			}
 
 			if !JSONEquals(value, tc.expectedValue) {
-				t.Errorf("value %v for param %s and code %s is not expected: %v", 
-						value, tc.param, tc.code, tc.expectedValue)
+				t.Errorf("value %v for param %s and code %s is not expected: %v",
+					value, tc.param, tc.code, tc.expectedValue)
 			}
 		})
 	}
@@ -204,7 +204,7 @@ func TestUnmarshalJSONData(t *testing.T) {
 		}`
 
 	var message = "error unmarshalling JSON data due to error: json: cannot unmarshal " +
-					"object into Go value of type []map[string]interface {}"
+		"object into Go value of type []map[string]interface {}"
 	formatError := errors.New(message)
 	var expected interface{}
 	if err := json.Unmarshal([]byte(expectedString), &expected); err != nil {
