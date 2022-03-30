@@ -35,6 +35,8 @@ import (
 	"encoding/json"
 )
 
+const parameterError = "error getting parameter from json: %w"
+
 // Request information of the Session.
 type Request struct {
 	// Endpoint of the HTTP server. It might include a base path.
@@ -126,20 +128,24 @@ func (s *Session) ConfigureCredentials(ctx context.Context, username, password s
 	s.Request.Password = password
 }
 
-// ConfigureRequestBodyJSONProperties writes the body in the HTTP request as a JSON with properties.
-func (s *Session) ConfigureRequestBodyJSONProperties(ctx context.Context, props map[string]interface{}) error {
-	var json string
+// ConfigureRequestBodyJSONProperties writes the body 
+// in the HTTP request as a JSON with properties.
+func (s *Session) ConfigureRequestBodyJSONProperties(
+	ctx context.Context,
+	props map[string]interface{}) error {
+	var jsonRequestBody string
 	var err error
 	for key, value := range props {
-		if json, err = sjson.Set(json, key, value); err != nil {
+		if jsonRequestBody, err = sjson.Set(jsonRequestBody, key, value); err != nil {
 			return fmt.Errorf("failed setting property '%s' with value '%s' in the request body: %w", key, value, err)
 		}
 	}
-	s.ConfigureRequestBodyJSONText(ctx, json)
+	s.ConfigureRequestBodyJSONText(ctx, jsonRequestBody)
 	return nil
 }
-
-// ConfigureRequestBodyJSONText // ConfigureRequestBodyJSONText writes the body in the HTTP request as a JSON from text.
+ 
+// ConfigureRequestBodyJSONText writes the body in the
+// HTTP request as a JSON from text.
 func (s *Session) ConfigureRequestBodyJSONText(ctx context.Context, message string) {
 	s.Request.RequestBody = []byte(message)
 	s.Request.AddJSONHeaders()
@@ -163,17 +169,22 @@ func (r *Request) AddJSONHeaders() {
 func (s *Session) ConfigureRequestBodyJSONFile(ctx context.Context, code, file string) error {
 	message, err := GetParamFromJSON(ctx, file, code, "body")
 	if err != nil {
-		return fmt.Errorf("error getting parameter from json: %w", err)
+		return fmt.Errorf(parameterError, err)
 	}
 	s.AddToRequestMessageFromJSONFile(message)
 	return nil
 }
 
-// ConfigureRequestBodyJSONFileWithout writes the body in the HTTP request as a JSON from file without given values.
-func (s *Session) ConfigureRequestBodyJSONFileWithout(ctx context.Context, code, file string, params []string) error {
+// ConfigureRequestBodyJSONFileWithout writes the body in the
+// HTTP request as a JSON from file without given values.
+func (s *Session) ConfigureRequestBodyJSONFileWithout(
+	ctx context.Context,
+	code,
+	file string,
+	params []string) error {
 	message, err := GetParamFromJSON(ctx, file, code, "body")
 	if err != nil {
-		return fmt.Errorf("error getting parameter from json: %w", err)
+		return fmt.Errorf(parameterError, err)
 	}
 	messageMap, _ := message.(map[string]interface{})
 	for _, removeParams := range params {
@@ -183,8 +194,11 @@ func (s *Session) ConfigureRequestBodyJSONFileWithout(ctx context.Context, code,
 	return nil
 }
 
-// ConfigureRequestBodyURLEncodedProperties writes the body in the HTTP request as x-www-form-urlencoded with properties.
-func (s *Session) ConfigureRequestBodyURLEncodedProperties(ctx context.Context, props map[string][]string) error {
+// ConfigureRequestBodyURLEncodedProperties writes the body in the
+// HTTP request as x-www-form-urlencoded with properties.
+func (s *Session) ConfigureRequestBodyURLEncodedProperties(
+	ctx context.Context,
+	props map[string][]string) error {
 	data := url.Values{}
 	for k, s := range props {
 		for _, v := range s {
@@ -216,7 +230,8 @@ func (s *Session) SendHTTPRequest(ctx context.Context, method string) error {
 	reqBodyReader := bytes.NewReader(s.Request.RequestBody)
 	req, err := http.NewRequest(method, url.String(), reqBodyReader)
 	if err != nil {
-		return fmt.Errorf("failed creating the HTTP request with method '%s' and url '%s'. %w", method, url, err)
+		return fmt.Errorf("failed creating the HTTP request with method '%s' and url '%s'. %w",
+			method, url, err)
 	}
 	if s.Request.Headers != nil {
 		hostHeaders, found := s.Request.Headers["Host"]
@@ -245,7 +260,8 @@ func (s *Session) SendHTTPRequest(ctx context.Context, method string) error {
 		return fmt.Errorf("error with the HTTP request. %w", err)
 	}
 	defer resp.Body.Close()
-	// This is dangerous for big response bodies, but is read now to make sure that the body reader is closed.
+	// This is dangerous for big response bodies,
+	// but is read now to make sure that the body reader is closed.
 	// TODO: limit the max size of the response body.
 	respBodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -269,24 +285,30 @@ func (s *Session) ValidateResponseTimedout(ctx context.Context) error {
 // ValidateStatusCode validates the status code from the HTTP response.
 func (s *Session) ValidateStatusCode(ctx context.Context, expectedCode int) error {
 	if expectedCode != s.Response.Response.StatusCode {
-		return fmt.Errorf("status code mismatch: expected '%d', actual '%d'", expectedCode, s.Response.Response.StatusCode)
+		return fmt.Errorf("status code mismatch: expected '%d', actual '%d'",
+			expectedCode, s.Response.Response.StatusCode)
 	}
 	return nil
 }
 
 // ValidateResponseHeaders checks a set of response headers.
-func (s *Session) ValidateResponseHeaders(ctx context.Context, expectedHeaders map[string][]string) error {
+func (s *Session) ValidateResponseHeaders(
+	ctx context.Context,
+	expectedHeaders map[string][]string) error {
 	for expectedHeader, expectedHeaderValues := range expectedHeaders {
 		for _, expectedHeaderValue := range expectedHeaderValues {
-			if !golium.ContainsString(expectedHeaderValue, s.Response.Response.Header.Values(expectedHeader)) {
-				return fmt.Errorf("HTTP response does not have the header '%s' with value '%s'", expectedHeader, expectedHeaderValue)
+			if !golium.ContainsString(
+				expectedHeaderValue, s.Response.Response.Header.Values(expectedHeader)) {
+				return fmt.Errorf("HTTP response does not have the header '%s' with value '%s'",
+					expectedHeader, expectedHeaderValue)
 			}
 		}
 	}
 	return nil
 }
 
-// ValidateNotResponseHeaders checks that a set of response headers are not included in HTTP response.
+// ValidateNotResponseHeaders checks that a set of
+// response headers are not included in HTTP response.
 func (s *Session) ValidateNotResponseHeaders(ctx context.Context, expectedHeaders []string) error {
 	for _, expectedHeader := range expectedHeaders {
 		if len(s.Response.Response.Header.Values(expectedHeader)) > 0 {
@@ -312,7 +334,9 @@ func (s *Session) ValidateResponseBodyJSONSchema(ctx context.Context, schema str
 }
 
 // ValidateResponseFromJSONFile validates the response body against the response from JSON File.
-func (s *Session) ValidateResponseFromJSONFile(response interface{}, respDataLocation string) error {
+func (s *Session) ValidateResponseFromJSONFile(
+	response interface{},
+	respDataLocation string) error {
 	respBody := s.Response.ResponseBody
 	if respDataLocation != "" {
 		respBodyAux := golium.NewMapFromJSONBytes(respBody)
@@ -345,19 +369,28 @@ func (s *Session) ValidateResponseFromJSONFile(response interface{}, respDataLoc
 }
 
 // ValidateResponseBodyJSONFile validates the response body against the JSON in File.
-func (s *Session) ValidateResponseBodyJSONFile(ctx context.Context, code, file, respDataLocation string) error {
+func (s *Session) ValidateResponseBodyJSONFile(
+	ctx context.Context,
+	code,
+	file,
+	respDataLocation string) error {
 	jsonResponseBody, err := GetParamFromJSON(ctx, file, code, "response")
 	if err != nil {
-		return fmt.Errorf("error getting parameter from json: %w", err)
+		return fmt.Errorf(parameterError, err)
 	}
 	return s.ValidateResponseFromJSONFile(jsonResponseBody, respDataLocation)
 }
 
-// ValidateResponseBodyJSONFileWithout validates the response body against the JSON in File without params.
-func (s *Session) ValidateResponseBodyJSONFileWithout(ctx context.Context, code, file, respDataLocation string, params []string) error {
+// ValidateResponseBodyJSONFileWithout validates 
+// the response body against the JSON in File without params.
+func (s *Session) ValidateResponseBodyJSONFileWithout(
+	ctx context.Context,
+	code,
+	file,
+	respDataLocation string, params []string) error {
 	jsonResponseBody, err := GetParamFromJSON(ctx, file, code, "response")
 	if err != nil {
-		return fmt.Errorf("error getting parameter from json: %w", err)
+		return fmt.Errorf(parameterError, err)
 	}
 	jsonResponseBodyMap, _ := jsonResponseBody.(map[string]interface{})
 	for _, removeParams := range params {
@@ -366,13 +399,17 @@ func (s *Session) ValidateResponseBodyJSONFileWithout(ctx context.Context, code,
 	return s.ValidateResponseFromJSONFile(jsonResponseBody, respDataLocation)
 }
 
-// ValidateResponseBodyJSONProperties validates a list of properties in the JSON body of the HTTP response.
-func (s *Session) ValidateResponseBodyJSONProperties(ctx context.Context, props map[string]interface{}) error {
+// ValidateResponseBodyJSONProperties validates a list 
+// of properties in the JSON body of the HTTP response.
+func (s *Session) ValidateResponseBodyJSONProperties(
+	ctx context.Context, 
+	props map[string]interface{}) error {
 	m := golium.NewMapFromJSONBytes(s.Response.ResponseBody)
 	for key, expectedValue := range props {
 		value := m.Get(key)
 		if value != expectedValue {
-			return fmt.Errorf("mismatch of json property '%s': expected '%s', actual '%s'", key, expectedValue, value)
+			return fmt.Errorf("mismatch of json property '%s': expected '%s', actual '%s'",
+				key, expectedValue, value)
 		}
 	}
 	return nil
@@ -395,8 +432,10 @@ func (s *Session) ValidateResponseBodyText(ctx context.Context, expectedText str
 	return fmt.Errorf("response payload: '%v' is not the expected: '%s'", s.Request.RequestBody, expectedText)
 }
 
-// StoreResponseBodyJSONPropertyInContext extracts a JSON property from the HTTP response body and stores it in the context.
-func (s *Session) StoreResponseBodyJSONPropertyInContext(ctx context.Context, key string, ctxtKey string) error {
+// StoreResponseBodyJSONPropertyInContext extracts a JSON property from
+// the HTTP response body and stores it in the context.
+func (s *Session) StoreResponseBodyJSONPropertyInContext(
+	ctx context.Context, key, ctxtKey string) error {
 	m := golium.NewMapFromJSONBytes(s.Response.ResponseBody)
 	value := m.Get(key)
 	golium.GetContext(ctx).Put(ctxtKey, value)
@@ -406,7 +445,7 @@ func (s *Session) StoreResponseBodyJSONPropertyInContext(ctx context.Context, ke
 // StoreResponseHeaderInContext stores in context a header of the HTTP response.
 // If the header does not exist, the context value is empty.
 // This method does not support multiple headers with the same name. It just stores one of them.
-func (s *Session) StoreResponseHeaderInContext(ctx context.Context, header string, ctxtKey string) error {
+func (s *Session) StoreResponseHeaderInContext(ctx context.Context, header, ctxtKey string) error {
 	h := s.Response.Response.Header.Get(header)
 	golium.GetContext(ctx).Put(ctxtKey, h)
 	return nil
