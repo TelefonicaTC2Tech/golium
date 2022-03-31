@@ -2,6 +2,7 @@ package dns
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"os"
@@ -12,13 +13,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// func createTestRecord() Record {
-// 	rNname := "John"
-// 	rType := dns.Type(dns.TypeMX).String()
-// 	rClass := dns.Class(dns.ClassINET).String()
-// 	record := Record{Name: &rNname, Type: &rType, Class: &rClass}
-// 	return record
-// }
 const (
 	fakeServer  string     = "fakeServer"
 	udpServer   string     = "8.8.8.8:53"
@@ -176,6 +170,15 @@ func TestSendDoTQuery(t *testing.T) {
 						IsNotFound:  false,
 					},
 				}),
+		},
+		{
+			name:      "Send DoT query upstream failure",
+			server:    "http://asdp-ert",
+			qtype:     1,
+			qdomain:   "www.telefonica.net.",
+			recursive: true,
+			expectedErr: fmt.Errorf("cannot create an upstream: %w",
+				errors.New("unsupported URL scheme: http")),
 		},
 	}
 

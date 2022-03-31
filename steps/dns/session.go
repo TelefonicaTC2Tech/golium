@@ -205,7 +205,7 @@ func (s *Session) SendDoTQuery(
 	}
 	u, err := upstream.AddressToUpstream(s.Server, &opts)
 	if err != nil {
-		return fmt.Errorf("cannot create an upstream: %s", err)
+		return fmt.Errorf("cannot create an upstream: %w", err)
 	}
 	m := &dns.Msg{}
 	m.Id = dns.Id()
