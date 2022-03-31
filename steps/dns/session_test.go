@@ -306,6 +306,13 @@ func TestValidateResponseWithRecords(t *testing.T) {
 			expRecords:  []Record{{Name: &rNname, Type: &rType, Class: &rClass}},
 			expectedErr: nil,
 		},
+		{
+			name:       "Validate Response with invalid records",
+			recordType: "fake",
+			expRecords: []Record{{Name: &rNname, Type: &rType, Class: &rClass}},
+			expectedErr: fmt.Errorf("no '%s' record with '%+v' in",
+				"fake", "{\"Name\":\"John\",\"Type\":\"A\",\"Class\":\"IN\",\"Data\":null,\"TTL\":null}"),
+		},
 	}
 
 	for _, tc := range tcs {
