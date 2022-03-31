@@ -31,6 +31,7 @@ func TestSendUDPQuery(t *testing.T) {
 	tcs := []struct {
 		name        string
 		server      string
+		options     bool
 		qtype       uint16
 		qdomain     string
 		recursive   bool
@@ -39,6 +40,16 @@ func TestSendUDPQuery(t *testing.T) {
 		{
 			name:        "Send UDP query ok",
 			server:      udpServer,
+			options:     false,
+			qtype:       1,
+			qdomain:     "any",
+			recursive:   false,
+			expectedErr: nil,
+		},
+		{
+			name:        "Send UDP query with options",
+			server:      udpServer,
+			options:     true,
 			qtype:       1,
 			qdomain:     "any",
 			recursive:   false,
@@ -47,6 +58,7 @@ func TestSendUDPQuery(t *testing.T) {
 		{
 			name:      "Send UDP query fake server",
 			server:    fakeServer,
+			options:   false,
 			qtype:     1,
 			qdomain:   "any",
 			recursive: false,
@@ -63,6 +75,11 @@ func TestSendUDPQuery(t *testing.T) {
 			ctx, s := getContextAndSession()
 			createLogsDir()
 			s.ConfigureServer(ctx, tc.server, "UDP")
+
+			if tc.options {
+				options := []dns.EDNS0{&dns.EDNS0_LOCAL{Code: 1, Data: []byte{1}}}
+				s.ConfigureOptions(ctx, options)
+			}
 
 			err := s.SendUDPQuery(ctx, tc.qtype, tc.qdomain, tc.recursive)
 
