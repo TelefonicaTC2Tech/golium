@@ -66,10 +66,6 @@ func LoadJSONData(file string) ([]byte, error) {
 	filePath := fmt.Sprintf("%s%s%s.json", assetsDir, string(os.PathSeparator), file)
 
 	absPath, _ := filepath.Abs(filePath)
-	if _, err := os.Stat(absPath); err != nil {
-		return nil, fmt.Errorf("file path does not exist: %v", absPath)
-	}
-
 	data, readErr := os.ReadFile(absPath)
 	if readErr != nil {
 		return nil, fmt.Errorf("error reading file at %s due to error: %w", absPath, readErr)

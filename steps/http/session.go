@@ -137,7 +137,8 @@ func (s *Session) ConfigureRequestBodyJSONProperties(
 	var err error
 	for key, value := range props {
 		if jsonRequestBody, err = sjson.Set(jsonRequestBody, key, value); err != nil {
-			return fmt.Errorf("failed setting property '%s' with value '%s' in the request body: %w", key, value, err)
+			return fmt.Errorf("failed setting property '%s' with value '%s' in the request body: %w",
+				key, value, err)
 		}
 	}
 	s.ConfigureRequestBodyJSONText(ctx, jsonRequestBody)
@@ -321,7 +322,8 @@ func (s *Session) ValidateNotResponseHeaders(ctx context.Context, expectedHeader
 // ValidateResponseBodyJSONSchema validates the response body against the JSON schema.
 func (s *Session) ValidateResponseBodyJSONSchema(ctx context.Context, schema string) error {
 	schemasDir := golium.GetConfig().Dir.Schemas
-	schemaLoader := gojsonschema.NewReferenceLoader(fmt.Sprintf("file://%s/%s.json", schemasDir, schema))
+	schemaLoader := gojsonschema.NewReferenceLoader(fmt.Sprintf("file://%s/%s.json",
+		schemasDir, schema))
 	documentLoader := gojsonschema.NewStringLoader(string(s.Response.ResponseBody))
 	result, err := gojsonschema.Validate(schemaLoader, documentLoader)
 	if err != nil {
@@ -429,7 +431,8 @@ func (s *Session) ValidateResponseBodyText(ctx context.Context, expectedText str
 	if expectedText == string(s.Response.ResponseBody) {
 		return nil
 	}
-	return fmt.Errorf("response payload: '%v' is not the expected: '%s'", s.Request.RequestBody, expectedText)
+	return fmt.Errorf("response payload: '%v' is not the expected: '%s'",
+		s.Request.RequestBody, expectedText)
 }
 
 // StoreResponseBodyJSONPropertyInContext extracts a JSON property from
