@@ -8,8 +8,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const genericName string = "John"
+
 func createTestRecord() Record {
-	rNname := "John"
+	rNname := genericName
 	rType := dns.Type(dns.TypeMX).String()
 	rClass := dns.Class(dns.ClassINET).String()
 	record := Record{Name: &rNname, Type: &rType, Class: &rClass}
@@ -24,7 +26,7 @@ func TestMatches(t *testing.T) {
 	}{
 		{
 			name:           "Matches RR",
-			rr:             &dns.RR_Header{Name: "John", Class: dns.ClassINET, Rrtype: dns.TypeMX},
+			rr:             &dns.RR_Header{Name: genericName, Class: dns.ClassINET, Rrtype: dns.TypeMX},
 			expectedResult: true,
 		},
 		{
@@ -34,12 +36,12 @@ func TestMatches(t *testing.T) {
 		},
 		{
 			name:           "Not Matches RR Class",
-			rr:             &dns.RR_Header{Name: "John", Class: dns.ClassCSNET, Rrtype: dns.TypeMX},
+			rr:             &dns.RR_Header{Name: genericName, Class: dns.ClassCSNET, Rrtype: dns.TypeMX},
 			expectedResult: false,
 		},
 		{
 			name:           "Not Matches RR Type",
-			rr:             &dns.RR_Header{Name: "John", Class: dns.ClassINET, Rrtype: dns.TypeANY},
+			rr:             &dns.RR_Header{Name: genericName, Class: dns.ClassINET, Rrtype: dns.TypeANY},
 			expectedResult: false,
 		},
 	}
@@ -64,7 +66,7 @@ func TestIsContained(t *testing.T) {
 		{
 			name: "Record is contained in []dns.RR",
 			rrs: []dns.RR{
-				&dns.RR_Header{Name: "John", Class: dns.ClassINET, Rrtype: dns.TypeMX},
+				&dns.RR_Header{Name: genericName, Class: dns.ClassINET, Rrtype: dns.TypeMX},
 			},
 			expectedResult: true,
 		},
@@ -98,7 +100,7 @@ func TestGetValueFromRecord(t *testing.T) {
 		{
 			name: "Get Value from dns.TypeA",
 			rr: &dns.A{
-				Hdr: dns.RR_Header{Name: "John", Class: dns.ClassINET, Rrtype: dns.TypeA},
+				Hdr: dns.RR_Header{Name: genericName, Class: dns.ClassINET, Rrtype: dns.TypeA},
 				A:   []byte("a"),
 			},
 			expectedResult: "?61",
@@ -107,7 +109,7 @@ func TestGetValueFromRecord(t *testing.T) {
 		{
 			name: "Get Value from dns.TypeAAAA",
 			rr: &dns.AAAA{
-				Hdr:  dns.RR_Header{Name: "John", Class: dns.ClassINET, Rrtype: dns.TypeAAAA},
+				Hdr:  dns.RR_Header{Name: genericName, Class: dns.ClassINET, Rrtype: dns.TypeAAAA},
 				AAAA: []byte("aaaa"),
 			},
 			expectedResult: "97.97.97.97",
@@ -116,7 +118,7 @@ func TestGetValueFromRecord(t *testing.T) {
 		{
 			name: "Get Value from dns.TypeCNAME",
 			rr: &dns.CNAME{
-				Hdr:    dns.RR_Header{Name: "John", Class: dns.ClassINET, Rrtype: dns.TypeCNAME},
+				Hdr:    dns.RR_Header{Name: genericName, Class: dns.ClassINET, Rrtype: dns.TypeCNAME},
 				Target: "cdomain-name",
 			},
 			expectedResult: "cdomain-name",
@@ -125,7 +127,7 @@ func TestGetValueFromRecord(t *testing.T) {
 		{
 			name: "Get Value from dns.TypeMX",
 			rr: &dns.MX{
-				Hdr:        dns.RR_Header{Name: "John", Class: dns.ClassINET, Rrtype: dns.TypeMX},
+				Hdr:        dns.RR_Header{Name: genericName, Class: dns.ClassINET, Rrtype: dns.TypeMX},
 				Preference: 1,
 				Mx:         "cdomain-name",
 			},
@@ -135,7 +137,7 @@ func TestGetValueFromRecord(t *testing.T) {
 		{
 			name: "Get Value from dns.TypeNS",
 			rr: &dns.NS{
-				Hdr: dns.RR_Header{Name: "John", Class: dns.ClassINET, Rrtype: dns.TypeNS},
+				Hdr: dns.RR_Header{Name: genericName, Class: dns.ClassINET, Rrtype: dns.TypeNS},
 				Ns:  "cdomain-name",
 			},
 			expectedResult: "cdomain-name",
@@ -144,7 +146,7 @@ func TestGetValueFromRecord(t *testing.T) {
 		{
 			name: "Get Value unsuported type",
 			rr: &dns.NSAPPTR{
-				Hdr: dns.RR_Header{Name: "John", Class: dns.ClassINET, Rrtype: dns.TypeNSAPPTR},
+				Hdr: dns.RR_Header{Name: genericName, Class: dns.ClassINET, Rrtype: dns.TypeNSAPPTR},
 				Ptr: "domain-name",
 			},
 			expectedResult: "",
