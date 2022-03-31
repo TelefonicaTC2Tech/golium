@@ -205,7 +205,7 @@ func (s *Session) SendDoTQuery(
 	}
 	u, err := upstream.AddressToUpstream(s.Server, &opts)
 	if err != nil {
-		logger.log.Fatalf("Cannot create an upstream: %s", err)
+		return fmt.Errorf("cannot create an upstream: %s", err)
 	}
 	m := &dns.Msg{}
 	m.Id = dns.Id()
@@ -215,7 +215,7 @@ func (s *Session) SendDoTQuery(
 	logger.LogRequest(m, corr)
 	dnsResp, err := u.Exchange(m)
 	if err != nil {
-		logger.log.Fatalf("Cannot make the DNS request: %s", err)
+		return fmt.Errorf("cannot make the DNS request: %w", err)
 	}
 	logger.LogResponse(m, corr)
 	// Set response in dns session struct
@@ -280,7 +280,7 @@ func (s *Session) ValidateResponseWithRecords(
 	records := getRecordsForType(s.Response, recordType)
 	for _, expectedRecord := range expectedRecords {
 		if !expectedRecord.IsContained(records) {
-			return fmt.Errorf("no '%s' record with '%+v'", recordType, expectedRecord)
+			return fmt.Errorf("no '%s' record with '%+v' in", recordType, expectedRecord)
 		}
 	}
 	return nil

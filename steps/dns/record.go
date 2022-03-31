@@ -108,7 +108,8 @@ func getValueFromRecord(rr dns.RR) (string, error) {
 	case dns.TypeNS:
 		value = rr.(*dns.NS).Ns
 	default:
-		return "", fmt.Errorf("unsupported record type '%s'", dns.Type(rr.Header().Rrtype).String())
+		return "", fmt.Errorf(
+			"unsupported record type '%s'", dns.Type(rr.Header().Rrtype).String())
 	}
 	return value, nil
 }
