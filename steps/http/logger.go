@@ -16,54 +16,36 @@ package http
 
 import (
 	"fmt"
-	"log"
 	"net/http"
-	"os"
-	"path"
 	"strings"
 
-	"github.com/TelefonicaTC2Tech/golium"
+	"github.com/TelefonicaTC2Tech/golium/logger"
 	"github.com/sirupsen/logrus"
 )
 
-var logger *Logger
+var httpLog *Logger
+
+// Logger logs in a configurable file.
+type Logger struct {
+	Log *logger.Logger
+}
 
 // GetLogger returns the logger for HTTP requests and responses.
 // If the logger is not created yet, it creates a new instance of Logger.
 func GetLogger() *Logger {
-	if logger != nil {
-		return logger
+	if httpLog == nil {
+		logInstance, err := logger.Factory("http")
+		if err != nil {
+			logrus.Fatalf("Error creating HTTP logger with file: '%s'. %s", "http", err)
+		}
+		httpLog = &Logger{Log: logInstance}
 	}
-	dir := golium.GetConfig().Log.Directory
-	path := path.Join(dir, "http.log")
-	logger, err := NewLogger(path)
-	if err != nil {
-		logrus.Fatalf("Error creating HTTP logger with file: '%s'. %s", path, err)
-	}
-	return logger
-}
-
-// Logger logs the HTTP request and response in a configurable file.
-type Logger struct {
-	log *log.Logger
-}
-
-// NewLogger creates an instance of the logger.
-// It configures the file path where the HTTP request and response are written.
-func NewLogger(path string) (*Logger, error) {
-	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
-	if err != nil {
-		return nil, err
-	}
-	os.Chmod(file.Name(), 0766)
-	return &Logger{
-		log: log.New(file, "", log.Ldate|log.Lmicroseconds|log.LUTC),
-	}, nil
+	return httpLog
 }
 
 // LogRequest logs an HTTP request in the configured log file.
 func (l Logger) LogRequest(req *http.Request, body []byte, corr string) {
-	l.log.Printf("Request [%s]:\n%s\n%s\n%s\n\n",
+	l.Log.Printf("Request [%s]:\n%s\n%s\n%s\n\n",
 		corr,
 		getRequestFirstLine(req),
 		getHeaders(req.Header),
@@ -72,7 +54,7 @@ func (l Logger) LogRequest(req *http.Request, body []byte, corr string) {
 
 // LogResponse logs an HTTP response in the configured log file.
 func (l Logger) LogResponse(resp *http.Response, body []byte, corr string) {
-	l.log.Printf("Response [%s]:\n%s\n%s\n%s\n\n",
+	l.Log.Printf("Response [%s]:\n%s\n%s\n%s\n\n",
 		corr,
 		getResponseFirstLine(resp),
 		getHeaders(resp.Header),
@@ -81,7 +63,7 @@ func (l Logger) LogResponse(resp *http.Response, body []byte, corr string) {
 
 // LogTimeout logs an HTTP response with timeout in the configured log file.
 func (l Logger) LogTimeout(corr string) {
-	l.log.Print("Response: Timeout\n\n")
+	l.Log.Print("Response: Timeout\n\n")
 }
 
 func getRequestFirstLine(req *http.Request) string {
