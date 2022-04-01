@@ -286,14 +286,6 @@ func TestConfigurePublicKey(t *testing.T) {
 				publicKeyPEM: signPublicKey,
 			},
 		},
-		// {
-		// 	name:    "Invalid Key",
-		// 	wantErr: true,
-		// 	args: args{
-		// 		ctx:          context.Background(),
-		// 		publicKeyPEM: invalidPublicKey,
-		// 	},
-		// },
 		{
 			name:    "Default",
 			wantErr: true,
@@ -339,14 +331,6 @@ func TestConfigurePrivateKey(t *testing.T) {
 				privateKeyPEM: signPrivateKey,
 			},
 		},
-		// {
-		// 	name:    "Invalid Key",
-		// 	wantErr: true,
-		// 	args: args{
-		// 		ctx:          context.Background(),
-		// 		publicKeyPEM: invalidPublicKey,
-		// 	},
-		// },
 		{
 			name:    "Default",
 			wantErr: true,
