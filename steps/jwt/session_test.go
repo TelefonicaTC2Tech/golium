@@ -735,6 +735,8 @@ func TestValidateJWTRequirements(t *testing.T) {
 func TestSession_ValidatePayloadJSONProperties(t *testing.T) {
 	testPayload := make(map[string]interface{})
 	testPayload["jsonKey"] = "jsonValue"
+	missmatchPayload := make(map[string]interface{})
+	missmatchPayload["jsonKey"] = "jsonValueError"
 	tests := []struct {
 		name            string
 		payload         []byte
@@ -751,6 +753,12 @@ func TestSession_ValidatePayloadJSONProperties(t *testing.T) {
 			wantErr:         false,
 			payload:         []byte("nonEmptyPayload"),
 			expectedPayload: testPayload,
+		},
+		{
+			name:            "Payload missmatch",
+			wantErr:         true,
+			payload:         []byte("nonEmptyPayload"),
+			expectedPayload: missmatchPayload,
 		},
 	}
 	for _, tt := range tests {
