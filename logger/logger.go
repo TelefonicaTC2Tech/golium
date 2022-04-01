@@ -29,12 +29,12 @@ type Logger struct {
 }
 
 // LoggerFactory returns a Logger instance.
-// If the logger is not created yet, it creates a new instance of Logger.
 func Factory(name string) (*Logger, error) {
 	file := configureFile(name)
 	return builder(*file), nil
 }
 
+// configureFile configures the file where the logs are written.
 func configureFile(name string) *os.File {
 	dir := golium.GetConfig().Log.Directory
 	logPath := path.Join(dir, fmt.Sprintf("%s.log", name))
@@ -48,7 +48,6 @@ func configureFile(name string) *os.File {
 }
 
 // Builder creates an instance of the logger.
-// It configures the file path where the DNS request and response are written.
 func builder(file os.File) *Logger {
 	return &Logger{
 		&logrus.Logger{
