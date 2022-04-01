@@ -12,51 +12,43 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const JSONhttpFileValues = `
-[
-	{
-		"code": "example1",
-		"body": {
-			"empty": "",
-			"boolean": false,
-			"list": [
-			  { "attribute": "attribute0", "value": "value0"},
-			  { "attribute": "attribute1", "value": "value1"},
-			  { "attribute": "attribute2", "value": "value2"}
-			]
-		},
-		"response": {
-			"boolean": false, 
-			"empty": "", 
-			"list": [
+const (
+	schemasDir         = "./schemas"
+	JSONhttpFileValues = `
+	[
+		{
+			"code": "example1",
+			"body": {
+				"empty": "",
+				"boolean": false,
+				"list": [
 				{ "attribute": "attribute0", "value": "value0"},
 				{ "attribute": "attribute1", "value": "value1"},
 				{ "attribute": "attribute2", "value": "value2"}
-			]
+				]
+			},
+			"response": {
+				"boolean": false, 
+				"empty": "", 
+				"list": [
+					{ "attribute": "attribute0", "value": "value0"},
+					{ "attribute": "attribute1", "value": "value1"},
+					{ "attribute": "attribute2", "value": "value2"}
+				]
+			}
 		}
-	}
-]
-`
-
-const JSON = `{
-	"boolean": false, 
-	"empty": "", 
-	"list": [
-		{ "attribute": "attribute0", "value": "value0"},
-		{ "attribute": "attribute1", "value": "value1"},
-		{ "attribute": "attribute2", "value": "value2"}
 	]
-}`
-
-const JSONBadRead = `{
-	"boolean": failData, 
-	"empty": "", 
-	"list": [
-		{ "attribute": "attribute0", "value": "value0"},
-		{ "attribute": "attribute1", "value": "value1"},
-		{ "attribute": "attribute2", "value": "value2"}
-	]
-}`
+	`
+	JSON = `{
+		"boolean": false, 
+		"empty": "", 
+		"list": [
+			{ "attribute": "attribute0", "value": "value0"},
+			{ "attribute": "attribute1", "value": "value1"},
+			{ "attribute": "attribute2", "value": "value2"}
+		]
+	}`
+)
 
 func TestGetParamFromJSON(t *testing.T) {
 	var expectedParam interface{}
@@ -76,7 +68,7 @@ func TestGetParamFromJSON(t *testing.T) {
 			"body": {
 	`
 
-	golium.GetConfig().Dir.Schemas = "./schemas"
+	golium.GetConfig().Dir.Schemas = schemasDir
 
 	os.MkdirAll("./schemas", os.ModePerm)
 	os.WriteFile("./schemas/httpBadFormat.json", []byte(JSONhttpFileBadFormat), os.ModePerm)
@@ -85,7 +77,7 @@ func TestGetParamFromJSON(t *testing.T) {
 
 	tcs := []struct {
 		name          string
-		fileName	  string
+		fileName      string
 		code          string
 		param         string
 		expectedErr   string
@@ -93,15 +85,15 @@ func TestGetParamFromJSON(t *testing.T) {
 	}{
 		{
 			name:          "Should return selected value from JSON file",
-			fileName:	   "http",
+			fileName:      "http",
 			code:          "example1",
 			param:         "response",
-			expectedErr:    "",
+			expectedErr:   "",
 			expectedValue: expectedParam,
 		},
 		{
 			name:          "Should return a error loading file",
-			fileName:	   "httpNotExist",
+			fileName:      "httpNotExist",
 			code:          "example1",
 			param:         "response",
 			expectedErr:   "error loading file at httpNotExist due to error:",
@@ -109,18 +101,19 @@ func TestGetParamFromJSON(t *testing.T) {
 		},
 		{
 			name:          "Should return a error unmarsharlling JSON file",
-			fileName:	   "httpBadFormat",
+			fileName:      "httpBadFormat",
 			code:          "example1",
 			param:         "response",
 			expectedErr:   "error unmarsharlling JSON file at httpBadFormat due to error:",
 			expectedValue: nil,
 		},
 		{
-			name:          "Should return a error param value not found",
-			fileName:	   "http",
-			code:          "non-existing-code",
-			param:         "response",
-			expectedErr:   fmt.Sprintf("param value: 'response' not found in '%v' due to error:", dataStruct),
+			name:     "Should return a error param value not found",
+			fileName: "http",
+			code:     "non-existing-code",
+			param:    "response",
+			expectedErr: fmt.Sprintf("param value: 'response' not found in '%v' due to error:",
+				dataStruct),
 			expectedValue: nil,
 		},
 	}
@@ -131,7 +124,7 @@ func TestGetParamFromJSON(t *testing.T) {
 			resultParam, err := GetParamFromJSON(ctx, tc.fileName, tc.code, tc.param)
 			if err != nil {
 				assert.Containsf(t, err.Error(), tc.expectedErr, "error message %s", "formatted")
-			} 
+			}
 			if !JSONEquals(resultParam, tc.expectedValue) {
 				t.Errorf("value %v for param %s and code %s is not expected: %v",
 					resultParam, tc.param, tc.code, tc.expectedValue)
@@ -197,36 +190,34 @@ func TestFindValueByCode(t *testing.T) {
 
 func TestLoadJSONData(t *testing.T) {
 	tcs := []struct {
-		name		 string
-		fileName     string
-		expectedErr  string
+		name        string
+		fileName    string
+		expectedErr string
 	}{
 		{
-			name:          "Should return data json file",
-			fileName: 	   "http",
-			expectedErr:   "",
+			name:        "Should return data json file",
+			fileName:    "http",
+			expectedErr: "",
 		},
 		{
-			name:          "Should return error reading file",
-			fileName:      "httpNotExistsFile",
-			expectedErr:   "error reading file",
+			name:        "Should return error reading file",
+			fileName:    "httpNotExistsFile",
+			expectedErr: "error reading file",
 		},
 	}
 
-	for _, tc := range tcs {
-		golium.GetConfig().Dir.Schemas = "./schemas"
-		os.MkdirAll("./schemas", os.ModePerm)
-		os.WriteFile("./schemas/http.json", []byte(JSONhttpFileValues), os.ModePerm)
-		defer os.RemoveAll("./schemas/")
+	golium.GetConfig().Dir.Schemas = schemasDir
+	os.MkdirAll("./schemas", os.ModePerm)
+	os.WriteFile("./schemas/http.json", []byte(JSONhttpFileValues), os.ModePerm)
+	defer os.RemoveAll("./schemas/")
 
-		
+	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			_, err := LoadJSONData(tc.fileName)
 			if err != nil {
 				assert.Containsf(t, err.Error(), tc.expectedErr, "error message %s", "formatted")
 				fmt.Printf(err.Error(), tc.expectedErr)
-			} 
-
+			}
 		})
 	}
 }
