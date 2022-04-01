@@ -734,7 +734,7 @@ func TestValidateJWTRequirements(t *testing.T) {
 
 func TestSession_ValidatePayloadJSONProperties(t *testing.T) {
 	testPayload := make(map[string]interface{})
-	testPayload["title"] = "foo1"
+	testPayload["jsonKey"] = "jsonValue"
 	tests := []struct {
 		name            string
 		payload         []byte
