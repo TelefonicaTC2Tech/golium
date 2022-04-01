@@ -127,6 +127,7 @@ issues:
     - path: _test\.go
       linters:
         - gomnd
+        - dupl
     - path: steps\.go
       linters:
         - funlen
