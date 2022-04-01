@@ -117,7 +117,9 @@ func (s *Session) ConfigurePrivateKey(ctx context.Context, privateKeyPEM string)
 
 // ConfigurePayloadWithContentType configures the payload and the content type (cty header).
 func (s *Session) ConfigurePayloadWithContentType(
-	ctx context.Context, payload, contentType string) {
+	ctx context.Context,
+	payload, contentType string,
+) {
 	s.Payload = []byte(payload)
 	s.ContentType = contentType
 }
