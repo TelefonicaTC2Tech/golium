@@ -731,3 +731,41 @@ func TestValidateJWTRequirements(t *testing.T) {
 		})
 	}
 }
+
+func TestSession_ValidatePayloadJSONProperties(t *testing.T) {
+	testPayload := make(map[string]interface{})
+	testPayload["title"] = "foo1"
+	tests := []struct {
+		name            string
+		payload         []byte
+		expectedPayload map[string]interface{}
+		wantErr         bool
+	}{
+		{
+			name:    "Nil payload",
+			payload: nil,
+			wantErr: true,
+		},
+		{
+			name:            "Valid payload",
+			wantErr:         false,
+			payload:         []byte("nonEmptyPayload"),
+			expectedPayload: testPayload,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctxGolium := golium.InitializeContext(context.Background())
+			ctx := InitializeContext(ctxGolium)
+			s := &Session{}
+			if tt.payload == nil {
+				s.Payload = tt.payload
+			} else {
+				s.ConfigureJSONPayload(ctx, testPayload)
+			}
+			if err := s.ValidatePayloadJSONProperties(ctx, tt.expectedPayload); (err != nil) != tt.wantErr {
+				t.Errorf("Session.ValidatePayloadJSONProperties() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
