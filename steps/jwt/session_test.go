@@ -633,7 +633,7 @@ func TestProcessSignedEncryptedJWT(t *testing.T) {
 			ctx := InitializeContext(ctxGolium)
 			s := &Session{}
 			if tt.tokenError {
-				s.Token = "fakeToken"
+				s.Token = "fakeToken1"
 			} else {
 				s.Token = token
 			}
@@ -815,7 +815,7 @@ func TestValidateJWT(t *testing.T) {
 				s.ConfigureJSONPayload(ctx, testPayload)
 				s.GenerateSignedJWTInContext(ctx, "jwt.jws")
 				if tt.wrongToken {
-					s.Token = "fakeToken"
+					s.Token = "fakeToken2"
 				}
 				s.ProcessSignedJWT(ctx, s.Token)
 			}
@@ -873,7 +873,7 @@ func TestValidateInvalidJWT(t *testing.T) {
 				s.ConfigureJSONPayload(ctx, testPayload)
 				s.GenerateSignedJWTInContext(ctx, "jwt.jws")
 				if tt.wrongToken {
-					s.Token = "fakeToken"
+					s.Token = "fakeToken3"
 				}
 				s.ProcessSignedJWT(ctx, s.Token)
 			}
