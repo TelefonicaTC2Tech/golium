@@ -20,7 +20,6 @@ import (
 	"strings"
 
 	"github.com/TelefonicaTC2Tech/golium/logger"
-	"github.com/sirupsen/logrus"
 )
 
 var httpLog *Logger
@@ -33,12 +32,9 @@ type Logger struct {
 // GetLogger returns the logger for HTTP requests and responses.
 // If the logger is not created yet, it creates a new instance of Logger.
 func GetLogger() *Logger {
+	name := "http"
 	if httpLog == nil {
-		logInstance, err := logger.Factory("http")
-		if err != nil {
-			logrus.Fatalf("Error creating HTTP logger with file: '%s'. %s", "http", err)
-		}
-		httpLog = &Logger{Log: logInstance}
+		httpLog = &Logger{Log: logger.Factory(name)}
 	}
 	return httpLog
 }

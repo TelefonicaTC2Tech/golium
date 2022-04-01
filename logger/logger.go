@@ -29,9 +29,9 @@ type Logger struct {
 }
 
 // LoggerFactory returns a Logger instance.
-func Factory(name string) (*Logger, error) {
+func Factory(name string) *Logger {
 	file := configureFile(name)
-	return builder(*file), nil
+	return builder(*file)
 }
 
 // configureFile configures the file where the logs are written.
