@@ -158,19 +158,30 @@ func TestConfigureSignatureAlgorithm(t *testing.T) {
 }
 
 func TestConfigureKeyEncryptionAlgorithm(t *testing.T) {
+	type args struct {
+		ctx context.Context
+		alg string
+	}
 	tests := []struct {
 		name    string
-		alg     string
+		args    args
 		wantErr bool
 	}{
 		{
-			name:    "Valid encryption algorithm",
-			alg:     string(jwa.RSA1_5),
+			name: "Valid encryption algorithm",
+			args: args{
+				alg: string(jwa.RSA1_5),
+				ctx: context.Background(),
+			},
+
 			wantErr: false,
 		},
 		{
-			name:    "Invalid encryption algorithm",
-			alg:     "invalid_encryption",
+			name: "Invalid encryption algorithm",
+			args: args{
+				alg: "invalid_encryption",
+				ctx: context.Background(),
+			},
 			wantErr: true,
 		},
 	}
@@ -178,7 +189,7 @@ func TestConfigureKeyEncryptionAlgorithm(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &Session{}
 			if err := s.ConfigureKeyEncryptionAlgorithm(
-				context.Background(), tt.alg); (err != nil) != tt.wantErr {
+				tt.args.ctx, tt.args.alg); (err != nil) != tt.wantErr {
 				t.Errorf("Session.ConfigureKeyEncryptionAlgorithm() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
