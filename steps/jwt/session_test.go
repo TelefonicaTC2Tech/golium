@@ -24,9 +24,9 @@ import (
 )
 
 const (
-	rs256         = "RS256"
-	rsa15         = "RSA1_5"
-	a128cbchs256  = "A128CBC-HS256"
+	symmetricKey = "sign_symmetric_key_that_is_long_enough_for_algorithm_" +
+		"HS512_(with_more_than 256 bits!)"
+
 	signPublicKey = `
 -----BEGIN RSA PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoNNaEB/t0c4kZNhoz9G5
@@ -165,7 +165,7 @@ func TestConfigureKeyEncryptionAlgorithm(t *testing.T) {
 	}{
 		{
 			name:    "Valid encryption algorithm",
-			alg:     rsa15,
+			alg:     string(jwa.RSA1_5),
 			wantErr: false,
 		},
 		{
@@ -193,7 +193,7 @@ func TestConfigureContentEncryptionAlgorithm(t *testing.T) {
 	}{
 		{
 			name: "Valid content encryption algorithm",
-			alg:  a128cbchs256,
+			alg:  string(jwa.A128CBC_HS256),
 
 			wantErr: false,
 		},
@@ -227,9 +227,8 @@ func TestConfigureSymmetricKey(t *testing.T) {
 		{
 			name: "Configure Symmetric Key",
 			args: args{
-				ctx: context.Background(),
-				symmetricKey: "sign_symmetric_key_that_is_long_enough_for_algorithm_" +
-					"HS512_(with_more_than 256 bits!)",
+				ctx:          context.Background(),
+				symmetricKey: symmetricKey,
 			},
 		},
 	}
@@ -396,7 +395,7 @@ func TestGenerateSignedJWTInContext(t *testing.T) {
 		name               string
 		args               args
 		payload            []byte
-		signatureAlgorithm string
+		signatureAlgorithm jwa.SignatureAlgorithm
 		privateKey         interface{}
 		wantErr            bool
 	}{
@@ -420,7 +419,7 @@ func TestGenerateSignedJWTInContext(t *testing.T) {
 		{
 			name:               "Nil private key",
 			payload:            []byte("payload"),
-			signatureAlgorithm: rs256,
+			signatureAlgorithm: jwa.RS256,
 			privateKey:         nil,
 			wantErr:            true,
 			args: args{
@@ -430,7 +429,7 @@ func TestGenerateSignedJWTInContext(t *testing.T) {
 		{
 			name:               "Valid token",
 			payload:            []byte("payload"),
-			signatureAlgorithm: rs256,
+			signatureAlgorithm: jwa.RS256,
 			privateKey:         "valid",
 			wantErr:            false,
 			args: args{
@@ -444,7 +443,7 @@ func TestGenerateSignedJWTInContext(t *testing.T) {
 			ctx := InitializeContext(ctxGolium)
 			s := &Session{}
 			s.Payload = tt.payload
-			s.SignatureAlgorithm = jwa.SignatureAlgorithm(tt.signatureAlgorithm)
+			s.SignatureAlgorithm = tt.signatureAlgorithm
 			if tt.privateKey == nil {
 				s.PrivateKey = tt.privateKey
 			} else {
@@ -467,8 +466,8 @@ func TestGenerateEncryptedJWTInContext(t *testing.T) {
 		name                       string
 		args                       args
 		payload                    []byte
-		keyEncryptionAlgorithm     string
-		contentEncryptionAlgorithm string
+		keyEncryptionAlgorithm     jwa.KeyEncryptionAlgorithm
+		contentEncryptionAlgorithm jwa.ContentEncryptionAlgorithm
 		publicKey                  interface{}
 		wantErr                    bool
 	}{
@@ -494,7 +493,7 @@ func TestGenerateEncryptedJWTInContext(t *testing.T) {
 		{
 			name:                       "Empty Content Encryption Algorithn",
 			payload:                    []byte("payload"),
-			keyEncryptionAlgorithm:     rsa15,
+			keyEncryptionAlgorithm:     jwa.RSA1_5,
 			contentEncryptionAlgorithm: "",
 			wantErr:                    true,
 			args: args{
@@ -505,8 +504,8 @@ func TestGenerateEncryptedJWTInContext(t *testing.T) {
 		{
 			name:                       "Nil Public Key",
 			payload:                    []byte("payload"),
-			keyEncryptionAlgorithm:     rsa15,
-			contentEncryptionAlgorithm: a128cbchs256,
+			keyEncryptionAlgorithm:     jwa.RSA1_5,
+			contentEncryptionAlgorithm: jwa.A128CBC_HS256,
 			publicKey:                  nil,
 			wantErr:                    true,
 			args: args{
@@ -517,8 +516,8 @@ func TestGenerateEncryptedJWTInContext(t *testing.T) {
 		{
 			name:                       "Valid token",
 			payload:                    []byte("payload"),
-			keyEncryptionAlgorithm:     rsa15,
-			contentEncryptionAlgorithm: a128cbchs256,
+			keyEncryptionAlgorithm:     jwa.RSA1_5,
+			contentEncryptionAlgorithm: jwa.A128CBC_HS256,
 			publicKey:                  "valid",
 			wantErr:                    false,
 			args: args{
@@ -533,8 +532,8 @@ func TestGenerateEncryptedJWTInContext(t *testing.T) {
 			ctx := InitializeContext(ctxGolium)
 			s := &Session{}
 			s.Payload = tt.payload
-			s.KeyEncryptionAlgorithm = jwa.KeyEncryptionAlgorithm(tt.keyEncryptionAlgorithm)
-			s.ContentEncryptionAlgorithm = jwa.ContentEncryptionAlgorithm(tt.contentEncryptionAlgorithm)
+			s.KeyEncryptionAlgorithm = tt.keyEncryptionAlgorithm
+			s.ContentEncryptionAlgorithm = tt.contentEncryptionAlgorithm
 			if tt.publicKey == nil {
 				s.PublicKey = tt.publicKey
 			} else {
@@ -584,12 +583,12 @@ func TestGenerateSignedEncryptedJWTInContext(t *testing.T) {
 			s := &Session{}
 
 			s.Payload = []byte("payload")
-			s.SignatureAlgorithm = rs256
+			s.SignatureAlgorithm = jwa.RS256
 			if !tt.signedError {
 				s.ConfigurePrivateKey(ctx, signPrivateKey)
 			}
-			s.KeyEncryptionAlgorithm = rsa15
-			s.ContentEncryptionAlgorithm = a128cbchs256
+			s.KeyEncryptionAlgorithm = jwa.RSA1_5
+			s.ContentEncryptionAlgorithm = jwa.A128CBC_HS256
 			s.ConfigurePublicKey(ctx, encryptPublicKey)
 
 			if err := s.GenerateSignedEncryptedJWTInContext(
@@ -639,7 +638,7 @@ func TestProcessSignedEncryptedJWT(t *testing.T) {
 				s.Token = token
 			}
 			s.ConfigurePrivateKey(ctx, encryptPrivateKey)
-			s.KeyEncryptionAlgorithm = rsa15
+			s.KeyEncryptionAlgorithm = jwa.RSA1_5
 			if err := s.ProcessSignedEncryptedJWT(ctx, s.Token); (err != nil) != tt.wantErr {
 				t.Errorf("Session.ProcessSignedEncryptedJWT() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -683,7 +682,7 @@ func TestValidateJWTRequirements(t *testing.T) {
 				ctx: context.Background(),
 			},
 			token:              token,
-			signatureAlgorithm: rs256,
+			signatureAlgorithm: jwa.RS256,
 			publicKey:          nil,
 			wantErr:            true,
 		},
@@ -693,7 +692,7 @@ func TestValidateJWTRequirements(t *testing.T) {
 				ctx: context.Background(),
 			},
 			token:              token,
-			signatureAlgorithm: rs256,
+			signatureAlgorithm: jwa.RS256,
 			publicKey:          "valid",
 			signedMessage:      nil,
 			wantErr:            false,
@@ -704,7 +703,7 @@ func TestValidateJWTRequirements(t *testing.T) {
 				ctx: context.Background(),
 			},
 			token:              token,
-			signatureAlgorithm: rs256,
+			signatureAlgorithm: jwa.RS256,
 			publicKey:          "valid",
 			signedMessage:      &jws.Message{},
 			wantErr:            false,
@@ -732,9 +731,9 @@ func TestValidateJWTRequirements(t *testing.T) {
 	}
 }
 
-func TestSession_ValidatePayloadJSONProperties(t *testing.T) {
+func TestValidatePayloadJSONProperties(t *testing.T) {
 	testPayload := make(map[string]interface{})
-	testPayload["jsonKey"] = "jsonValue"
+	testPayload["jsonKey"] = "jsonValue1"
 	missmatchPayload := make(map[string]interface{})
 	missmatchPayload["jsonKey"] = "jsonValueError"
 	tests := []struct {
@@ -773,6 +772,113 @@ func TestSession_ValidatePayloadJSONProperties(t *testing.T) {
 			}
 			if err := s.ValidatePayloadJSONProperties(ctx, tt.expectedPayload); (err != nil) != tt.wantErr {
 				t.Errorf("Session.ValidatePayloadJSONProperties() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+func TestValidateJWT(t *testing.T) {
+	testPayload := make(map[string]interface{})
+	testPayload["jsonKey"] = "jsonValue2"
+	tests := []struct {
+		name       string
+		invalidReq bool
+		wrongToken bool
+		wantErr    bool
+	}{
+		{
+			name:       "Invalid JWT Requirements",
+			invalidReq: true,
+			wrongToken: false,
+			wantErr:    true,
+		},
+		{
+			name:       "Valid JWT",
+			invalidReq: false,
+			wrongToken: false,
+			wantErr:    false,
+		},
+		{
+			name:       "Wrong Token",
+			invalidReq: false,
+			wrongToken: true,
+			wantErr:    true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctxGolium := golium.InitializeContext(context.Background())
+			ctx := InitializeContext(ctxGolium)
+			s := &Session{}
+			if !tt.invalidReq {
+				s.SignatureAlgorithm = jwa.HS512
+				s.ConfigureSymmetricKey(ctx, symmetricKey)
+				s.ConfigureJSONPayload(ctx, testPayload)
+				s.GenerateSignedJWTInContext(ctx, "jwt.jws")
+				if tt.wrongToken {
+					s.Token = "fakeToken"
+				}
+				s.ProcessSignedJWT(ctx, s.Token)
+			}
+			if err := s.ValidateJWT(ctx); (err != nil) != tt.wantErr {
+				t.Errorf("Session.ValidateJWT() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+func TestValidateInvalidJWT(t *testing.T) {
+	testPayload := make(map[string]interface{})
+	testPayload["jsonKey"] = "jsonValue3"
+	tests := []struct {
+		name          string
+		invalidReq    bool
+		wrongToken    bool
+		expectedError string
+		wantErr       bool
+	}{
+		{
+			name:       "Invalid JWT Requirements",
+			invalidReq: true,
+			wrongToken: false,
+			wantErr:    true,
+		},
+		{
+			name:       "Error when validation ok",
+			invalidReq: false,
+			wrongToken: false,
+			wantErr:    true,
+		},
+		{
+			name:          "Validation error",
+			invalidReq:    false,
+			wrongToken:    true,
+			wantErr:       false,
+			expectedError: "",
+		},
+		{
+			name:          "Validation error",
+			invalidReq:    false,
+			wrongToken:    true,
+			wantErr:       true,
+			expectedError: "expectedError",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctxGolium := golium.InitializeContext(context.Background())
+			ctx := InitializeContext(ctxGolium)
+			s := &Session{}
+			if !tt.invalidReq {
+				s.SignatureAlgorithm = jwa.HS512
+				s.ConfigureSymmetricKey(ctx, symmetricKey)
+				s.ConfigureJSONPayload(ctx, testPayload)
+				s.GenerateSignedJWTInContext(ctx, "jwt.jws")
+				if tt.wrongToken {
+					s.Token = "fakeToken"
+				}
+				s.ProcessSignedJWT(ctx, s.Token)
+			}
+			if err := s.ValidateInvalidJWT(ctx, tt.expectedError); (err != nil) != tt.wantErr {
+				t.Errorf("Session.ValidateInvalidJWT() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
