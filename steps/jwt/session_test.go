@@ -23,6 +23,8 @@ import (
 	"github.com/lestrrat-go/jwx/jws"
 )
 
+var bytePayload = []byte("payload")
+
 const (
 	symmetricKey = "sign_symmetric_key_that_is_long_enough_for_algorithm_" +
 		"HS512_(with_more_than 256 bits!)"
@@ -404,7 +406,7 @@ func TestGenerateSignedJWTInContext(t *testing.T) {
 		},
 		{
 			name:               "Empty signature",
-			payload:            []byte("payload"),
+			payload:            bytePayload,
 			signatureAlgorithm: "",
 			wantErr:            true,
 			args: args{
@@ -413,7 +415,7 @@ func TestGenerateSignedJWTInContext(t *testing.T) {
 		},
 		{
 			name:               "Nil private key",
-			payload:            []byte("payload"),
+			payload:            bytePayload,
 			signatureAlgorithm: jwa.RS256,
 			privateKey:         nil,
 			wantErr:            true,
@@ -423,7 +425,7 @@ func TestGenerateSignedJWTInContext(t *testing.T) {
 		},
 		{
 			name:               "Valid token",
-			payload:            []byte("payload"),
+			payload:            bytePayload,
 			signatureAlgorithm: jwa.RS256,
 			privateKey:         "valid",
 			wantErr:            false,
@@ -477,7 +479,7 @@ func TestGenerateEncryptedJWTInContext(t *testing.T) {
 		},
 		{
 			name:                   "Empty Encryption Algorithm",
-			payload:                []byte("payload"),
+			payload:                bytePayload,
 			keyEncryptionAlgorithm: "",
 			wantErr:                true,
 			args: args{
@@ -487,7 +489,7 @@ func TestGenerateEncryptedJWTInContext(t *testing.T) {
 		},
 		{
 			name:                       "Empty Content Encryption Algorithn",
-			payload:                    []byte("payload"),
+			payload:                    bytePayload,
 			keyEncryptionAlgorithm:     jwa.RSA1_5,
 			contentEncryptionAlgorithm: "",
 			wantErr:                    true,
@@ -498,7 +500,7 @@ func TestGenerateEncryptedJWTInContext(t *testing.T) {
 		},
 		{
 			name:                       "Nil Public Key",
-			payload:                    []byte("payload"),
+			payload:                    bytePayload,
 			keyEncryptionAlgorithm:     jwa.RSA1_5,
 			contentEncryptionAlgorithm: jwa.A128CBC_HS256,
 			publicKey:                  nil,
@@ -510,7 +512,7 @@ func TestGenerateEncryptedJWTInContext(t *testing.T) {
 		},
 		{
 			name:                       "Valid token",
-			payload:                    []byte("payload"),
+			payload:                    bytePayload,
 			keyEncryptionAlgorithm:     jwa.RSA1_5,
 			contentEncryptionAlgorithm: jwa.A128CBC_HS256,
 			publicKey:                  "valid",
@@ -577,7 +579,7 @@ func TestGenerateSignedEncryptedJWTInContext(t *testing.T) {
 			ctx := InitializeContext(ctxGolium)
 			s := &Session{}
 
-			s.Payload = []byte("payload")
+			s.Payload = bytePayload
 			s.SignatureAlgorithm = jwa.RS256
 			if !tt.signedError {
 				s.ConfigurePrivateKey(ctx, signPrivateKey)
