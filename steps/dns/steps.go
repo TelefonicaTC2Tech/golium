@@ -30,6 +30,8 @@ import (
 type Steps struct {
 }
 
+const transportUDP string = "UDP"
+
 // InitializeSteps adds client DNS steps to the scenario context.
 // It implements StepInitializer interface.
 // It returns a new context (context is immutable) with the DNS Context.
@@ -41,8 +43,7 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 	// Initialize the steps
 	scenCtx.Step(`^the DNS server "([^"]*)"$`, func(svr string) {
 		// DNS transport protocol is set to UDP by default
-		transport := "UDP"
-		session.ConfigureServer(ctx, golium.ValueAsString(ctx, svr), transport)
+		session.ConfigureServer(ctx, golium.ValueAsString(ctx, svr), transportUDP)
 	})
 	scenCtx.Step(`^the DNS server "([^"]*)" on "([^"]*)"$`, func(svr, transport string) {
 		session.ConfigureServer(ctx, golium.ValueAsString(ctx, svr), golium.ValueAsString(ctx, transport))
@@ -72,7 +73,7 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 			return fmt.Errorf("invalid qtype '%s': permitted values '%s'", qtype, reflect.ValueOf(QueryTypes).MapKeys())
 		}
 		switch session.Transport {
-		case "UDP":
+		case transportUDP:
 			return session.SendUDPQuery(ctx, qt, qname, recursive)
 		case "DoH with GET":
 			return session.SendDoHQuery(ctx, "GET", qt, qname, recursive)
