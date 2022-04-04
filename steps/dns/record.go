@@ -21,7 +21,8 @@ import (
 	"github.com/miekg/dns"
 )
 
-// RecordType enumerates the possible types of DNS records: answer, authority and additional records.
+// RecordType
+// enumerates the possible types of DNS records: answer, authority and additional records.
 type RecordType string
 
 const (
@@ -34,7 +35,7 @@ const (
 )
 
 // QueryTypes is a map of the DNS query type with the correspondence type in dns package.
-var QueryTypes = map[string](uint16){
+var QueryTypes = map[string]uint16{
 	"A":     dns.TypeA,
 	"AAAA":  dns.TypeAAAA,
 	"CNAME": dns.TypeCNAME,
@@ -107,7 +108,8 @@ func getValueFromRecord(rr dns.RR) (string, error) {
 	case dns.TypeNS:
 		value = rr.(*dns.NS).Ns
 	default:
-		return "", fmt.Errorf("unsupported record type '%s'", dns.Type(rr.Header().Rrtype).String())
+		return "", fmt.Errorf(
+			"unsupported record type '%s'", dns.Type(rr.Header().Rrtype).String())
 	}
 	return value, nil
 }
