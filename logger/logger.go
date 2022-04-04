@@ -23,6 +23,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const (
+	SUFFIX = ".log"
+)
+
 // Logger logs in a configurable file.
 type Logger struct {
 	*logrus.Logger
@@ -37,7 +41,7 @@ func Factory(name string) *Logger {
 // configureFile configures the file where the logs are written.
 func configureFile(name string) *os.File {
 	dir := golium.GetConfig().Log.Directory
-	logPath := path.Join(dir, fmt.Sprintf("%s.log", name))
+	logPath := path.Join(dir, fmt.Sprintf("%s%s", name, SUFFIX))
 
 	file, err := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
