@@ -15,55 +15,32 @@
 package s3steps
 
 import (
-	"log"
-	"os"
-	"path"
-
-	"github.com/TelefonicaTC2Tech/golium"
-	"github.com/sirupsen/logrus"
+	"github.com/TelefonicaTC2Tech/golium/logger"
 )
 
-var logger *Logger
+var s3Log *Logger
+
+// Logger logs in a configurable file.
+type Logger struct {
+	Log *logger.Logger
+}
 
 // GetLogger returns the logger for s3 operations.
 // If the logger is not created yet, it creates a new instance of Logger.
 func GetLogger() *Logger {
-	if logger != nil {
-		return logger
+	name := "s3"
+	if s3Log == nil {
+		s3Log = &Logger{Log: logger.Factory(name)}
 	}
-	dir := golium.GetConfig().Log.Directory
-	path := path.Join(dir, "s3.log")
-	logger, err := NewLogger(path)
-	if err != nil {
-		logrus.Fatalf("Error creating s3 logger with file: '%s'. %s", path, err)
-	}
-	return logger
-}
-
-// Logger logs the s3 operations in a configurable file.
-type Logger struct {
-	log *log.Logger
-}
-
-// NewLogger creates an instance of the logger.
-// It configures the file path where the s3 operations are logged.
-func NewLogger(path string) (*Logger, error) {
-	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
-	if err != nil {
-		return nil, err
-	}
-	os.Chmod(file.Name(), 0766)
-	return &Logger{
-		log: log.New(file, "", log.Ldate|log.Lmicroseconds|log.LUTC),
-	}, nil
+	return s3Log
 }
 
 // Log a S3 operation
 func (l Logger) LogOperation(operation, bucket, key string) {
-	l.log.Printf("Operation: %s in bucket: %s for key: %s", operation, bucket, key)
+	l.Log.Printf("Operation: %s in bucket: %s for key: %s", operation, bucket, key)
 }
 
 // Log a S3 message
 func (l Logger) LogMessage(message string) {
-	l.log.Printf("%s", message)
+	l.Log.Printf("%s", message)
 }
