@@ -28,7 +28,8 @@ const (
 	TypeJWT = "JWT"
 	// TypeJWE for encrypted tokens in typ header.
 	TypeJWE = "JWE"
-	// ContentTypeJWT for signed encrypted tokens where the encrypted token will include a cty header with this value.
+	// ContentTypeJWT for signed encrypted tokens where the encrypted token will include
+	// a cty header with this value.
 	ContentTypeJWT = "JWT"
 )
 
@@ -38,7 +39,12 @@ const (
 
 // sign applies JWS to sign the payload with an algorithm, a private key.
 // It also sets a JWT header with the content type.
-func sign(payload []byte, signatureAlgorithm jwa.SignatureAlgorithm, privateKey interface{}, contentType string) (string, error) {
+func sign(
+	payload []byte,
+	signatureAlgorithm jwa.SignatureAlgorithm,
+	privateKey interface{},
+	contentType string,
+) (string, error) {
 	headers := jws.NewHeaders()
 	headers.Set(jws.TypeKey, TypeJWT)
 	if contentType != "" {
@@ -77,7 +83,11 @@ func verifyClaims(token string) error {
 }
 
 // verify validates a JWS token checking the signature.
-func verifySignature(token string, signatureAlgorithm jwa.SignatureAlgorithm, publicKey interface{}) error {
+func verifySignature(
+	token string,
+	signatureAlgorithm jwa.SignatureAlgorithm,
+	publicKey interface{},
+) error {
 	_, err := jws.Verify([]byte(token), signatureAlgorithm, publicKey)
 	return err
 }
@@ -88,14 +98,26 @@ func verifySignature(token string, signatureAlgorithm jwa.SignatureAlgorithm, pu
 
 // encrypt a payload.
 // It returns the token and error.
-func encrypt(payload []byte, keyEncryptionAlgorithm jwa.KeyEncryptionAlgorithm, publicKey interface{}, contentEncryptionAlgorithm jwa.ContentEncryptionAlgorithm, contentType string) (string, error) {
+func encrypt(
+	payload []byte,
+	keyEncryptionAlgorithm jwa.KeyEncryptionAlgorithm,
+	publicKey interface{},
+	contentEncryptionAlgorithm jwa.ContentEncryptionAlgorithm,
+	contentType string,
+) (string, error) {
 	headers := jwe.NewHeaders()
 	headers.Set(jws.TypeKey, TypeJWE)
 	if contentType != "" {
 		headers.Set(jws.ContentTypeKey, contentType)
 	}
 	withHeaders := jwe.WithProtectedHeaders(headers)
-	encrypted, err := jwe.Encrypt(payload, keyEncryptionAlgorithm, publicKey, contentEncryptionAlgorithm, jwa.NoCompress, withHeaders)
+	encrypted, err := jwe.Encrypt(
+		payload,
+		keyEncryptionAlgorithm,
+		publicKey,
+		contentEncryptionAlgorithm,
+		jwa.NoCompress,
+		withHeaders)
 	if err != nil {
 		return "", fmt.Errorf("failed to encrypt token: %w", err)
 	}
@@ -104,7 +126,11 @@ func encrypt(payload []byte, keyEncryptionAlgorithm jwa.KeyEncryptionAlgorithm, 
 
 // decrypt processes an encrypted token.
 // It returns the message (including headers), decrypted payload, and error.
-func decrypt(encrypted []byte, keyEncryptionAlgorithm jwa.KeyEncryptionAlgorithm, privateKey interface{}) (*jwe.Message, []byte, error) {
+func decrypt(
+	encrypted []byte,
+	keyEncryptionAlgorithm jwa.KeyEncryptionAlgorithm,
+	privateKey interface{},
+) (*jwe.Message, []byte, error) {
 	msg, err := jwe.Parse(encrypted)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed parsing the encrypted token: %w", err)

@@ -34,7 +34,8 @@ import (
 type Session struct {
 	// Server is the address to the DNS server, including the server port (e.g. 8.8.8.8:53).
 	Server string
-	// Transport is the network protocol used to send the queries (valid values: UDP, DoT, Doh with GET, DoH with POST)
+	// Transport is the network protocol used to send the queries
+	// (valid values: UDP, DoT, Doh with GET, DoH with POST)
 	Transport string
 	// DNS query options (EDNS0)
 	Options []dns.EDNS0
@@ -51,7 +52,7 @@ type Session struct {
 }
 
 // ConfigureServer configures the DNS server location and the transport protocol.
-func (s *Session) ConfigureServer(ctx context.Context, svr string, transport string) {
+func (s *Session) ConfigureServer(ctx context.Context, svr, transport string) {
 	s.Server = svr
 	s.Transport = transport
 }
@@ -72,7 +73,12 @@ func (s *Session) ConfigureDoHQueryParams(ctx context.Context, params map[string
 }
 
 // SendUDPQuery sends a DNS query to resolve a domain.
-func (s *Session) SendUDPQuery(ctx context.Context, qtype uint16, qdomain string, recursive bool) error {
+func (s *Session) SendUDPQuery(
+	ctx context.Context,
+	qtype uint16,
+	qdomain string,
+	recursive bool,
+) error {
 	logger := GetLogger()
 	corr := uuid.New().String()
 	c := dns.Client{Timeout: s.Timeout}
@@ -103,7 +109,13 @@ func (s *Session) SendUDPQuery(ctx context.Context, qtype uint16, qdomain string
 }
 
 // SendDoHQuery sends a DoH query to resolve a domain.
-func (s *Session) SendDoHQuery(ctx context.Context, method string, qtype uint16, qdomain string, recursive bool) error {
+func (s *Session) SendDoHQuery(
+	ctx context.Context,
+	method string,
+	qtype uint16,
+	qdomain string,
+	recursive bool,
+) error {
 	logger := GetLogger()
 	corr := uuid.New().String()
 	// Set DNS query
@@ -117,6 +129,7 @@ func (s *Session) SendDoHQuery(ctx context.Context, method string, qtype uint16,
 	if err != nil {
 		return err
 	}
+	// #nosec G402
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
@@ -129,13 +142,14 @@ func (s *Session) SendDoHQuery(ctx context.Context, method string, qtype uint16,
 	switch method {
 	case "GET":
 		dq := base64.RawURLEncoding.EncodeToString(data)
-		request, err = http.NewRequest("GET", fmt.Sprintf("%s?dns=%s", s.Server, dq), http.NewRequest("GET", fmt.Sprintf("%s?dns=%s", s.Server, dq), http.NoBody))
+		urlStr := fmt.Sprintf("%s?dns=%s", s.Server, dq)
+		request, err = http.NewRequest("GET", urlStr, http.NoBody)
 		if err != nil {
 			return err
 		}
 	case "POST":
-		u, err := url.Parse(s.Server)
-		if err != nil {
+		u, errParse := url.Parse(s.Server)
+		if errParse != nil {
 			return err
 		}
 		params := url.Values(s.DoHQueryParams)
@@ -155,12 +169,14 @@ func (s *Session) SendDoHQuery(ctx context.Context, method string, qtype uint16,
 	}
 	// Check Content-Type
 	if response.Header.Get("Content-Type") != "application/dns-message" {
-		return fmt.Errorf("error in Content-Type Header. Value: %s, Expected: %s", response.Header.Get("Content-Type"), "application/dns-message")
+		return fmt.Errorf("error in Content-Type Header. Value: %s, Expected: %s",
+			response.Header.Get("Content-Type"), "application/dns-message")
 	}
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
 		return fmt.Errorf("error reading the response body. %s", err)
 	}
+	response.Body.Close()
 	// Get the response body and Unpack it to convert from a DNS wireformat
 	dnsResp := new(dns.Msg)
 	err = dnsResp.Unpack(body)
@@ -174,7 +190,12 @@ func (s *Session) SendDoHQuery(ctx context.Context, method string, qtype uint16,
 }
 
 // SendDoTQuery sends a DoT query to resolve a domain.
-func (s *Session) SendDoTQuery(ctx context.Context, qtype uint16, qdomain string, recursive bool) error {
+func (s *Session) SendDoTQuery(
+	ctx context.Context,
+	qtype uint16,
+	qdomain string,
+	recursive bool,
+) error {
 	logger := GetLogger()
 	corr := uuid.New().String()
 	// Set DNS query
@@ -184,7 +205,7 @@ func (s *Session) SendDoTQuery(ctx context.Context, qtype uint16, qdomain string
 	}
 	u, err := upstream.AddressToUpstream(s.Server, &opts)
 	if err != nil {
-		logger.log.Fatalf("Cannot create an upstream: %s", err)
+		return fmt.Errorf("cannot create an upstream: %w", err)
 	}
 	m := &dns.Msg{}
 	m.Id = dns.Id()
@@ -194,7 +215,7 @@ func (s *Session) SendDoTQuery(ctx context.Context, qtype uint16, qdomain string
 	logger.LogRequest(m, corr)
 	dnsResp, err := u.Exchange(m)
 	if err != nil {
-		logger.log.Fatalf("Cannot make the DNS request: %s", err)
+		return fmt.Errorf("cannot make the DNS request: %w", err)
 	}
 	logger.LogResponse(m, corr)
 	// Set response in dns session struct
@@ -214,8 +235,12 @@ func (s *Session) ValidateResponseWithCode(ctx context.Context, expectedCode str
 	return nil
 }
 
-// ValidateResponseWithOneOfCodes validates the code of the DNS response againt a list of valid codes.
-func (s *Session) ValidateResponseWithOneOfCodes(ctx context.Context, expectedCodes []string) error {
+// ValidateResponseWithOneOfCodes
+// validates the code of the DNS response againt a list of valid codes.
+func (s *Session) ValidateResponseWithOneOfCodes(
+	ctx context.Context,
+	expectedCodes []string,
+) error {
 	responseCode, ok := dns.RcodeToString[s.Response.Rcode]
 	if !ok {
 		return fmt.Errorf("invalid code '%d'", s.Response.Rcode)
@@ -228,23 +253,34 @@ func (s *Session) ValidateResponseWithOneOfCodes(ctx context.Context, expectedCo
 	return fmt.Errorf("expected DNS code one of '%s' but received '%s'", expectedCodes, responseCode)
 }
 
-// ValidateResponseWithNumberOfRecords validates the amount of records in a DNS response for one of the
+// ValidateResponseWithNumberOfRecords
+// validates the amount of records in a DNS response for one of the
 // record types: answer, authority, additional.
-func (s *Session) ValidateResponseWithNumberOfRecords(ctx context.Context, expectedRecords int, recordType RecordType) error {
+func (s *Session) ValidateResponseWithNumberOfRecords(
+	ctx context.Context,
+	expectedRecords int,
+	recordType RecordType,
+) error {
 	records := len(getRecordsForType(s.Response, recordType))
 	if records != expectedRecords {
-		return fmt.Errorf("expected '%d' records of type '%s' but received '%d'", expectedRecords, recordType, records)
+		return fmt.Errorf("expected '%d' records of type '%s' but received '%d'",
+			expectedRecords, recordType, records)
 	}
 	return nil
 }
 
-// ValidateResponseWithRecords validates that the response contains the following records for one of the record
+// ValidateResponseWithRecords
+// validates that the response contains the following records for one of the record
 // types: answer, authority, additional.
-func (s *Session) ValidateResponseWithRecords(ctx context.Context, recordType RecordType, expectedRecords []Record) error {
+func (s *Session) ValidateResponseWithRecords(
+	ctx context.Context,
+	recordType RecordType,
+	expectedRecords []Record,
+) error {
 	records := getRecordsForType(s.Response, recordType)
 	for _, expectedRecord := range expectedRecords {
 		if !expectedRecord.IsContained(records) {
-			return fmt.Errorf("no '%s' record with '%+v'", recordType, expectedRecord)
+			return fmt.Errorf("no '%s' record with '%+v' in", recordType, expectedRecord)
 		}
 	}
 	return nil
