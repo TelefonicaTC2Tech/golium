@@ -50,9 +50,7 @@ type AMQPServiceFunctions interface {
 	) error
 }
 
-type AMQPService struct {
-	Connection *amqp.Connection
-}
+type AMQPService struct{}
 
 func NewAMQPService() *AMQPService {
 	return &AMQPService{}
