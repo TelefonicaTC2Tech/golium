@@ -26,9 +26,7 @@ const contextKey ContextKey = "rabbitSession"
 // InitializeContext adds the rabbit session to the context.
 // The new context is returned because context is immutable.
 func InitializeContext(ctx context.Context) context.Context {
-	var session Session
-	session.AMQPService = *NewAMQPService()
-	return context.WithValue(ctx, contextKey, session)
+	return context.WithValue(ctx, contextKey, &Session{AMQPService: *NewAMQPService()})
 }
 
 // GetSession returns the rabbit session stored in context.
