@@ -76,10 +76,7 @@ type Session struct {
 
 // URL composes the endpoint, the resource, and query parameters to build a URL.
 func (s *Session) URL() (*url.URL, error) {
-	u, err := url.Parse(s.Request.Endpoint)
-	if err != nil {
-		return nil, fmt.Errorf("invalid endpoint URL '%s': %w", s.Request.Endpoint, err)
-	}
+	u, _ := url.Parse(s.Request.Endpoint)
 	if s.Request.Path != "" {
 		u.Path = path.Join(u.Path, s.Request.Path)
 	}
