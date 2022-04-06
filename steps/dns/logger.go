@@ -15,7 +15,7 @@
 package dns
 
 import (
-	"github.com/TelefonicaTC2Tech/golium/logger"
+	"github.com/TelefonicaTC2Tech/golium"
 	"github.com/miekg/dns"
 )
 
@@ -23,7 +23,7 @@ var dnsLog *Logger
 
 // Logger logs the DNS request and response in a configurable file.
 type Logger struct {
-	Log *logger.Logger
+	Log *golium.Logger
 }
 
 // GetLogger returns the logger for DNS requests and responses.
@@ -31,7 +31,7 @@ type Logger struct {
 func GetLogger() *Logger {
 	name := "dns"
 	if dnsLog == nil {
-		dnsLog = &Logger{Log: logger.Factory(name)}
+		dnsLog = &Logger{Log: golium.LoggerFactory(name)}
 	}
 	return dnsLog
 }

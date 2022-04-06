@@ -17,7 +17,6 @@ package golium
 import (
 	"context"
 	"os"
-	"path"
 	"time"
 
 	"github.com/TelefonicaTC2Tech/golium/cfg"
@@ -30,6 +29,29 @@ import (
 // Launcher is responsible to launch golium (based on godog).
 // The default configuration is merged with environment variables.
 type Launcher struct {
+	log *Logger
+}
+
+var goliumLog *Logger
+
+// GetLogger returns the logger for DNS requests and responses.
+// If the logger is not created yet, it creates a new instance of Logger.
+func GetLogger() *Logger {
+	configLoggerPath()
+
+	name := "golium"
+	if goliumLog == nil {
+		goliumLog = LoggerFactory(name)
+	}
+	return goliumLog
+}
+
+func configLoggerPath() {
+	dir := GetConfig().Log.Directory
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		os.MkdirAll(dir, 0777)
+		os.Chmod(dir, 0777)
+	}
 }
 
 // NewLauncher with a default configuration.
@@ -49,9 +71,7 @@ func NewLauncherWithYaml(path string) *Launcher {
 	if err := cfg.LoadEnv(config); err != nil {
 		logrus.Fatalf("Error configuring golium with environment variables. %s", err)
 	}
-	l := &Launcher{}
-	l.configLogger()
-	return l
+	return &Launcher{log: GetLogger()}
 }
 
 // Launch golium.
@@ -65,7 +85,7 @@ func (l *Launcher) Launch(testSuiteInitializer func(context.Context, *godog.Test
 	pflag.Parse()
 
 	start := time.Now()
-	logRecord := logrus.WithField("suite", conf.Suite).WithField("environment", conf.Environment)
+	logRecord := l.log.WithField("suite", conf.Suite).WithField("environment", conf.Environment)
 	logRecord.Info("Running suite")
 
 	status := godog.TestSuite{
@@ -98,40 +118,16 @@ func (l *Launcher) initContext() context.Context {
 	return ctx
 }
 
-func (l *Launcher) configLogger() {
-	dir := GetConfig().Log.Directory
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		os.MkdirAll(dir, 0777)
-		os.Chmod(dir, 0777)
-	}
-	path := path.Join(dir, "golium.log")
-	file, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0766)
-	if err != nil {
-		logrus.Fatalf("Error preparing logging to file: '%s'. %s", path, err)
-	}
-	os.Chmod(file.Name(), 0766)
-	level, err := logrus.ParseLevel(config.Log.Level)
-	if err != nil {
-		logrus.Fatalf("Error configuring logging level: '%s'. %s", config.Log.Level, err)
-	}
-	logrus.SetLevel(level)
-	logrus.SetOutput(file)
-	logrus.SetFormatter(&logrus.TextFormatter{
-		FullTimestamp:   true,
-		TimestampFormat: "2006-01-02T15:04:05.999Z07:00",
-	})
-}
-
 // configScenarioContext configures the godog.ScenarioContext to include some handlers
 // for logging purposes.
 // It considers before and after for both steps and scenarios.
 func (l *Launcher) configScenarioContext(scenarioContext *godog.ScenarioContext) {
 	start := time.Now()
 	scenarioContext.BeforeStep(func(step *godog.Step) {
-		logrus.WithField("step", step.Text).Debug("Running step")
+		l.log.WithField("step", step.Text).Debug("Running step")
 	})
 	scenarioContext.AfterStep(func(step *godog.Step, err error) {
-		logEntry := logrus.WithField("step", step.Text)
+		logEntry := l.log.WithField("step", step.Text)
 		if err == nil {
 			logEntry.Debug("Step succeeded")
 		} else {
@@ -139,11 +135,11 @@ func (l *Launcher) configScenarioContext(scenarioContext *godog.ScenarioContext)
 		}
 	})
 	scenarioContext.BeforeScenario(func(sc *godog.Scenario) {
-		logrus.WithField("scenario", sc.Name).Info("Running scenario")
+		l.log.WithField("scenario", sc.Name).Info("Running scenario")
 	})
 	scenarioContext.AfterScenario(func(sc *godog.Scenario, err error) {
 		latency := int(time.Since(start).Nanoseconds() / 1000000)
-		logEntry := logrus.WithField("latency", latency).WithField("scenario", sc.Name)
+		logEntry := l.log.WithField("latency", latency).WithField("scenario", sc.Name)
 		if err == nil {
 			logEntry.Info("Scenario succeeded")
 		} else {

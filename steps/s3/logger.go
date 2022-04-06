@@ -15,14 +15,14 @@
 package s3steps
 
 import (
-	"github.com/TelefonicaTC2Tech/golium/logger"
+	"github.com/TelefonicaTC2Tech/golium"
 )
 
 var s3Log *Logger
 
 // Logger logs in a configurable file.
 type Logger struct {
-	Log *logger.Logger
+	Log *golium.Logger
 }
 
 // GetLogger returns the logger for s3 operations.
@@ -30,7 +30,7 @@ type Logger struct {
 func GetLogger() *Logger {
 	name := "s3"
 	if s3Log == nil {
-		s3Log = &Logger{Log: logger.Factory(name)}
+		s3Log = &Logger{Log: golium.LoggerFactory(name)}
 	}
 	return s3Log
 }

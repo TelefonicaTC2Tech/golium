@@ -15,14 +15,14 @@
 package redis
 
 import (
-	"github.com/TelefonicaTC2Tech/golium/logger"
+	"github.com/TelefonicaTC2Tech/golium"
 )
 
 var redisLog *Logger
 
 // Logger logs in a configurable file.
 type Logger struct {
-	Log *logger.Logger
+	Log *golium.Logger
 }
 
 // GetLogger returns the logger for HTTP requests and responses.
@@ -30,7 +30,7 @@ type Logger struct {
 func GetLogger() *Logger {
 	name := "redis-pubsub"
 	if redisLog == nil {
-		redisLog = &Logger{Log: logger.Factory(name)}
+		redisLog = &Logger{Log: golium.LoggerFactory(name)}
 	}
 	return redisLog
 }

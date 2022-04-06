@@ -15,7 +15,7 @@
 package elasticsearch
 
 import (
-	"github.com/TelefonicaTC2Tech/golium/logger"
+	"github.com/TelefonicaTC2Tech/golium"
 	"github.com/elastic/go-elasticsearch/v7/esapi"
 )
 
@@ -23,7 +23,7 @@ var elasticLog *Logger
 
 // Logger logs the elasticsearch requests and responses in a configurable file.
 type Logger struct {
-	Log *logger.Logger
+	Log *golium.Logger
 }
 
 // GetLogger returns the logger for elasticsearch requests and responses.
@@ -31,7 +31,7 @@ type Logger struct {
 func GetLogger() *Logger {
 	name := "elasticsearch"
 	if elasticLog == nil {
-		elasticLog = &Logger{Log: logger.Factory(name)}
+		elasticLog = &Logger{Log: golium.LoggerFactory(name)}
 	}
 	return elasticLog
 }

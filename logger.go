@@ -12,14 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package logger
+package golium
 
 import (
 	"fmt"
 	"os"
 	"path"
 
-	"github.com/TelefonicaTC2Tech/golium"
 	"github.com/sirupsen/logrus"
 )
 
@@ -33,14 +32,14 @@ type Logger struct {
 }
 
 // LoggerFactory returns a Logger instance.
-func Factory(name string) *Logger {
+func LoggerFactory(name string) *Logger {
 	file := configureFile(name)
 	return builder(*file)
 }
 
 // configureFile configures the file where the logs are written.
 func configureFile(name string) *os.File {
-	dir := golium.GetConfig().Log.Directory
+	dir := GetConfig().Log.Directory
 	logPath := path.Join(dir, fmt.Sprintf("%s%s", name, SUFFIX))
 
 	file, err := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
@@ -53,12 +52,20 @@ func configureFile(name string) *os.File {
 
 // Builder creates an instance of the logger.
 func builder(file os.File) *Logger {
+	level, err := logrus.ParseLevel(GetConfig().Log.Level)
+	if err != nil {
+		logrus.Fatalf("Error configuring logging level: '%s'. %s", GetConfig().Log.Level, err)
+	}
+	loggerFormat := &logrus.TextFormatter{
+		FullTimestamp:   true,
+		TimestampFormat: "2006-01-02T15:04:05.999Z07:00",
+	}
 	return &Logger{
 		&logrus.Logger{
 			Out:       &file,
-			Formatter: new(logrus.JSONFormatter),
+			Formatter: loggerFormat,
 			Hooks:     make(logrus.LevelHooks),
-			Level:     logrus.DebugLevel,
+			Level:     level,
 		},
 	}
 }

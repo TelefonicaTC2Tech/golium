@@ -15,14 +15,14 @@
 package rabbit
 
 import (
-	"github.com/TelefonicaTC2Tech/golium/logger"
+	"github.com/TelefonicaTC2Tech/golium"
 )
 
 var rabbitLog *Logger
 
 // Logger logs in a configurable file.
 type Logger struct {
-	Log *logger.Logger
+	Log *golium.Logger
 }
 
 // GetLogger returns the logger for rabbit messages in publish/subscribe.
@@ -30,7 +30,7 @@ type Logger struct {
 func GetLogger() *Logger {
 	name := "rabbit-pubsub"
 	if rabbitLog == nil {
-		rabbitLog = &Logger{Log: logger.Factory(name)}
+		rabbitLog = &Logger{Log: golium.LoggerFactory(name)}
 	}
 	return rabbitLog
 }
