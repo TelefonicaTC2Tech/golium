@@ -59,6 +59,7 @@ func builder(file os.File) *Logger {
 	loggerFormat := &logrus.TextFormatter{
 		FullTimestamp:   true,
 		TimestampFormat: "2006-01-02T15:04:05.999Z07:00",
+		DisableQuote:    true,
 	}
 	return &Logger{
 		&logrus.Logger{
