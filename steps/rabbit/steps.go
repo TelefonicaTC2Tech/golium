@@ -147,8 +147,8 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 		}
 		return session.ValidateMessageJSONBody(ctx, props, pos)
 	})
-	scenCtx.AfterScenario(func(sc *godog.Scenario, err error) {
-		session.Unsubscribe(ctx)
+	scenCtx.After(func(ctx context.Context, sc *godog.Scenario, err error) (context.Context, error) {
+		return ctx, session.Unsubscribe(ctx)
 	})
 	return ctx
 }
