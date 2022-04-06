@@ -123,27 +123,41 @@ func (l *Launcher) initContext() context.Context {
 // It considers before and after for both steps and scenarios.
 func (l *Launcher) configScenarioContext(scenarioContext *godog.ScenarioContext) {
 	start := time.Now()
-	scenarioContext.BeforeStep(func(step *godog.Step) {
-		l.log.WithField("step", step.Text).Debug("Running step")
-	})
-	scenarioContext.AfterStep(func(step *godog.Step, err error) {
-		logEntry := l.log.WithField("step", step.Text)
-		if err == nil {
-			logEntry.Debug("Step succeeded")
-		} else {
-			logEntry.WithError(err).Error("Step failed")
-		}
-	})
-	scenarioContext.BeforeScenario(func(sc *godog.Scenario) {
-		l.log.WithField("scenario", sc.Name).Info("Running scenario")
-	})
-	scenarioContext.AfterScenario(func(sc *godog.Scenario, err error) {
-		latency := int(time.Since(start).Nanoseconds() / 1000000)
-		logEntry := l.log.WithField("latency", latency).WithField("scenario", sc.Name)
-		if err == nil {
-			logEntry.Info("Scenario succeeded")
-		} else {
-			logEntry.WithError(err).Error("Scenario failed")
-		}
-	})
+	scenarioContext.StepContext().Before(
+		func(ctx context.Context, st *godog.Step) (context.Context, error) {
+			l.log.WithField("step", st.Text).Debug("Running step")
+			return ctx, nil
+		})
+	scenarioContext.StepContext().After(
+		func(ctx context.Context,
+			st *godog.Step,
+			status godog.StepResultStatus,
+			err error) (context.Context, error) {
+			logEntry := l.log.WithField("step", st.Text)
+			if err == nil {
+				logEntry.Debug("Step succeeded")
+			} else {
+				logEntry.WithError(err).Error("Step failed")
+			}
+			return ctx, nil
+		})
+
+	scenarioContext.Before(
+		func(ctx context.Context, sc *godog.Scenario) (context.Context, error) {
+			l.log.WithField("scenario", sc.Name).Info("Running scenario")
+			return ctx, nil
+		})
+	scenarioContext.After(
+		func(ctx context.Context,
+			sc *godog.Scenario,
+			err error) (context.Context, error) {
+			latency := int(time.Since(start).Nanoseconds() / 1000000)
+			logEntry := l.log.WithField("latency", latency).WithField("scenario", sc.Name)
+			if err == nil {
+				logEntry.Info("Scenario succeeded")
+			} else {
+				logEntry.WithError(err).Error("Scenario failed")
+			}
+			return ctx, nil
+		})
 }
