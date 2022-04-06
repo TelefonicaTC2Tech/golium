@@ -85,52 +85,19 @@ func (s *Session) SubscribeTopic(ctx context.Context, topic string) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to open a channel")
 	}
-	err = s.AMQPService.ChannelExchangeDeclare(
-		s.channel,
-		topic,    // name
-		"fanout", // type
-		true,     // durable
-		false,    // auto-deleted
-		false,    // internal
-		false,    // no-wait
-		nil,      // arguments)
-	)
+	err = s.AMQPService.ChannelExchangeDeclare(s.channel, topic)
 	if err != nil {
 		return errors.Wrap(err, "failed to declare an exchange")
 	}
-	q, err := s.AMQPService.ChannelQueueDeclare(
-		s.channel,
-		"",    // name
-		false, // durable
-		true,  // delete when unused
-		true,  // exclusive
-		false, // no-wait
-		nil,   // arguments
-	)
+	q, err := s.AMQPService.ChannelQueueDeclare(s.channel)
 	if err != nil {
 		return errors.Wrap(err, "failed to declare a queue")
 	}
-	err = s.AMQPService.ChannelQueueBind(
-		s.channel,
-		q.Name, // queue name
-		"",     // routing key
-		topic,  // exchange
-		false,
-		nil,
-	)
+	err = s.AMQPService.ChannelQueueBind(s.channel, q.Name, topic)
 	if err != nil {
 		return errors.Wrap(err, "failed to bind a queue")
 	}
-	s.subCh, err = s.AMQPService.ChannelConsume(
-		s.channel,
-		q.Name, // queue
-		"",     // consumer
-		true,   // auto-ack
-		false,  // exclusive
-		false,  // no-local
-		false,  // no-wait
-		nil,    // args
-	)
+	s.subCh, err = s.AMQPService.ChannelConsume(s.channel, q.Name)
 	go func() {
 		logrus.Debugf("Receiving messages from topic %s...", topic)
 		for msg := range s.subCh {
@@ -163,28 +130,12 @@ func (s *Session) PublishTextMessage(ctx context.Context, topic, message string)
 	if err != nil {
 		return errors.Wrap(err, "failed to open a channel")
 	}
-	err = s.AMQPService.ChannelExchangeDeclare(
-		s.channel,
-		topic,    // name
-		"fanout", // type
-		true,     // durable
-		false,    // auto-deleted
-		false,    // internal
-		false,    // no-wait
-		nil,      // arguments
-	)
+	err = s.AMQPService.ChannelExchangeDeclare(s.channel, topic)
 	if err != nil {
 		return fmt.Errorf("failed to declare an exchange")
 	}
 	publishing := s.buildPublishingMessage([]byte(message))
-	err = s.AMQPService.ChannelPublish(
-		s.channel,
-		topic,      // exchange
-		"",         // routing key
-		false,      // mandatory
-		false,      // immediate
-		publishing, // publishing
-	)
+	err = s.AMQPService.ChannelPublish(s.channel, topic, publishing)
 	if err != nil {
 		return fmt.Errorf("failed publishing the message '%s' to topic '%s': %w", message, topic, err)
 	}

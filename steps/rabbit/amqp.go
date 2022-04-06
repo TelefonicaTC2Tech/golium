@@ -21,31 +21,14 @@ import (
 type AMQPServiceFunctions interface {
 	Dial(url string) (*amqp.Connection, error)
 	ConnectionChannel(c *amqp.Connection) (*amqp.Channel, error)
-	ChannelExchangeDeclare(
-		channel *amqp.Channel,
-		name, kind string,
-		durable, autoDelete, internal, noWait bool,
-		args amqp.Table,
-	) error
-	ChannelQueueDeclare(
-		channel *amqp.Channel,
-		name string,
-		durable, autoDelete, exclusive, noWait bool,
-		args amqp.Table,
-	) (amqp.Queue, error)
-	ChannelQueueBind(channel *amqp.Channel,
-		name, key, exchange string,
-		noWait bool, args amqp.Table,
-	) error
-	ChannelConsume(channel *amqp.Channel,
-		queue, consumer string,
-		autoAck, exclusive, noLocal, noWait bool,
-		args amqp.Table,
+	ChannelExchangeDeclare(channel *amqp.Channel, name string) error
+	ChannelQueueDeclare(channel *amqp.Channel) (amqp.Queue, error)
+	ChannelQueueBind(channel *amqp.Channel, name, exchange string) error
+	ChannelConsume(channel *amqp.Channel, queue string,
 	) (<-chan amqp.Delivery, error)
 	ChannelClose(channel *amqp.Channel) error
 	ChannelPublish(channel *amqp.Channel,
-		exchange, key string,
-		mandatory, immediate bool,
+		exchange string,
 		msg amqp.Publishing,
 	) error
 }
@@ -63,36 +46,20 @@ func (a AMQPService) Dial(url string) (*amqp.Connection, error) {
 func (a AMQPService) ConnectionChannel(connection *amqp.Connection) (*amqp.Channel, error) {
 	return connection.Channel()
 }
-func (a AMQPService) ChannelExchangeDeclare(
-	channel *amqp.Channel,
-	name, kind string,
-	durable, autoDelete, internal, noWait bool,
-	args amqp.Table,
-) error {
-	return channel.ExchangeDeclare(name, kind, durable, autoDelete, internal, noWait, args)
+func (a AMQPService) ChannelExchangeDeclare(channel *amqp.Channel, name string) error {
+	return channel.ExchangeDeclare(name, "fanout", true, false, false, false, nil)
 }
 
-func (a AMQPService) ChannelQueueDeclare(
-	channel *amqp.Channel,
-	name string,
-	durable, autoDelete, exclusive, noWait bool,
-	args amqp.Table,
-) (amqp.Queue, error) {
-	return channel.QueueDeclare(name, durable, autoDelete, exclusive, noWait, args)
+func (a AMQPService) ChannelQueueDeclare(channel *amqp.Channel) (amqp.Queue, error) {
+	return channel.QueueDeclare("", false, true, true, false, nil)
 }
-func (a AMQPService) ChannelQueueBind(channel *amqp.Channel,
-	name, key, exchange string,
-	noWait bool, args amqp.Table,
-) error {
-	return channel.QueueBind(name, key, exchange, noWait, args)
+func (a AMQPService) ChannelQueueBind(channel *amqp.Channel, name, exchange string) error {
+	return channel.QueueBind(name, "", exchange, false, nil)
 }
 
-func (a AMQPService) ChannelConsume(channel *amqp.Channel,
-	queue, consumer string,
-	autoAck, exclusive, noLocal, noWait bool,
-	args amqp.Table,
+func (a AMQPService) ChannelConsume(channel *amqp.Channel, queue string,
 ) (<-chan amqp.Delivery, error) {
-	return channel.Consume(queue, consumer, autoAck, exclusive, noLocal, noWait, args)
+	return channel.Consume(queue, "", true, false, false, false, nil)
 }
 
 func (a AMQPService) ChannelClose(channel *amqp.Channel) error {
@@ -100,9 +67,8 @@ func (a AMQPService) ChannelClose(channel *amqp.Channel) error {
 }
 
 func (a AMQPService) ChannelPublish(channel *amqp.Channel,
-	exchange, key string,
-	mandatory, immediate bool,
+	exchange string,
 	msg amqp.Publishing,
 ) error {
-	return channel.Publish(exchange, key, mandatory, immediate, msg)
+	return channel.Publish(exchange, "", false, false, msg)
 }

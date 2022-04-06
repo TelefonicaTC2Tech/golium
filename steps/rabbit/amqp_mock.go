@@ -39,36 +39,20 @@ func (a AMQPServiceFuncMock) ConnectionChannel(c *amqp.Connection) (*amqp.Channe
 	return nil, ConnectionChannelError
 }
 
-func (a AMQPServiceFuncMock) ChannelExchangeDeclare(
-	channel *amqp.Channel,
-	name, kind string,
-	durable, autoDelete, internal, noWait bool,
-	args amqp.Table,
-) error {
+func (a AMQPServiceFuncMock) ChannelExchangeDeclare(channel *amqp.Channel, name string) error {
 	return ChannelExchangeDeclareError
 }
 
-func (a AMQPServiceFuncMock) ChannelQueueDeclare(
-	channel *amqp.Channel,
-	name string,
-	durable, autoDelete, exclusive, noWait bool,
-	args amqp.Table,
-) (amqp.Queue, error) {
+func (a AMQPServiceFuncMock) ChannelQueueDeclare(channel *amqp.Channel) (amqp.Queue, error) {
 	amqpQueue := amqp.Queue{}
 	return amqpQueue, ChannelQueueDeclareError
 }
 
-func (a AMQPServiceFuncMock) ChannelQueueBind(channel *amqp.Channel,
-	name, key, exchange string,
-	noWait bool, args amqp.Table,
-) error {
+func (a AMQPServiceFuncMock) ChannelQueueBind(channel *amqp.Channel, name, exchange string) error {
 	return ChannelQueueBindError
 }
 
-func (a AMQPServiceFuncMock) ChannelConsume(channel *amqp.Channel,
-	queue, consumer string,
-	autoAck, exclusive, noLocal, noWait bool,
-	args amqp.Table,
+func (a AMQPServiceFuncMock) ChannelConsume(channel *amqp.Channel, queue string,
 ) (<-chan amqp.Delivery, error) {
 	return MockSubCh, ChannelConsumeError
 }
@@ -77,8 +61,7 @@ func (a AMQPServiceFuncMock) ChannelClose(channel *amqp.Channel) error {
 }
 
 func (a AMQPServiceFuncMock) ChannelPublish(channel *amqp.Channel,
-	exchange, key string,
-	mandatory, immediate bool,
+	exchange string,
 	msg amqp.Publishing,
 ) error {
 	return ChannelPublishError
