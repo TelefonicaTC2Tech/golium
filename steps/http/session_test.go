@@ -299,8 +299,6 @@ func TestValidateResponseHeaders(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var ctx = context.Background()
 			s := &Session{}
-			s.Request.Endpoint = httpbinURL + "/anything"
-			s.Request.Path = "/test-query"
 			s.Request.Headers = map[string][]string{
 				"Content-Type": {tt.contentType},
 			}
