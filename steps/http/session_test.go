@@ -263,6 +263,8 @@ func TestSession_SendHTTPRequest(t *testing.T) {
 }
 
 func TestSession_ValidateResponseHeaders(t *testing.T) {
+	os.MkdirAll(logsPath, os.ModePerm)
+	defer os.RemoveAll(logsPath)
 	tests := []struct {
 		name        string
 		contentType string
