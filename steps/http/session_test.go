@@ -16,6 +16,7 @@ package http
 
 import (
 	"context"
+	"net/http"
 	"net/url"
 	"os"
 	"testing"
@@ -158,10 +159,9 @@ func TestConfigureRequestBodyJSONFileWithout(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var ctx = context.Background()
 			s := &Session{}
-			if err := s.ConfigureRequestBodyJSONFileWithout(ctx, tt.code, tt.fileName, tt.params); 
-				(err != nil) != tt.wantErr {
-					t.Errorf("Session.ConfigureRequestBodyJSONFileWithout() error = %v, wantErr %v",
-						err, tt.wantErr)
+			if err := s.ConfigureRequestBodyJSONFileWithout(ctx, tt.code, tt.fileName, tt.params); (err != nil) != tt.wantErr {
+				t.Errorf("Session.ConfigureRequestBodyJSONFileWithout() error = %v, wantErr %v",
+					err, tt.wantErr)
 			}
 		})
 	}
@@ -267,19 +267,22 @@ func TestValidateResponseHeaders(t *testing.T) {
 	os.MkdirAll(logsPath, os.ModePerm)
 	defer os.RemoveAll(logsPath)
 	tests := []struct {
-		name        string
-		contentType string
-		wantErr     bool
+		name                string
+		contentType         string
+		responseContentType string
+		wantErr             bool
 	}{
 		{
-			name:        "testing correct headers",
-			contentType: "application/json",
-			wantErr:     false,
+			name:                "testing correct headers",
+			contentType:         "application/json",
+			responseContentType: "application/json",
+			wantErr:             false,
 		},
 		{
-			name:        "testing incorrect headers",
-			contentType: "failcontentType",
-			wantErr:     true,
+			name:                "testing incorrect headers",
+			contentType:         "application/json",
+			responseContentType: "failcontentType",
+			wantErr:             true,
 		},
 	}
 	for _, tt := range tests {
@@ -292,8 +295,11 @@ func TestValidateResponseHeaders(t *testing.T) {
 				"Content-Type": {tt.contentType},
 			}
 			s.ConfigureHeaders(ctx, s.Request.Headers)
-			s.SendHTTPRequest(ctx, "GET")
 
+			header := http.Header{}
+			header.Add("Content-Type", tt.responseContentType)
+
+			s.Response.Response = &http.Response{Header: header}
 			err := s.ValidateResponseHeaders(ctx, s.Request.Headers)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Session.ValidateResponseHeaders() error = %v, wantErr %v",
