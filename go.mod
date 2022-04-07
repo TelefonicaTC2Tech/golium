@@ -6,7 +6,7 @@ require (
 	github.com/AdguardTeam/dnsproxy v0.41.2
 	github.com/aws/aws-sdk-go v1.38.71
 	github.com/cucumber/godog v0.12.0
-	github.com/cucumber/messages-go/v16 v16.0.1 // indirect
+	github.com/cucumber/messages-go/v16 v16.0.1
 	github.com/elastic/go-elasticsearch/v7 v7.12.0
 	github.com/go-redis/redis/v8 v8.7.1
 	github.com/google/uuid v1.2.0

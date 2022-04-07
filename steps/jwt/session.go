@@ -76,7 +76,8 @@ func (s *Session) ConfigureSymmetricKey(ctx context.Context, symmetricKey string
 	s.PrivateKey = s.PublicKey
 }
 
-// ConfigurePublicKey configures the public key to verify the signature of a JWT token or to encrypt a JWE token.
+// ConfigurePublicKey configures the public key to verify the signature
+// of a JWT token or to encrypt a JWE token.
 func (s *Session) ConfigurePublicKey(ctx context.Context, publicKeyPEM string) error {
 	block, _ := pem.Decode([]byte(publicKeyPEM))
 	if block == nil {
@@ -115,7 +116,10 @@ func (s *Session) ConfigurePrivateKey(ctx context.Context, privateKeyPEM string)
 }
 
 // ConfigurePayloadWithContentType configures the payload and the content type (cty header).
-func (s *Session) ConfigurePayloadWithContentType(ctx context.Context, payload, contentType string) {
+func (s *Session) ConfigurePayloadWithContentType(
+	ctx context.Context,
+	payload, contentType string,
+) {
 	s.Payload = []byte(payload)
 	s.ContentType = contentType
 }
@@ -126,7 +130,8 @@ func (s *Session) ConfigureJSONPayload(ctx context.Context, props map[string]int
 	var err error
 	for key, value := range props {
 		if json, err = sjson.Set(json, key, value); err != nil {
-			return fmt.Errorf("failed setting property '%s' with value '%s' in the request body: %w", key, value, err)
+			return fmt.Errorf("failed setting property '%s' with value '%s' in the request body: %w",
+				key, value, err)
 		}
 	}
 	s.ConfigurePayloadWithContentType(ctx, json, "JSON")
@@ -167,7 +172,8 @@ func (s *Session) GenerateEncryptedJWTInContext(ctx context.Context, ctxtKey str
 	if s.PublicKey == nil {
 		return errors.New("a public key is required")
 	}
-	token, err := encrypt(s.Payload, s.KeyEncryptionAlgorithm, s.PublicKey, s.ContentEncryptionAlgorithm, s.ContentType)
+	token, err := encrypt(
+		s.Payload, s.KeyEncryptionAlgorithm, s.PublicKey, s.ContentEncryptionAlgorithm, s.ContentType)
 	if err != nil {
 		return err
 	}
@@ -176,7 +182,8 @@ func (s *Session) GenerateEncryptedJWTInContext(ctx context.Context, ctxtKey str
 	return nil
 }
 
-// GenerateSignedEncryptedJWTInContext builds a JWT with signed encrypted payload and stores it in the context.
+// GenerateSignedEncryptedJWTInContext builds a JWT with signed encrypted payload
+// and stores it in the context.
 // The payload is signed first. Then the whole JWT is considered as payload for encryption phase.
 // The content type header (cty) of the final token is set to JWT.
 func (s *Session) GenerateSignedEncryptedJWTInContext(ctx context.Context, ctxtKey string) error {
@@ -223,18 +230,8 @@ func (s *Session) ProcessSignedEncryptedJWT(ctx context.Context, token string) e
 // ValidateJWT checks that the token is valid (the claims and the signature of the token).
 // Note that JWE tokens are not validated.
 func (s *Session) ValidateJWT(ctx context.Context) error {
-	if s.Token == "" {
-		return errors.New("no token has been processed")
-	}
-	if s.SignatureAlgorithm == "" {
-		return errors.New("a signature algorithm is required")
-	}
-	if s.PublicKey == nil {
-		return errors.New("a public key is required")
-	}
-	if s.SignedMessage == nil {
-		// Encrypted messages cannot be verified
-		return nil
+	if err := s.ValidateJWTRequirements(); err != nil {
+		return err
 	}
 	if err := verify(s.Token, s.SignatureAlgorithm, s.PublicKey); err != nil {
 		return fmt.Errorf("token is invalid: %w", err)
@@ -245,18 +242,8 @@ func (s *Session) ValidateJWT(ctx context.Context) error {
 // ValidateInvalidJWT checks that the token is invalid (the claims and the signature of the token).
 // Note that JWE tokens are not validated.
 func (s *Session) ValidateInvalidJWT(ctx context.Context, expectedError string) error {
-	if s.Token == "" {
-		return errors.New("no token has been processed")
-	}
-	if s.SignatureAlgorithm == "" {
-		return errors.New("a signature algorithm is required")
-	}
-	if s.PublicKey == nil {
-		return errors.New("a public key is required")
-	}
-	if s.SignedMessage == nil {
-		// Encrypted messages cannot be verified
-		return nil
+	if err := s.ValidateJWTRequirements(); err != nil {
+		return err
 	}
 	err := verify(s.Token, s.SignatureAlgorithm, s.PublicKey)
 	if err == nil {
@@ -268,8 +255,28 @@ func (s *Session) ValidateInvalidJWT(ctx context.Context, expectedError string) 
 	return fmt.Errorf("token is invalid: %w", err)
 }
 
+func (s *Session) ValidateJWTRequirements() error {
+	if s.Token == "" {
+		return errors.New("no token has been processed")
+	}
+	if s.SignatureAlgorithm == "" {
+		return errors.New("a signature algorithm is required")
+	}
+	if s.PublicKey == nil {
+		return errors.New("a public key is required")
+	}
+	if s.SignedMessage == nil {
+		// Encrypted messages cannot be verified
+		return nil
+	}
+	return nil
+}
+
 // ValidatePayloadJSONProperties checks if the payload contains a map of expected properties.
-func (s *Session) ValidatePayloadJSONProperties(ctx context.Context, expectedPayload map[string]interface{}) error {
+func (s *Session) ValidatePayloadJSONProperties(
+	ctx context.Context,
+	expectedPayload map[string]interface{},
+) error {
 	if s.Payload == nil {
 		return errors.New("no token has been processed")
 	}
@@ -277,7 +284,8 @@ func (s *Session) ValidatePayloadJSONProperties(ctx context.Context, expectedPay
 	for key, expectedValue := range expectedPayload {
 		value := m.Get(key)
 		if expectedValue != value {
-			return fmt.Errorf("mismatch payload property '%s': expected '%v', actual '%v'", key, expectedValue, value)
+			return fmt.Errorf(
+				"mismatch payload property '%s': expected '%v', actual '%v'", key, expectedValue, value)
 		}
 	}
 	return nil
