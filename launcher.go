@@ -37,21 +37,11 @@ var goliumLog *Logger
 // GetLogger returns the logger for DNS requests and responses.
 // If the logger is not created yet, it creates a new instance of Logger.
 func GetLogger() *Logger {
-	configLoggerPath()
-
 	name := "golium"
 	if goliumLog == nil {
 		goliumLog = LoggerFactory(name)
 	}
 	return goliumLog
-}
-
-func configLoggerPath() {
-	dir := GetConfig().Log.Directory
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		os.MkdirAll(dir, 0777)
-		os.Chmod(dir, 0777)
-	}
 }
 
 // NewLauncher with a default configuration.

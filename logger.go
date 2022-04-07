@@ -33,8 +33,18 @@ type Logger struct {
 
 // LoggerFactory returns a Logger instance.
 func LoggerFactory(name string) *Logger {
+	configurePath()
 	file := configureFile(name)
 	return builder(*file)
+}
+
+// configurePath configures path where the logs are written.
+func configurePath() {
+	dir := GetConfig().Log.Directory
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		os.MkdirAll(dir, 0777)
+		os.Chmod(dir, 0777)
+	}
 }
 
 // configureFile configures the file where the logs are written.
