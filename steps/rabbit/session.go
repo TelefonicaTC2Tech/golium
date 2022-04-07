@@ -46,12 +46,14 @@ type Session struct {
 	publishing amqp.Publishing
 	// rabbit received delivery message
 	msg amqp.Delivery
+	// ampq service
+	AMQPService AMQPServiceFunctions
 }
 
 // ConfigureConnection creates a rabbit connection based on the URI.
 func (s *Session) ConfigureConnection(ctx context.Context, uri string) error {
 	var err error
-	s.Connection, err = amqp.Dial(uri)
+	s.Connection, err = s.AMQPService.Dial(uri)
 	if err != nil {
 		return fmt.Errorf("failed configuring connection '%s': %w", uri, err)
 	}
@@ -79,52 +81,23 @@ func (s *Session) ConfigureStandardProperties(ctx context.Context, props amqp.Pu
 func (s *Session) SubscribeTopic(ctx context.Context, topic string) error {
 	GetLogger().LogSubscribedTopic(topic)
 	var err error
-	s.channel, err = s.Connection.Channel()
+	s.channel, err = s.AMQPService.ConnectionChannel(s.Connection)
 	if err != nil {
 		return errors.Wrap(err, "failed to open a channel")
 	}
-	err = s.channel.ExchangeDeclare(
-		topic,    // name
-		"fanout", // type
-		true,     // durable
-		false,    // auto-deleted
-		false,    // internal
-		false,    // no-wait
-		nil,      // arguments
-	)
+	err = s.AMQPService.ChannelExchangeDeclare(s.channel, topic)
 	if err != nil {
 		return errors.Wrap(err, "failed to declare an exchange")
 	}
-	q, err := s.channel.QueueDeclare(
-		"",    // name
-		false, // durable
-		true,  // delete when unused
-		true,  // exclusive
-		false, // no-wait
-		nil,   // arguments
-	)
+	q, err := s.AMQPService.ChannelQueueDeclare(s.channel)
 	if err != nil {
 		return errors.Wrap(err, "failed to declare a queue")
 	}
-	err = s.channel.QueueBind(
-		q.Name, // queue name
-		"",     // routing key
-		topic,  // exchange
-		false,
-		nil,
-	)
+	err = s.AMQPService.ChannelQueueBind(s.channel, q.Name, topic)
 	if err != nil {
 		return errors.Wrap(err, "failed to bind a queue")
 	}
-	s.subCh, err = s.channel.Consume(
-		q.Name, // queue
-		"",     // consumer
-		true,   // auto-ack
-		false,  // exclusive
-		false,  // no-local
-		false,  // no-wait
-		nil,    // args
-	)
+	s.subCh, err = s.AMQPService.ChannelConsume(s.channel, q.Name)
 	go func() {
 		logrus.Debugf("Receiving messages from topic %s...", topic)
 		for msg := range s.subCh {
@@ -146,37 +119,23 @@ func (s *Session) Unsubscribe(ctx context.Context) error {
 	if s.channel == nil {
 		return nil
 	}
-	return s.channel.Close()
+	return s.AMQPService.ChannelClose(s.channel)
 }
 
 // PublishTextMessage publishes a text message in a rabbit topic.
 func (s *Session) PublishTextMessage(ctx context.Context, topic, message string) error {
 	GetLogger().LogPublishedMessage(message, topic, s.Correlator)
 	var err error
-	s.channel, err = s.Connection.Channel()
+	s.channel, err = s.AMQPService.ConnectionChannel(s.Connection)
 	if err != nil {
 		return errors.Wrap(err, "failed to open a channel")
 	}
-	err = s.channel.ExchangeDeclare(
-		topic,    // name
-		"fanout", // type
-		true,     // durable
-		false,    // auto-deleted
-		false,    // internal
-		false,    // no-wait
-		nil,      // arguments
-	)
+	err = s.AMQPService.ChannelExchangeDeclare(s.channel, topic)
 	if err != nil {
 		return fmt.Errorf("failed to declare an exchange")
 	}
 	publishing := s.buildPublishingMessage([]byte(message))
-	err = s.channel.Publish(
-		topic,      // exchange
-		"",         // routing key
-		false,      // mandatory
-		false,      // immediate
-		publishing, // publishing
-	)
+	err = s.AMQPService.ChannelPublish(s.channel, topic, publishing)
 	if err != nil {
 		return fmt.Errorf("failed publishing the message '%s' to topic '%s': %w", message, topic, err)
 	}
@@ -195,30 +154,38 @@ func (s *Session) buildPublishingMessage(body []byte) amqp.Publishing {
 		publishing.ContentType = "text/plain"
 	}
 	publishing.Headers = s.headers
-	publishing.Body = []byte(body)
+	publishing.Body = body
 	return publishing
 }
 
 // PublishJSONMessage publishes a JSON message in a rabbit topic.
-func (s *Session) PublishJSONMessage(ctx context.Context, topic string, props map[string]interface{}) error {
+func (s *Session) PublishJSONMessage(
+	ctx context.Context,
+	topic string,
+	props map[string]interface{},
+) error {
 	var json string
 	var err error
 	for key, value := range props {
 		if json, err = sjson.Set(json, key, value); err != nil {
-			return fmt.Errorf("failed setting property '%s' with value '%s' in the message: %w", key, value, err)
+			return fmt.Errorf("failed setting property '%s' with value '%s' in the message: %w",
+				key, value, err)
 		}
 	}
 	s.publishing.ContentType = "application/json"
 	return s.PublishTextMessage(ctx, topic, json)
 }
 
-// WaitForTextMessage waits up to timeout until the expected message is found in the received messages
-// for this session.
-func (s *Session) WaitForTextMessage(ctx context.Context, timeout time.Duration, expectedMsg string) error {
+// WaitForTextMessage waits up to timeout until the expected message is found in
+// the received messages for this session.
+func (s *Session) WaitForTextMessage(ctx context.Context,
+	timeout time.Duration,
+	expectedMsg string,
+) error {
 	return waitUpTo(timeout, func() error {
-		for _, msg := range s.Messages {
-			if string(msg.Body) == expectedMsg {
-				s.msg = msg
+		for i := range s.Messages {
+			if string(s.Messages[i].Body) == expectedMsg {
+				s.msg = s.Messages[i]
 				return nil
 			}
 		}
@@ -228,12 +195,15 @@ func (s *Session) WaitForTextMessage(ctx context.Context, timeout time.Duration,
 
 // WaitForJSONMessageWithProperties waits up to timeout and verifies if there is a message received
 // in the topic with the requested properties.
-func (s *Session) WaitForJSONMessageWithProperties(ctx context.Context, timeout time.Duration, props map[string]interface{}) error {
+func (s *Session) WaitForJSONMessageWithProperties(ctx context.Context,
+	timeout time.Duration,
+	props map[string]interface{},
+) error {
 	return waitUpTo(timeout, func() error {
-		for _, msg := range s.Messages {
-			logrus.Debugf("Checking message: %s", msg.Body)
-			if matchMessage(string(msg.Body), props) {
-				s.msg = msg
+		for i := range s.Messages {
+			logrus.Debugf("Checking message: %s", s.Messages[i].Body)
+			if matchMessage(string(s.Messages[i].Body), props) {
+				s.msg = s.Messages[i]
 				return nil
 			}
 		}
@@ -253,17 +223,23 @@ func matchMessage(msg string, expectedProps map[string]interface{}) bool {
 	return true
 }
 
-// WaitForMessagesWithStandardProperties waits for 'count' messages with standard rabbit properties that are equal to the expected values.
-func (s *Session) WaitForMessagesWithStandardProperties(ctx context.Context, timeout time.Duration, count int, props amqp.Delivery) error {
+// WaitForMessagesWithStandardProperties waits for 'count' messages with standard rabbit properties
+// that are equal to the expected values.
+func (s *Session) WaitForMessagesWithStandardProperties(
+	ctx context.Context,
+	timeout time.Duration,
+	count int,
+	props amqp.Delivery,
+) error {
 	return waitUpTo(timeout, func() error {
 		err := fmt.Errorf("no message(s) received match(es) the standard properties")
 		if count < 0 {
 			return err
 		}
-		for _, msg := range s.Messages {
-			logrus.Debugf("Checking message: %s", msg.Body)
-			s.msg = msg
-			if err := s.ValidateMessageStandardProperties(ctx, props); err == nil {
+		for i := range s.Messages {
+			logrus.Debugf("Checking message: %s", s.Messages[i].Body)
+			s.msg = s.Messages[i]
+			if err = s.ValidateMessageStandardProperties(ctx, props); err == nil {
 				count--
 				if count == 0 {
 					return nil
@@ -274,8 +250,12 @@ func (s *Session) WaitForMessagesWithStandardProperties(ctx context.Context, tim
 	})
 }
 
-// ValidateMessageStandardProperties checks if the message standard rabbit properties are equal the expected values.
-func (s *Session) ValidateMessageStandardProperties(ctx context.Context, props amqp.Delivery) error {
+// ValidateMessageStandardProperties checks if the message standard rabbit properties are equal
+// the expected values.
+func (s *Session) ValidateMessageStandardProperties(
+	ctx context.Context,
+	props amqp.Delivery,
+) error {
 	msg := reflect.ValueOf(s.msg)
 	expectedMsg := reflect.ValueOf(props)
 	t := expectedMsg.Type()
@@ -285,7 +265,9 @@ func (s *Session) ValidateMessageStandardProperties(ctx context.Context, props a
 			value := msg.Field(i).Interface()
 			expectedValue := expectedMsg.Field(i).Interface()
 			if value != expectedValue {
-				return fmt.Errorf("mismatch of standard rabbit property '%s': expected '%s', actual '%s'", key, expectedValue, value)
+				return fmt.Errorf(
+					"mismatch of standard rabbit property '%s': expected '%s', actual '%s'",
+					key, expectedValue, value)
 			}
 		}
 	}
@@ -293,7 +275,10 @@ func (s *Session) ValidateMessageStandardProperties(ctx context.Context, props a
 }
 
 // ValidateMessageHeaders checks if the message rabbit headers are equal the expected values.
-func (s *Session) ValidateMessageHeaders(ctx context.Context, headers map[string]interface{}) error {
+func (s *Session) ValidateMessageHeaders(
+	ctx context.Context,
+	headers map[string]interface{},
+) error {
 	h := s.msg.Headers
 	for key, expectedValue := range headers {
 		value, found := h[key]
@@ -301,7 +286,9 @@ func (s *Session) ValidateMessageHeaders(ctx context.Context, headers map[string
 			return fmt.Errorf("missing rabbit message header '%s'", key)
 		}
 		if value != expectedValue {
-			return fmt.Errorf("mismatch of standard rabbit property '%s': expected '%s', actual '%s'", key, expectedValue, value)
+			return fmt.Errorf(
+				"mismatch of standard rabbit property '%s': expected '%s', actual '%s'",
+				key, expectedValue, value)
 		}
 	}
 	return nil
@@ -316,21 +303,29 @@ func (s *Session) ValidateMessageTextBody(ctx context.Context, expectedMsg strin
 	return nil
 }
 
-// ValidateMessageJSONBody checks if the message json body properties of message in position 'pos' are equal the expected values.
+// ValidateMessageJSONBody checks if the message json body properties of message in position 'pos'
+// are equal the expected values.
 // if pos == -1 then it means last message stored, that is the one stored in s.msg
-func (s *Session) ValidateMessageJSONBody(ctx context.Context, props map[string]interface{}, pos int) error {
-	m := golium.NewMapFromJSONBytes([]byte(s.msg.Body))
+func (s *Session) ValidateMessageJSONBody(ctx context.Context,
+	props map[string]interface{},
+	pos int,
+) error {
+	m := golium.NewMapFromJSONBytes(s.msg.Body)
 	if pos != -1 {
 		nMessages := len(s.Messages)
 		if pos < 0 || pos >= nMessages {
-			return fmt.Errorf("trying to validate message in position: '%d', '%d' messages available", pos, nMessages)
+			return fmt.Errorf(
+				"trying to validate message in position: '%d', '%d' messages available",
+				pos, nMessages)
 		}
-		m = golium.NewMapFromJSONBytes([]byte(s.Messages[pos].Body))
+		m = golium.NewMapFromJSONBytes(s.Messages[pos].Body)
 	}
 	for key, expectedValue := range props {
 		value := m.Get(key)
 		if value != expectedValue {
-			return fmt.Errorf("mismatch of json property '%s': expected '%s', actual '%s'", key, expectedValue, value)
+			return fmt.Errorf(
+				"mismatch of json property '%s': expected '%s', actual '%s'",
+				key, expectedValue, value)
 		}
 	}
 	return nil
