@@ -221,15 +221,15 @@ func (s *Session) SendHTTPRequest(ctx context.Context, method string) error {
 	logger := GetLogger()
 	s.Request.Method = method
 	corr := uuid.New().String()
-	url, err := s.URL()
+	u, err := s.URL()
 	if err != nil {
 		return err
 	}
 	reqBodyReader := bytes.NewReader(s.Request.RequestBody)
-	req, err := http.NewRequest(method, url.String(), reqBodyReader)
+	req, err := http.NewRequest(method, u.String(), reqBodyReader)
 	if err != nil {
 		return fmt.Errorf("failed creating the HTTP request with method '%s' and url '%s'. %w",
-			method, url, err)
+			method, u, err)
 	}
 	if s.Request.Headers != nil {
 		hostHeaders, found := s.Request.Headers["Host"]

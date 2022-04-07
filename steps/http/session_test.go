@@ -25,6 +25,7 @@ import (
 )
 
 const httpbinURL = "https://httpbin.org"
+const logsPath = "./logs"
 
 func TestSessionURL(t *testing.T) {
 	tests := []struct {
@@ -65,8 +66,6 @@ func TestSessionConfigureRequestBodyJSONProperties(t *testing.T) {
 		props   map[string]interface{}
 		wantErr bool
 	}{
-		// TODO: Add test cases.
-		//context.Background()
 		{
 			name:    "Should setting property and return nil",
 			props:   expectedResult,
@@ -188,6 +187,113 @@ func TestSessionConfigureRequestBodyURLEncodedProperties(t *testing.T) {
 			s := &Session{}
 			if err := s.ConfigureRequestBodyURLEncodedProperties(ctx, tt.props); (err != nil) != tt.wantErr {
 				t.Errorf("Session.ConfigureRequestBodyURLEncodedProperties() error = %v, wantErr %v",
+					err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestSession_SendHTTPRequest(t *testing.T) {
+	os.MkdirAll(logsPath, os.ModePerm)
+	defer os.RemoveAll(logsPath)
+
+	tests := []struct {
+		name      string
+		endpoint  string
+		method    string
+		host      string
+		preHeader bool
+		wantErr   bool
+	}{
+		{
+			name:      "testing with correct method",
+			endpoint:  httpbinURL,
+			method:    "POST",
+			host:      "",
+			preHeader: false,
+			wantErr:   false,
+		},
+		{
+			name:      "testing empty endpoint",
+			endpoint:  "",
+			method:    "POST",
+			host:      "",
+			preHeader: false,
+			wantErr:   true,
+		},
+		{
+			name:      "testing invalid method",
+			endpoint:  "httpbinURL",
+			method:    "invalid Method",
+			host:      "",
+			preHeader: false,
+			wantErr:   true,
+		},
+		{
+			name:      "testing headers auth",
+			endpoint:  "httpbinURL",
+			method:    "POST",
+			host:      "httpbin.org",
+			preHeader: true,
+			wantErr:   true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var ctx = context.Background()
+			s := &Session{}
+			s.Request.Endpoint = tt.endpoint
+			s.Request.Username = "QA"
+			s.Request.Password = "QATesting#"
+			s.NoRedirect = true
+			if tt.preHeader {
+				s.Request.Headers = map[string][]string{
+					"Content-Type":  {"application/json"},
+					"Authorization": {"Bearer 1234567890ABCD"},
+					"host":          {tt.host},
+				}
+			}
+			s.Request.Headers = make(map[string][]string)
+			s.Request.Headers["host"] = []string{tt.host}
+			if err := s.SendHTTPRequest(ctx, tt.method); (err != nil) != tt.wantErr {
+				t.Errorf("Session.SendHTTPRequest() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestSession_ValidateResponseHeaders(t *testing.T) {
+	tests := []struct {
+		name        string
+		contentType string
+		wantErr     bool
+	}{
+		{
+			name:        "testing correct headers",
+			contentType: "application/json",
+			wantErr:     false,
+		},
+		{
+			name:        "testing incorrect headers",
+			contentType: "failcontentType",
+			wantErr:     true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var ctx = context.Background()
+			s := &Session{}
+			s.Request.Endpoint = httpbinURL + "/anything"
+			s.Request.Path = "/test-query"
+			s.Request.Headers = map[string][]string{
+				"Content-Type": {tt.contentType},
+			}
+			s.ConfigureHeaders(ctx, s.Request.Headers)
+			s.SendHTTPRequest(ctx, "GET")
+
+			err := s.ValidateResponseHeaders(ctx, s.Request.Headers)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Session.ValidateResponseHeaders() error = %v, wantErr %v",
 					err, tt.wantErr)
 			}
 		})
