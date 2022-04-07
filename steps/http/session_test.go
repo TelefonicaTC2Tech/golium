@@ -27,7 +27,7 @@ import (
 const httpbinURL = "https://httpbin.org"
 const logsPath = "./logs"
 
-func TestSessionURL(t *testing.T) {
+func TestURL(t *testing.T) {
 	tests := []struct {
 		name    string
 		path    string
@@ -54,7 +54,7 @@ func TestSessionURL(t *testing.T) {
 	}
 }
 
-func TestSessionConfigureRequestBodyJSONProperties(t *testing.T) {
+func TestConfigureRequestBodyJSONProperties(t *testing.T) {
 	expectedResult := make(map[string]interface{})
 	expectedResult["John"] = "182"
 
@@ -90,7 +90,7 @@ func TestSessionConfigureRequestBodyJSONProperties(t *testing.T) {
 	}
 }
 
-func TestSessionConfigureRequestBodyJSONFile(t *testing.T) {
+func TestConfigureRequestBodyJSONFile(t *testing.T) {
 	golium.GetConfig().Dir.Schemas = schemasDir
 	os.MkdirAll("./schemas", os.ModePerm)
 	os.WriteFile("./schemas/http.json", []byte(JSONhttpFileValues), os.ModePerm)
@@ -126,7 +126,7 @@ func TestSessionConfigureRequestBodyJSONFile(t *testing.T) {
 	}
 }
 
-func TestSessionConfigureRequestBodyJSONFileWithout(t *testing.T) {
+func TestConfigureRequestBodyJSONFileWithout(t *testing.T) {
 	golium.GetConfig().Dir.Schemas = schemasDir
 	os.MkdirAll("./schemas", os.ModePerm)
 	os.WriteFile("./schemas/http.json", []byte(JSONhttpFileValues), os.ModePerm)
@@ -158,15 +158,16 @@ func TestSessionConfigureRequestBodyJSONFileWithout(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var ctx = context.Background()
 			s := &Session{}
-			if err := s.ConfigureRequestBodyJSONFileWithout(ctx, tt.code, tt.fileName, tt.params); (err != nil) != tt.wantErr {
-				t.Errorf("Session.ConfigureRequestBodyJSONFileWithout() error = %v, wantErr %v",
-					err, tt.wantErr)
+			if err := s.ConfigureRequestBodyJSONFileWithout(ctx, tt.code, tt.fileName, tt.params); 
+				(err != nil) != tt.wantErr {
+					t.Errorf("Session.ConfigureRequestBodyJSONFileWithout() error = %v, wantErr %v",
+						err, tt.wantErr)
 			}
 		})
 	}
 }
 
-func TestSessionConfigureRequestBodyURLEncodedProperties(t *testing.T) {
+func TestConfigureRequestBodyURLEncodedProperties(t *testing.T) {
 	expectedResult := make(map[string][]string)
 	expectedResult["list"] = []string{"testing"}
 
@@ -193,7 +194,7 @@ func TestSessionConfigureRequestBodyURLEncodedProperties(t *testing.T) {
 	}
 }
 
-func TestSession_SendHTTPRequest(t *testing.T) {
+func TestSendHTTPRequest(t *testing.T) {
 	os.MkdirAll(logsPath, os.ModePerm)
 	defer os.RemoveAll(logsPath)
 
@@ -262,7 +263,7 @@ func TestSession_SendHTTPRequest(t *testing.T) {
 	}
 }
 
-func TestSession_ValidateResponseHeaders(t *testing.T) {
+func TestValidateResponseHeaders(t *testing.T) {
 	os.MkdirAll(logsPath, os.ModePerm)
 	defer os.RemoveAll(logsPath)
 	tests := []struct {
