@@ -84,7 +84,8 @@ func TestConfigureRequestBodyJSONProperties(t *testing.T) {
 			s := &Session{}
 			err := s.ConfigureRequestBodyJSONProperties(ctx, tt.props)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Session.ConfigureRequestBodyJSONProperties() error = %v, wantErr %v",
+				t.Errorf(
+					"Session.ConfigureRequestBodyJSONProperties() error = %v, wantErr %v",
 					err, tt.wantErr)
 			}
 		})
@@ -120,8 +121,11 @@ func TestConfigureRequestBodyJSONFile(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var ctx = context.Background()
 			s := &Session{}
-			if err := s.ConfigureRequestBodyJSONFile(ctx, tt.code, tt.fileName); (err != nil) != tt.wantErr {
-				t.Errorf("Session.ConfigureRequestBodyJSONFile() error = %v, wantErr %v", err, tt.wantErr)
+			if err := s.ConfigureRequestBodyJSONFile(
+				ctx, tt.code, tt.fileName); (err != nil) != tt.wantErr {
+				t.Errorf(
+					"Session.ConfigureRequestBodyJSONFile() error = %v, wantErr %v",
+					err, tt.wantErr)
 			}
 		})
 	}
@@ -159,8 +163,10 @@ func TestConfigureRequestBodyJSONFileWithout(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var ctx = context.Background()
 			s := &Session{}
-			if err := s.ConfigureRequestBodyJSONFileWithout(ctx, tt.code, tt.fileName, tt.params); (err != nil) != tt.wantErr {
-				t.Errorf("Session.ConfigureRequestBodyJSONFileWithout() error = %v, wantErr %v",
+			if err := s.ConfigureRequestBodyJSONFileWithout(
+				ctx, tt.code, tt.fileName, tt.params); (err != nil) != tt.wantErr {
+				t.Errorf(
+					"Session.ConfigureRequestBodyJSONFileWithout() error = %v, wantErr %v",
 					err, tt.wantErr)
 			}
 		})
@@ -186,8 +192,10 @@ func TestConfigureRequestBodyURLEncodedProperties(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var ctx = context.Background()
 			s := &Session{}
-			if err := s.ConfigureRequestBodyURLEncodedProperties(ctx, tt.props); (err != nil) != tt.wantErr {
-				t.Errorf("Session.ConfigureRequestBodyURLEncodedProperties() error = %v, wantErr %v",
+			if err := s.ConfigureRequestBodyURLEncodedProperties(
+				ctx, tt.props); (err != nil) != tt.wantErr {
+				t.Errorf(
+					"Session.ConfigureRequestBodyURLEncodedProperties() error = %v, wantErr %v",
 					err, tt.wantErr)
 			}
 		})
@@ -257,7 +265,9 @@ func TestSendHTTPRequest(t *testing.T) {
 			s.Request.Headers = make(map[string][]string)
 			s.Request.Headers["host"] = []string{tt.host}
 			if err := s.SendHTTPRequest(ctx, tt.method); (err != nil) != tt.wantErr {
-				t.Errorf("Session.SendHTTPRequest() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf(
+					"Session.SendHTTPRequest() error = %v, wantErr %v",
+					err, tt.wantErr)
 			}
 		})
 	}
@@ -298,11 +308,12 @@ func TestValidateResponseHeaders(t *testing.T) {
 
 			header := http.Header{}
 			header.Add("Content-Type", tt.responseContentType)
-
 			s.Response.Response = &http.Response{Header: header}
+
 			err := s.ValidateResponseHeaders(ctx, s.Request.Headers)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Session.ValidateResponseHeaders() error = %v, wantErr %v",
+				t.Errorf(
+					"Session.ValidateResponseHeaders() error = %v, wantErr %v",
 					err, tt.wantErr)
 			}
 		})
