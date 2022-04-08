@@ -46,8 +46,8 @@ func (c ClientServiceFuncMock) Ping(ctx context.Context, client *redis.Client) e
 
 func (c ClientServiceFuncMock) Do(
 	ctx context.Context,
-	client *redis.Client,
-	args ...interface{},
+	client *redis.Client, op string,
+	db int,
 ) error {
 	return DoError
 }

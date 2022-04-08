@@ -23,7 +23,7 @@ import (
 
 type ClientFunctions interface {
 	Ping(ctx context.Context, client *redis.Client) error
-	Do(ctx context.Context, client *redis.Client, args ...interface{}) error
+	Do(ctx context.Context, client *redis.Client, op string, db int) error
 	Set(
 		ctx context.Context,
 		client *redis.Client,
@@ -86,8 +86,8 @@ func (c ClientService) Ping(ctx context.Context, client *redis.Client) error {
 	return client.Ping(ctx).Err()
 }
 
-func (c ClientService) Do(ctx context.Context, client *redis.Client, args ...interface{}) error {
-	return client.Do(ctx, args).Err()
+func (c ClientService) Do(ctx context.Context, client *redis.Client, op string, db int) error {
+	return client.Do(ctx, op, db).Err()
 }
 
 func (c ClientService) Set(
