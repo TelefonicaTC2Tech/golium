@@ -229,7 +229,7 @@ func (s *Session) SubscribeTopic(ctx context.Context, topic string) error {
 // If this method is not invoked, then the goroutine created with SubscribeTopic is never closed
 // and will permanently process messages from the topic until the program is finished.
 func (s *Session) UnsubscribeTopic(ctx context.Context, topic string) error {
-	return s.pubsub.Close()
+	return s.RedisClientService.PubSubClose(s.pubsub)
 }
 
 // PublishTextMessage publishes a text message in a redis topic.
@@ -252,8 +252,7 @@ func (s *Session) PublishJSONMessage(
 	for key, value := range props {
 		if json, err = sjson.Set(json, key, value); err != nil {
 			return fmt.Errorf(
-				"failed setting property '%s' with value '%s' in the message: %w",
-				key, value, err)
+				"failed setting property '%s' with value '%s' in the message: %w", key, value, err)
 		}
 	}
 	return s.PublishTextMessage(ctx, topic, json)

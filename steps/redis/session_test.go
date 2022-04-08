@@ -720,3 +720,29 @@ func TestWaitForJSONMessageWithProperties(t *testing.T) {
 		})
 	}
 }
+
+func TestSession_UnsubscribeTopic(t *testing.T) {
+	type args struct {
+		ctx   context.Context
+		topic string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name:    "Close without error",
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &Session{}
+			s.RedisClientService = ClientServiceFuncMock{}
+			if err := s.UnsubscribeTopic(tt.args.ctx, tt.args.topic); (err != nil) != tt.wantErr {
+				t.Errorf("Session.UnsubscribeTopic() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}

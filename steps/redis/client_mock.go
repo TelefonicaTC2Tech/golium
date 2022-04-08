@@ -129,3 +129,6 @@ func (c ClientServiceFuncMock) Publish(ctx context.Context,
 ) error {
 	return PublishError
 }
+func (c ClientServiceFuncMock) PubSubClose(pubSub *redis.PubSub) error {
+	return nil
+}

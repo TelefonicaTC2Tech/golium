@@ -75,6 +75,7 @@ type ClientFunctions interface {
 		channel string,
 		message interface{},
 	) error
+	PubSubClose(pubSub *redis.PubSub) error
 }
 type ClientService struct{}
 
@@ -166,4 +167,7 @@ func (c ClientService) Publish(ctx context.Context,
 	message interface{},
 ) error {
 	return client.Publish(ctx, channel, message).Err()
+}
+func (c ClientService) PubSubClose(pubSub *redis.PubSub) error {
+	return pubSub.Close()
 }
