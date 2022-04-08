@@ -26,7 +26,7 @@ const contextKey ContextKey = "redisSession"
 // InitializeContext adds the redis session to the context.
 // The new context is returned because context is immutable.
 func InitializeContext(ctx context.Context) context.Context {
-	return context.WithValue(ctx, contextKey, &Session{})
+	return context.WithValue(ctx, contextKey, &Session{RedisClientService: *NewRedisClientService()})
 }
 
 // GetSession returns the redis session stored in context.

@@ -37,13 +37,14 @@ type Session struct {
 	TTL int
 	// Redis PubSub.
 	// It is stored after subscription to close the subscription.
-	pubsub *redis.PubSub
+	pubsub             *redis.PubSub
+	RedisClientService ClientFunctions
 }
 
 // ConfigureClient creates a redis client based on the configuration in options.
 func (s *Session) ConfigureClient(ctx context.Context, options *redis.Options) error {
 	s.Client = redis.NewClient(options)
-	if err := s.Client.Ping(context.Background()).Err(); err != nil {
+	if err := s.RedisClientService.Ping(ctx, s.Client); err != nil {
 		return fmt.Errorf("failed configuring client '%+v': %w", options, err)
 	}
 	s.Correlator = uuid.New().String()
@@ -52,7 +53,7 @@ func (s *Session) ConfigureClient(ctx context.Context, options *redis.Options) e
 
 // SelectDatabase select redis database for current connection
 func (s *Session) SelectDatabase(ctx context.Context, db int) error {
-	if err := s.Client.Do(ctx, "select", db).Err(); err != nil {
+	if err := s.RedisClientService.Do(ctx, s.Client, "select", db); err != nil {
 		return err
 	}
 	return nil
@@ -67,7 +68,7 @@ func (s *Session) ConfigureTTL(ctx context.Context, ttl int) {
 // It uses session TTL to establish an expiration time (no expiration if TTL is 0).
 func (s *Session) SetTextValue(ctx context.Context, key, value string) error {
 	expiration := time.Duration(s.TTL * int(time.Millisecond))
-	if err := s.Client.Set(context.Background(), key, value, expiration).Err(); err != nil {
+	if err := s.RedisClientService.Set(ctx, s.Client, key, value, expiration); err != nil {
 		return err
 	}
 	GetLogger().LogSetKey(key, value, s.Correlator)
@@ -76,8 +77,11 @@ func (s *Session) SetTextValue(ctx context.Context, key, value string) error {
 
 // SetHashValue sets a redis key with a mapped value.
 // It uses session TTL to establish an expiration time (no expiration if TTL is 0).
-func (s *Session) SetHashValue(ctx context.Context, key string, value map[string]interface{}) error {
-	err := s.Client.HSet(context.Background(), key, value).Err()
+func (s *Session) SetHashValue(
+	ctx context.Context,
+	key string, value map[string]interface{},
+) error {
+	err := s.RedisClientService.HSet(ctx, s.Client, key, value)
 	if err != nil {
 		return err
 	}
@@ -85,7 +89,7 @@ func (s *Session) SetHashValue(ctx context.Context, key string, value map[string
 		return nil
 	}
 	expiration := time.Duration(s.TTL * int(time.Millisecond))
-	if err := s.Client.PExpire(context.Background(), key, expiration).Err(); err != nil {
+	if err := s.RedisClientService.PExpire(ctx, s.Client, key, expiration); err != nil {
 		return err
 	}
 	GetLogger().LogHSetKey(key, value, s.Correlator)
@@ -93,12 +97,17 @@ func (s *Session) SetHashValue(ctx context.Context, key string, value map[string
 }
 
 // SetJSONValue sets a redis key with a JSON document extracted from a table of properties.
-func (s *Session) SetJSONValue(ctx context.Context, key string, props map[string]interface{}) error {
+func (s *Session) SetJSONValue(
+	ctx context.Context,
+	key string, props map[string]interface{},
+) error {
 	var json string
 	var err error
 	for key, value := range props {
 		if json, err = sjson.Set(json, key, value); err != nil {
-			return fmt.Errorf("failed setting property '%s' with value '%s' in the request body: %w", key, value, err)
+			return fmt.Errorf(
+				"failed setting property '%s' with value '%s' in the request body: %w",
+				key, value, err)
 		}
 	}
 	return s.SetTextValue(ctx, key, json)
@@ -111,25 +120,31 @@ func (s *Session) ValidateTextValue(ctx context.Context, key, expectedValue stri
 	if err == nil {
 		return fmt.Errorf("failed validating key: key '%s' does not exist", key)
 	}
-	value, err := s.Client.Get(context.Background(), key).Result()
+	value, err := s.RedisClientService.Get(ctx, s.Client, key)
 	if err != nil {
 		return err
 	}
 	GetLogger().LogGetKey(key, value, s.Correlator)
 	if expectedValue != value {
-		return fmt.Errorf("mismatch value for key '%s': expected value '%s', actual value '%s'", key, expectedValue, value)
+		return fmt.Errorf(
+			"mismatch value for key '%s': expected value '%s', actual value '%s'",
+			key, expectedValue, value)
 	}
 	return nil
 }
 
 // ValidateHashValue checks if the mapped value for a redis key equals the expected value.
 // It uses session TTL to establish an expiration time (no expiration if TTL is 0).
-func (s *Session) ValidateHashValue(ctx context.Context, key string, props map[string]interface{}) error {
+func (s *Session) ValidateHashValue(
+	ctx context.Context,
+	key string,
+	props map[string]interface{},
+) error {
 	err := s.ValidateNonExistantKey(ctx, key)
 	if err == nil {
 		return fmt.Errorf("failed validating key: key '%s' does not exist", key)
 	}
-	m, err := s.Client.HGetAll(context.Background(), key).Result()
+	m, err := s.RedisClientService.HGetAll(ctx, s.Client, key)
 	if err != nil {
 		return err
 	}
@@ -140,19 +155,25 @@ func (s *Session) ValidateHashValue(ctx context.Context, key string, props map[s
 			return fmt.Errorf("missing property '%s': expected '%s'", key, expectedValue)
 		}
 		if value != expectedValue {
-			return fmt.Errorf("mismatch of json property '%s': expected '%s', actual '%s'", key, expectedValue, value)
+			return fmt.Errorf(
+				"mismatch of json property '%s': expected '%s', actual '%s'",
+				key, expectedValue, value)
 		}
 	}
 	return nil
 }
 
 // ValidateJSONValue checks if the JSON value for a redis key complies with the table of properties.
-func (s *Session) ValidateJSONValue(ctx context.Context, key string, props map[string]interface{}) error {
+func (s *Session) ValidateJSONValue(
+	ctx context.Context,
+	key string,
+	props map[string]interface{},
+) error {
 	err := s.ValidateNonExistantKey(ctx, key)
 	if err == nil {
 		return fmt.Errorf("failed validating key: key '%s' does not exist", key)
 	}
-	value, err := s.Client.Get(context.Background(), key).Result()
+	value, err := s.RedisClientService.Get(ctx, s.Client, key)
 	if err != nil {
 		return err
 	}
@@ -161,7 +182,9 @@ func (s *Session) ValidateJSONValue(ctx context.Context, key string, props map[s
 	for key, expectedValue := range props {
 		value := m.Get(key)
 		if value != expectedValue {
-			return fmt.Errorf("mismatch of json property '%s': expected '%s', actual '%s'", key, expectedValue, value)
+			return fmt.Errorf(
+				"mismatch of json property '%s': expected '%s', actual '%s'",
+				key, expectedValue, value)
 		}
 	}
 	return nil
@@ -169,7 +192,7 @@ func (s *Session) ValidateJSONValue(ctx context.Context, key string, props map[s
 
 // ValidateNonExistantKey checks if the redis key has not value.
 func (s *Session) ValidateNonExistantKey(ctx context.Context, key string) error {
-	exists, err := s.Client.Exists(context.Background(), key).Result()
+	exists, err := s.RedisClientService.Exists(ctx, s.Client, key)
 	if err != nil {
 		if err == redis.Nil {
 			return nil
@@ -185,11 +208,11 @@ func (s *Session) ValidateNonExistantKey(ctx context.Context, key string) error 
 
 // SubscribeTopic subscribes to a redis topic to receive messages via a channel.
 func (s *Session) SubscribeTopic(ctx context.Context, topic string) error {
-	s.pubsub = s.Client.Subscribe(ctx, topic)
-	if _, err := s.pubsub.Receive(ctx); err != nil {
+	s.pubsub = s.RedisClientService.Subscribe(ctx, s.Client, topic)
+	if _, err := s.RedisClientService.PubSubReceive(ctx, s.pubsub); err != nil {
 		return fmt.Errorf("failed receiving messages from the topic '%s': %w", topic, err)
 	}
-	channel := s.pubsub.Channel()
+	channel := s.RedisClientService.PubSubChannel(s.pubsub)
 	go func() {
 		logrus.Debugf("Receiving messages from topic %s...", topic)
 		for msg := range channel {
@@ -212,27 +235,37 @@ func (s *Session) UnsubscribeTopic(ctx context.Context, topic string) error {
 // PublishTextMessage publishes a text message in a redis topic.
 func (s *Session) PublishTextMessage(ctx context.Context, topic, message string) error {
 	GetLogger().LogPublishedMessage(message, topic, s.Correlator)
-	if err := s.Client.Publish(ctx, topic, message).Err(); err != nil {
+	if err := s.RedisClientService.Publish(ctx, s.Client, topic, message); err != nil {
 		return fmt.Errorf("failed publishing the message '%s' to topic '%s': %w", message, topic, err)
 	}
 	return nil
 }
 
 // PublishJSONMessage publishes a JSON message in a redis topic.
-func (s *Session) PublishJSONMessage(ctx context.Context, topic string, props map[string]interface{}) error {
+func (s *Session) PublishJSONMessage(
+	ctx context.Context,
+	topic string,
+	props map[string]interface{},
+) error {
 	var json string
 	var err error
 	for key, value := range props {
 		if json, err = sjson.Set(json, key, value); err != nil {
-			return fmt.Errorf("failed setting property '%s' with value '%s' in the message: %w", key, value, err)
+			return fmt.Errorf(
+				"failed setting property '%s' with value '%s' in the message: %w",
+				key, value, err)
 		}
 	}
 	return s.PublishTextMessage(ctx, topic, json)
 }
 
-// WaitForTextMessage waits up to timeout till the expected message is found in the received messages
-// for this session.
-func (s *Session) WaitForTextMessage(ctx context.Context, timeout time.Duration, expectedMsg string) error {
+// WaitForTextMessage waits up to timeout till the expected message
+// is found in the received messages for this session.
+func (s *Session) WaitForTextMessage(
+	ctx context.Context,
+	timeout time.Duration,
+	expectedMsg string,
+) error {
 	return waitUpTo(timeout, func() error {
 		for _, msg := range s.Messages {
 			if msg == expectedMsg {
@@ -245,7 +278,11 @@ func (s *Session) WaitForTextMessage(ctx context.Context, timeout time.Duration,
 
 // WaitForJSONMessageWithProperties waits 1 second and verifies if there is a message received
 // in the topic with the requested properties.
-func (s *Session) WaitForJSONMessageWithProperties(ctx context.Context, timeout time.Duration, props map[string]interface{}) error {
+func (s *Session) WaitForJSONMessageWithProperties(
+	ctx context.Context,
+	timeout time.Duration,
+	props map[string]interface{},
+) error {
 	return waitUpTo(timeout, func() error {
 		for _, msg := range s.Messages {
 			logrus.Debugf("Checking message: %s", msg)
