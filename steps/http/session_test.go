@@ -411,3 +411,185 @@ func TestValidateResponseFromJSONFile(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateResponseBodyJSONFile(t *testing.T) {
+
+	golium.GetConfig().Dir.Schemas = schemasDir
+
+	os.MkdirAll("./schemas", os.ModePerm)
+	os.WriteFile("./schemas/httpBadFormat.json", []byte(JSONhttpFileBadFormat), os.ModePerm)
+	os.WriteFile("./schemas/http.json", []byte(JSONhttpFileValues), os.ModePerm)
+	defer os.RemoveAll("./schemas/")
+
+	tests := []struct {
+		name             string
+		code             string
+		file             string
+		responseBody     string
+		respDataLocation string
+		wantErr          bool
+	}{
+		{
+			name:             "Should return selected value from JSON file",
+			file:             "http",
+			code:             "example1",
+			responseBody:     JSONhttpResponse,
+			respDataLocation: "response",
+			wantErr:          false,
+		},
+		{
+			name:             "Should return a error unmarsharlling JSON file",
+			file:             "httpBadFormat",
+			code:             "example1",
+			responseBody:     JSONhttpResponse,
+			respDataLocation: "response",
+			wantErr:          true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var ctx = context.Background()
+			s := &Session{}
+			s.Response.ResponseBody = []byte(tt.responseBody)
+			if err := s.ValidateResponseBodyJSONFile(ctx, tt.code, tt.file, tt.respDataLocation); (err != nil) != tt.wantErr {
+				t.Errorf("Session.ValidateResponseBodyJSONFile() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestValidateResponseBodyJSONFileWithout(t *testing.T) {
+	JSONhttpResponseWithout := `{
+		"code": "example1",
+		"body": {
+			"empty": "",
+			"boolean": false,
+			"list": [
+			{ "attribute": "attribute0", "value": "value0"},
+			{ "attribute": "attribute1", "value": "value1"},
+			{ "attribute": "attribute2", "value": "value2"}
+			]
+		},
+		"response": { 
+			"empty": "", 
+			"list": [
+				{ "attribute": "attribute0", "value": "value0"},
+				{ "attribute": "attribute1", "value": "value1"},
+				{ "attribute": "attribute2", "value": "value2"}
+			]
+		}
+		}`
+
+	golium.GetConfig().Dir.Schemas = schemasDir
+
+	os.MkdirAll("./schemas", os.ModePerm)
+	os.WriteFile("./schemas/http.json", []byte(JSONhttpFileValues), os.ModePerm)
+	defer os.RemoveAll("./schemas/")
+
+	tests := []struct {
+		name             string
+		code             string
+		file             string
+		responseBody     string
+		respDataLocation string
+		params           []string
+		wantErr          bool
+	}{
+		{
+			name:             "should remove the parameter from the file",
+			file:             "http",
+			code:             "example1",
+			responseBody:     JSONhttpResponseWithout,
+			respDataLocation: "response",
+			params:           []string{"boolean"},
+			wantErr:          false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var ctx = context.Background()
+			s := &Session{}
+			s.Response.ResponseBody = []byte(tt.responseBody)
+			if err := s.ValidateResponseBodyJSONFileWithout(
+				ctx, tt.code, tt.file, tt.respDataLocation, tt.params); (err != nil) != tt.wantErr {
+				t.Errorf("Session.ValidateResponseBodyJSONFileWithout() error = %v, wantErr %v",
+					err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestValidateResponseBodyJSONProperties(t *testing.T) {
+	props := map[string]interface{}{
+		"boolean":          false,
+		"empty":            "",
+		"list.0.attribute": "attribute0",
+		"list.0.value":     "value0",
+		"list.1.attribute": "attribute1",
+		"list.1.value":     "value1",
+		"list.2.attribute": "attribute2",
+		"list.2.value":     "value2",
+	}
+
+	tests := []struct {
+		name         string
+		responseBody string
+		props        map[string]interface{}
+		wantErr      bool
+	}{
+		{
+			name:         "testing validate response body json with correct properties",
+			responseBody: JSON,
+			props:        props,
+			wantErr:      false,
+		},
+		{
+			name:         "testing validate response body json with incorrect properties",
+			responseBody: JSON,
+			props:        map[string]interface{}{"boolean": true},
+			wantErr:      true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var ctx = context.Background()
+			s := &Session{}
+			s.Response.ResponseBody = []byte(tt.responseBody)
+			if err := s.ValidateResponseBodyJSONProperties(ctx, tt.props); (err != nil) != tt.wantErr {
+				t.Errorf("Session.ValidateResponseBodyJSONProperties() error = %v, wantErr %v",
+					err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestValidateResponseBodyEmpty(t *testing.T) {
+	tests := []struct {
+		name    string
+		responseBody string
+		wantErr bool
+	}{
+		{
+			name:         "testing response body empty",
+			responseBody: "",
+			wantErr:      false,
+		},
+		{
+			name:         "Should return error body is not empty",
+			responseBody: JSON,
+			wantErr:      true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var ctx = context.Background()
+			s := &Session{}
+			s.Response.ResponseBody = []byte(tt.responseBody)
+			s.Response.Response = &http.Response{}
+			s.Response.Response.ContentLength = 0
+			if err := s.ValidateResponseBodyEmpty(ctx); (err != nil) != tt.wantErr {
+				t.Errorf("Session.ValidateResponseBodyEmpty() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}

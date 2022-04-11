@@ -71,6 +71,13 @@ const (
 			{ "attribute": "attribute2", "value": "value2"}
 		]
 	}`
+
+	JSONhttpFileBadFormat = `
+	[
+		{
+			"code": "example1",
+			"body": {
+	`
 )
 
 func TestGetParamFromJSON(t *testing.T) {
@@ -83,13 +90,6 @@ func TestGetParamFromJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(JSONhttpFileValues), &dataStruct); err != nil {
 		t.Error("error Unmarshaling expected response body: %w", err)
 	}
-
-	var JSONhttpFileBadFormat = `
-	[
-		{
-			"code": "example1",
-			"body": {
-	`
 
 	golium.GetConfig().Dir.Schemas = schemasDir
 
