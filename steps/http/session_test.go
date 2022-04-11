@@ -413,7 +413,6 @@ func TestValidateResponseFromJSONFile(t *testing.T) {
 }
 
 func TestValidateResponseBodyJSONFile(t *testing.T) {
-
 	golium.GetConfig().Dir.Schemas = schemasDir
 
 	os.MkdirAll("./schemas", os.ModePerm)
@@ -451,8 +450,10 @@ func TestValidateResponseBodyJSONFile(t *testing.T) {
 			var ctx = context.Background()
 			s := &Session{}
 			s.Response.ResponseBody = []byte(tt.responseBody)
-			if err := s.ValidateResponseBodyJSONFile(ctx, tt.code, tt.file, tt.respDataLocation); (err != nil) != tt.wantErr {
-				t.Errorf("Session.ValidateResponseBodyJSONFile() error = %v, wantErr %v", err, tt.wantErr)
+			if err := s.ValidateResponseBodyJSONFile(
+				ctx, tt.code, tt.file, tt.respDataLocation); (err != nil) != tt.wantErr {
+				t.Errorf("Session.ValidateResponseBodyJSONFile() error = %v, wantErr %v",
+					err, tt.wantErr)
 			}
 		})
 	}
@@ -565,9 +566,9 @@ func TestValidateResponseBodyJSONProperties(t *testing.T) {
 
 func TestValidateResponseBodyEmpty(t *testing.T) {
 	tests := []struct {
-		name    string
+		name         string
 		responseBody string
-		wantErr bool
+		wantErr      bool
 	}{
 		{
 			name:         "testing response body empty",
