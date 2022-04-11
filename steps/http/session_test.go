@@ -16,6 +16,7 @@ package http
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"os"
@@ -313,6 +314,98 @@ func TestValidateResponseHeaders(t *testing.T) {
 				t.Errorf(
 					"Session.ValidateResponseHeaders() error = %v, wantErr %v",
 					err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestValidateResponseFromJSONFile(t *testing.T) {
+	os.MkdirAll(logsPath, os.ModePerm)
+	defer os.RemoveAll(logsPath)
+
+	var response interface{}
+	if err := json.Unmarshal([]byte(JSON), &response); err != nil {
+		t.Error("error Unmarshaling expected response body: %w", err)
+	}
+
+	os.MkdirAll("./schemas", os.ModePerm)
+	os.WriteFile("./schemas/http.json", []byte(JSONhttpFileValues), os.ModePerm)
+	defer os.RemoveAll("./schemas/")
+
+	unexpectedResponse := `{
+		"boolean": true, 
+		"empty": "", 
+		"list": [
+			{ "attribute": "attribute0", "value": "value0"},
+			{ "attribute": "attribute1", "value": "value1"},
+			{ "attribute": "attribute2", "value": "value2"}
+		]
+	}`
+
+	var incorrect = `
+	{
+		"boolean": false, 
+		"empty": ""
+	}`
+
+	tests := []struct {
+		name    		 string
+		response 		 interface{}
+		respDataLocation string
+		responseBody 	 string
+		wantErr 		 bool
+	}{
+		{
+			name:                "testing validate response type string",
+			response:         	 JSON,
+			responseBody:        JSONhttpResponse,
+			respDataLocation:    "response",
+			wantErr:             false,
+		},
+		{
+			name:                "testing unexpected response body ",
+			response:         	 JSON,
+			responseBody:        unexpectedResponse,
+			respDataLocation:    "",
+			wantErr:             true,
+		},
+		{
+			name:                "testing validate response type interface",
+			response:         	 response,
+			responseBody:        JSONhttpResponse,
+			respDataLocation:    "response",
+			wantErr:             false,
+		},
+		{
+			name:                "testing incorrect response type interface",
+			response:         	 response,
+			responseBody:        incorrect,
+			respDataLocation:    "response",
+			wantErr:             true,
+		},
+		{
+			name:                "testing unexpected response type interface",
+			response:         	 response,
+			responseBody:        unexpectedResponse,
+			respDataLocation:    "",
+			wantErr:             true,
+		},
+		{
+			name:                "Response body content should be string or map",
+			response:         	 777,
+			responseBody:        JSONhttpResponse,
+			respDataLocation:    "",
+			wantErr:             true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &Session{}
+			s.Response.ResponseBody = []byte(tt.responseBody)
+			if err := s.ValidateResponseFromJSONFile(tt.response, tt.respDataLocation); 
+				(err != nil) != tt.wantErr {
+					t.Errorf(
+						"Session.ValidateResponseFromJSONFile() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

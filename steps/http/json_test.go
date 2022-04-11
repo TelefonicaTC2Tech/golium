@@ -39,6 +39,29 @@ const (
 		}
 	]
 	`
+
+	JSONhttpResponse = `{
+	"code": "example1",
+	"body": {
+		"empty": "",
+		"boolean": false,
+		"list": [
+		{ "attribute": "attribute0", "value": "value0"},
+		{ "attribute": "attribute1", "value": "value1"},
+		{ "attribute": "attribute2", "value": "value2"}
+		]
+	},
+	"response": {
+		"boolean": false, 
+		"empty": "", 
+		"list": [
+			{ "attribute": "attribute0", "value": "value0"},
+			{ "attribute": "attribute1", "value": "value1"},
+			{ "attribute": "attribute2", "value": "value2"}
+		]
+	}
+	}`
+
 	JSON = `{
 		"boolean": false, 
 		"empty": "", 
