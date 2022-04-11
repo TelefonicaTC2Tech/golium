@@ -25,7 +25,8 @@ import (
 )
 
 const (
-	logsPath = "./logs"
+	logsPath   = "./logs"
+	correlator = "correlator"
 )
 
 func TestConfigureClient(t *testing.T) {
@@ -175,7 +176,7 @@ func TestSearchDocument(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &Session{}
-			s.Correlator = "correlator"
+			s.Correlator = correlator
 			s.ESServiceClient = ClientServiceFuncMock{}
 			SearchError = tt.searchErr
 			ResIsError = tt.resIsErr
@@ -266,7 +267,7 @@ func TestCleanUp(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &Session{}
 			s.ESServiceClient = ClientServiceFuncMock{}
-			s.Correlator = "correlator"
+			s.Correlator = correlator
 			NewBulkIndexerError = tt.bulkIndexErr
 			IndexerAddError = tt.indexerAddErr
 			IndexerCloseError = tt.indexerCloseErr
