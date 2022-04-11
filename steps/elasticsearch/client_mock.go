@@ -66,7 +66,9 @@ func (c ClientServiceFuncMock) Search(
 		Body: nopCloser{bytes.NewBufferString("test")},
 	}, SearchError
 }
-func (c ClientServiceFuncMock) ResBodyClose(res *esapi.Response) {}
+func (c ClientServiceFuncMock) ResBodyClose(res *esapi.Response) {
+	// Just to be runned on defer without failing
+}
 
 func (c ClientServiceFuncMock) ResIsError(res *esapi.Response) bool {
 	return ResIsError
