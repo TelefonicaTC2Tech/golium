@@ -17,14 +17,11 @@ package elasticsearch
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/TelefonicaTC2Tech/golium"
 	"github.com/elastic/go-elasticsearch/v7"
 	"github.com/elastic/go-elasticsearch/v7/esapi"
-	"github.com/elastic/go-elasticsearch/v7/esutil"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/tidwall/sjson"
@@ -36,12 +33,13 @@ type Session struct {
 	SearchResult     golium.Map
 	Correlator       string
 	indexedDocuments []*IndexedDocument
+	ESServiceClient  ClientFunctions
 }
 
 // ConfigureClient creates a elasticsearch connection based on the URI.
 func (s *Session) ConfigureClient(ctx context.Context, config elasticsearch.Config) error {
 	var err error
-	if s.Client, err = elasticsearch.NewClient(config); err != nil {
+	if s.Client, err = s.ESServiceClient.ElasticsearchNewClient(config); err != nil {
 		return errors.Wrap(err, "failed configuring elasticsearch client")
 	}
 	s.Correlator = uuid.NewString()
@@ -49,26 +47,28 @@ func (s *Session) ConfigureClient(ctx context.Context, config elasticsearch.Conf
 }
 
 // NewDocument creates a new document, with the given JSON and for the given index.
-func (s *Session) NewDocument(ctx context.Context, index string, props map[string]interface{}) error {
+func (s *Session) NewDocument(
+	ctx context.Context,
+	index string,
+	props map[string]interface{},
+) error {
 	logger := GetLogger()
 	var err error
 	data := ""
 	for key, value := range props {
 		data, err = sjson.Set(data, key, value)
 		if err != nil {
-			return errors.Wrapf(err, "failed setting property '%s' with value '%s' in the request body", key, value)
+			return errors.Wrapf(
+				err, "failed setting property '%s' with value '%s' in the request body",
+				key, value)
 		}
 	}
-	res, err := s.Client.Index(
-		index,
-		strings.NewReader(data),
-		s.Client.Index.WithContext(ctx),
-	)
+	res, err := s.ESServiceClient.Index(ctx, s.Client, index, data)
 	if err != nil {
 		return errors.Wrapf(err, "failed creating index '%s' with body '%s", index, data)
 	}
-	defer res.Body.Close()
-	if res.IsError() {
+	defer s.ESServiceClient.ResBodyClose(res)
+	if s.ESServiceClient.ResIsError(res) {
 		return s.parseErrorResponse(res)
 	}
 	if document, err := s.getResponseIndexedDocument(res); err == nil {
@@ -83,18 +83,22 @@ func (s *Session) NewDocument(ctx context.Context, index string, props map[strin
 // SearchDocument
 // searches in elasticsearch with given index and JSON body
 // and saves the result in the application context.
-func (s *Session) SearchDocument(ctx context.Context, index string, body string) error {
+func (s *Session) SearchDocument(
+	ctx context.Context,
+	index string,
+	body string,
+) error {
 	logger := GetLogger()
-	res, err := s.Client.Search(
-		s.Client.Search.WithIndex(index),
-		s.Client.Search.WithBody(strings.NewReader(body)),
-	)
+	res, err := s.ESServiceClient.Search(ctx, s.Client, index, body)
 	if err != nil {
-		return errors.Wrapf(err, "failed searching index '%s' with body '%s'", index, body)
+		return errors.Wrapf(
+			err, "failed searching index '%s' with body '%s'", index, body)
 	}
-	defer res.Body.Close()
-	if res.IsError() {
-		return errors.Wrapf(s.parseErrorResponse(res), "failed in searching response with index '%s' and body '%s", index, body)
+	defer s.ESServiceClient.ResBodyClose(res)
+	if s.ESServiceClient.ResIsError(res) {
+		return errors.Wrapf(
+			s.parseErrorResponse(res), "failed in searching response with index '%s' and body '%s",
+			index, body)
 	}
 	logger.LogSearchIndex(res, body, index, s.Correlator)
 	buff := new(bytes.Buffer)
@@ -105,12 +109,18 @@ func (s *Session) SearchDocument(ctx context.Context, index string, body string)
 	return nil
 }
 
-// ValidateDocumentJSONProperties validates that the search result in the application context has the given properties.
-func (s *Session) ValidateDocumentJSONProperties(ctx context.Context, props map[string]interface{}) error {
+// ValidateDocumentJSONProperties validates that the search result in the application context
+// has the given properties.
+func (s *Session) ValidateDocumentJSONProperties(
+	ctx context.Context,
+	props map[string]interface{},
+) error {
 	for key, expectedValue := range props {
 		value := s.SearchResult.Get(key)
 		if value != expectedValue {
-			return fmt.Errorf("mismatch of json property '%s': expected '%s', actual '%s'", key, expectedValue, value)
+			return fmt.Errorf(
+				"mismatch of json property '%s': expected '%s', actual '%s'",
+				key, expectedValue, value)
 		}
 	}
 	return nil
@@ -119,48 +129,35 @@ func (s *Session) ValidateDocumentJSONProperties(ctx context.Context, props map[
 // CleanUp cleans session by deleting all indexed documents in Elasticsearch
 func (s *Session) CleanUp(ctx context.Context) {
 	logger := GetLogger()
-	indexer, err := esutil.NewBulkIndexer(esutil.BulkIndexerConfig{
-		Client: s.Client,
-	})
+	indexer, err := s.ESServiceClient.NewBulkIndexer(s.Client)
 	if err != nil {
 		logger.LogError(errors.Wrap(err, "failed creating indexer to clean up indexes"), s.Correlator)
 		return
 	}
 	for _, document := range s.indexedDocuments {
-		if err := indexer.Add(
-			ctx,
-			esutil.BulkIndexerItem{
-				Action:     "delete",
-				Index:      document.Index,
-				DocumentID: document.Id,
-				OnFailure: func(ctx context.Context, item esutil.BulkIndexerItem, res esutil.BulkIndexerResponseItem, err error) {
-					errMsg := fmt.Sprintf("failed deleting document to clean up indexes for document %+v", document)
-					if err != nil {
-						logger.LogError(errors.Wrap(err, errMsg), s.Correlator)
-					} else {
-						logger.LogError(errors.Wrap(errors.Errorf("elasticsearch error. %s: %s", res.Error.Type, res.Error.Reason), errMsg), s.Correlator)
-					}
-				},
-			},
-		); err != nil {
-			logger.LogError(errors.Wrapf(err, "failed adding indexed item to clean up indexes for document '%+v", document), s.Correlator)
+		if err := s.ESServiceClient.IndexerAdd(ctx, indexer, document, s.Correlator); err != nil {
+			logger.LogError(
+				errors.Wrapf(
+					err, "failed adding indexed item to clean up indexes for document '%+v",
+					document), s.Correlator)
 			return
 		}
 	}
-	if err := indexer.Close(ctx); err != nil {
+	if err := s.ESServiceClient.IndexerClose(ctx, indexer); err != nil {
 		logger.LogError(errors.Wrap(err, "failed closing indexer to clean up indexes"), s.Correlator)
 		return
 	}
-	stats := indexer.Stats()
+	stats := s.ESServiceClient.IndexerStats(indexer)
 	if stats.NumFailed > 0 {
-		logger.LogError(errors.Errorf("failed cleaning up indexes: indexer stats %+v", stats), s.Correlator)
+		logger.LogError(errors.Errorf(
+			"failed cleaning up indexes: indexer stats %+v", stats), s.Correlator)
 		return
 	}
 }
 
 func (s *Session) parseErrorResponse(res *esapi.Response) error {
 	resDAO := &Response{}
-	if err := json.NewDecoder(res.Body).Decode(&resDAO); err != nil {
+	if err := s.ESServiceClient.ResBodyDecode(res, &resDAO); err != nil {
 		return errors.Wrapf(err, "failed parsing the response body: %s", err)
 	}
 	// Print the response status and error information.
@@ -173,7 +170,7 @@ func (s *Session) parseErrorResponse(res *esapi.Response) error {
 
 func (s *Session) getResponseIndexedDocument(res *esapi.Response) (*IndexedDocument, error) {
 	resDAO := &IndexedDocument{}
-	if err := json.NewDecoder(res.Body).Decode(&resDAO); err != nil {
+	if err := s.ESServiceClient.ResBodyDecode(res, &resDAO); err != nil {
 		return nil, errors.Wrapf(err, "failed parsing the index response body: %s", err)
 	}
 	return resDAO, nil
