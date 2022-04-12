@@ -15,60 +15,37 @@
 package rabbit
 
 import (
-	"log"
-	"os"
-	"path"
-
 	"github.com/TelefonicaTC2Tech/golium"
-	"github.com/sirupsen/logrus"
 )
 
-var logger *Logger
+var rabbitLog *Logger
+
+// Logger logs in a configurable file.
+type Logger struct {
+	Log *golium.Logger
+}
 
 // GetLogger returns the logger for rabbit messages in publish/subscribe.
 // If the logger is not created yet, it creates a new instance of Logger.
 func GetLogger() *Logger {
-	if logger != nil {
-		return logger
+	name := "rabbit-pubsub"
+	if rabbitLog == nil {
+		rabbitLog = &Logger{Log: golium.LoggerFactory(name)}
 	}
-	dir := golium.GetConfig().Log.Directory
-	path := path.Join(dir, "rabbit-pubsub.log")
-	logger, err := NewLogger(path)
-	if err != nil {
-		logrus.Fatalf("Error creating rabbit logger with file: '%s'. %s", path, err)
-	}
-	return logger
-}
-
-// Logger logs the HTTP request and response in a configurable file.
-type Logger struct {
-	log *log.Logger
-}
-
-// NewLogger creates an instance of the logger.
-// It configures the file path where the RabbitMQ interactions are written.
-func NewLogger(path string) (*Logger, error) {
-	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
-	if err != nil {
-		return nil, err
-	}
-	os.Chmod(file.Name(), 0766)
-	return &Logger{
-		log: log.New(file, "", log.Ldate|log.Lmicroseconds|log.LUTC),
-	}, nil
+	return rabbitLog
 }
 
 // LogPublishedMessage logs a rabbit message published to a topic.
 func (l Logger) LogPublishedMessage(msg, topic, corr string) {
-	l.log.Printf("Publish to %s [%s]:\n%s\n\n", topic, corr, msg)
+	l.Log.Printf("Publish to %s [%s]:\n%s\n\n", topic, corr, msg)
 }
 
 // LogReceivedMessage logs a rabbit message received from a topic.
 func (l Logger) LogReceivedMessage(msg, topic, corr string) {
-	l.log.Printf("Received from %s [%s]:\n%s\n\n", topic, corr, msg)
+	l.Log.Printf("Received from %s [%s]:\n%s\n\n", topic, corr, msg)
 }
 
 // LogSubscribedTopic logs the subscription to a rabbit topic.
 func (l Logger) LogSubscribedTopic(topic string) {
-	l.log.Printf("Subscribed to %s \n\n", topic)
+	l.Log.Printf("Subscribed to %s \n\n", topic)
 }

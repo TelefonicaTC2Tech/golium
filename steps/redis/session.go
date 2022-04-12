@@ -22,7 +22,6 @@ import (
 	"github.com/TelefonicaTC2Tech/golium"
 	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
 	"github.com/tidwall/sjson"
 )
 
@@ -208,18 +207,19 @@ func (s *Session) ValidateNonExistantKey(ctx context.Context, key string) error 
 
 // SubscribeTopic subscribes to a redis topic to receive messages via a channel.
 func (s *Session) SubscribeTopic(ctx context.Context, topic string) error {
+	logger := GetLogger()
 	s.pubsub = s.RedisClientService.Subscribe(ctx, s.Client, topic)
 	if _, err := s.RedisClientService.PubSubReceive(ctx, s.pubsub); err != nil {
 		return fmt.Errorf("failed receiving messages from the topic '%s': %w", topic, err)
 	}
 	channel := s.RedisClientService.PubSubChannel(s.pubsub)
 	go func() {
-		logrus.Debugf("Receiving messages from topic %s...", topic)
+		logger.Log.Debugf("Receiving messages from topic %s...", topic)
 		for msg := range channel {
 			GetLogger().LogReceivedMessage(msg.Payload, topic, s.Correlator)
 			s.Messages = append(s.Messages, msg.Payload)
 		}
-		logrus.Debugf("Stop receiving messages from topic %s", topic)
+		logger.Log.Debugf("Stop receiving messages from topic %s", topic)
 	}()
 	return nil
 }
@@ -283,8 +283,9 @@ func (s *Session) WaitForJSONMessageWithProperties(
 	props map[string]interface{},
 ) error {
 	return waitUpTo(timeout, func() error {
+		logger := GetLogger()
 		for _, msg := range s.Messages {
-			logrus.Debugf("Checking message: %s", msg)
+			logger.Log.Debugf("Checking message: %s", msg)
 			if matchMessage(msg, props) {
 				return nil
 			}
@@ -294,11 +295,12 @@ func (s *Session) WaitForJSONMessageWithProperties(
 }
 
 func matchMessage(msg string, expectedProps map[string]interface{}) bool {
+	logger := GetLogger()
 	m := golium.NewMapFromJSONBytes([]byte(msg))
 	for key, expectedValue := range expectedProps {
 		value := m.Get(key)
 		if value != expectedValue {
-			logrus.Debugf("Invalid value: %+v. Expected: %+v", value, expectedValue)
+			logger.Log.Debugf("Invalid value: %+v. Expected: %+v", value, expectedValue)
 			return false
 		}
 	}
