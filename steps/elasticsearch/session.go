@@ -157,7 +157,7 @@ func (s *Session) CleanUp(ctx context.Context) {
 
 func (s *Session) parseErrorResponse(res *esapi.Response) error {
 	resDAO := &Response{}
-	if err := s.ESServiceClient.ResBodyDecode(res, &resDAO); err != nil {
+	if err := s.ESServiceClient.ResBodyDecode(res, resDAO); err != nil {
 		return errors.Wrapf(err, "failed parsing the response body: %s", err)
 	}
 	// Print the response status and error information.
@@ -170,7 +170,7 @@ func (s *Session) parseErrorResponse(res *esapi.Response) error {
 
 func (s *Session) getResponseIndexedDocument(res *esapi.Response) (*IndexedDocument, error) {
 	resDAO := &IndexedDocument{}
-	if err := s.ESServiceClient.ResBodyDecode(res, &resDAO); err != nil {
+	if err := s.ESServiceClient.ResBodyDecode(res, resDAO); err != nil {
 		return nil, errors.Wrapf(err, "failed parsing the index response body: %s", err)
 	}
 	return resDAO, nil

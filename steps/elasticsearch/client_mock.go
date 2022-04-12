@@ -75,12 +75,12 @@ func (c ClientServiceFuncMock) ResIsError(res *esapi.Response) bool {
 }
 func (c ClientServiceFuncMock) ResBodyDecode(res *esapi.Response, v interface{}) error {
 	switch dec := v.(type) {
-	case **IndexedDocument:
+	case *IndexedDocument:
 		return ResBodyDecodeGetIndexedError
-	case **Response:
+	case *Response:
 		return ResBodyDecodeParseError
 	default:
-		return fmt.Errorf("dec should be *indexedDocument or Response: %v", dec)
+		return fmt.Errorf("dec should be *indexedDocument or *Response: %v", dec)
 	}
 }
 
