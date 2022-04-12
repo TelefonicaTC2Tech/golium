@@ -296,7 +296,10 @@ func assignFieldInStruct(value reflect.Value, fieldName string, fieldValue inter
 	if f.Kind() == reflect.Slice {
 		array, ok := fieldValue.([]gjson.Result)
 		if !ok {
-			return fmt.Errorf("failed setting the field '%s' with value '%s', not an array/slice", fieldName, fieldValueStr)
+			return fmt.Errorf(
+				"failed setting the field '%s' with value '%s', not an array/slice",
+				fieldName,
+				fieldValueStr)
 		}
 		length := len(array)
 		var fv reflect.Value
@@ -316,39 +319,59 @@ func assignFieldInStruct(value reflect.Value, fieldName string, fieldValue inter
 	if f.Kind() == reflect.Bool {
 		v, err := strconv.ParseBool(fieldValueStr)
 		if err != nil {
-			return fmt.Errorf("failed parsing to boolean the field '%s' with value '%s'", fieldName, fieldValueStr)
+			return fmt.Errorf("failed parsing to boolean the field '%s' with value '%s'",
+				fieldName,
+				fieldValueStr)
 		}
 		f.SetBool(v)
 		return nil
 	}
-	if f.Kind() == reflect.Int || f.Kind() == reflect.Int8 || f.Kind() == reflect.Int16 || f.Kind() == reflect.Int32 || f.Kind() == reflect.Int64 {
+	if f.Kind() == reflect.Int ||
+		f.Kind() == reflect.Int8 ||
+		f.Kind() == reflect.Int16 ||
+		f.Kind() == reflect.Int32 ||
+		f.Kind() == reflect.Int64 {
 		v, err := strconv.ParseInt(fieldValueStr, 10, 64)
 		if err != nil {
-			return fmt.Errorf("failed parsing to integer the field '%s' with value '%s'", fieldName, fieldValueStr)
+			return fmt.Errorf("failed parsing to integer the field '%s' with value '%s'",
+				fieldName,
+				fieldValueStr)
 		}
 		f.SetInt(v)
 		return nil
 	}
-	if f.Kind() == reflect.Uint || f.Kind() == reflect.Uint8 || f.Kind() == reflect.Uint16 || f.Kind() == reflect.Uint32 || f.Kind() == reflect.Uint64 {
+	if f.Kind() == reflect.Uint ||
+		f.Kind() == reflect.Uint8 ||
+		f.Kind() == reflect.Uint16 ||
+		f.Kind() == reflect.Uint32 ||
+		f.Kind() == reflect.Uint64 {
 		v, err := strconv.ParseUint(fieldValueStr, 10, 64)
 		if err != nil {
-			return fmt.Errorf("failed parsing to unsigned integer the field '%s' with value '%s'", fieldName, fieldValueStr)
+			return fmt.Errorf("failed parsing to unsigned integer the field '%s' with value '%s'",
+				fieldName,
+				fieldValueStr)
 		}
 		f.SetUint(v)
 		return nil
 	}
-	if f.Kind() == reflect.Float32 || f.Kind() == reflect.Float64 {
+	if f.Kind() == reflect.Float32 ||
+		f.Kind() == reflect.Float64 {
 		v, err := strconv.ParseFloat(fieldValueStr, 64)
 		if err != nil {
-			return fmt.Errorf("failed parsing to float the field '%s' with value '%s'", fieldName, fieldValueStr)
+			return fmt.Errorf("failed parsing to float the field '%s' with value '%s'",
+				fieldName,
+				fieldValueStr)
 		}
 		f.SetFloat(v)
 		return nil
 	}
-	if f.Kind() == reflect.Complex64 || f.Kind() == reflect.Complex128 {
+	if f.Kind() == reflect.Complex64 ||
+		f.Kind() == reflect.Complex128 {
 		v, err := strconv.ParseComplex(fieldValueStr, 128)
 		if err != nil {
-			return fmt.Errorf("failed parsing to complex the field '%s' with value '%s'", fieldName, fieldValueStr)
+			return fmt.Errorf("failed parsing to complex the field '%s' with value '%s'",
+				fieldName,
+				fieldValueStr)
 		}
 		f.SetComplex(v)
 		return nil
