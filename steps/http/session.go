@@ -106,8 +106,8 @@ func (s *Session) SetHTTPResponseTimeout(ctx context.Context, timeout int) {
 // ConfigurePath configures the path of the HTTP endpoint.
 // It configures a resource path in the application context.
 // The API endpoint and the resource path are composed when invoking the HTTP server.
-func (s *Session) ConfigurePath(ctx context.Context, path string) {
-	s.Request.Path = path
+func (s *Session) ConfigurePath(ctx context.Context, httpPath string) {
+	s.Request.Path = httpPath
 }
 
 // ConfigureQueryParams stores a table of query parameters in the application context.

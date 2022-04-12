@@ -46,7 +46,7 @@ func (l Logger) LogHSetKey(key string, value interface{}, corr string) {
 }
 
 // LogGetKey logs a redis GET command.
-func (l Logger) LogGetKey(key, value string, corr string) {
+func (l Logger) LogGetKey(key, value, corr string) {
 	l.Log.Printf("Get key %s with value[%s]:\n%s\n\n", key, corr, value)
 }
 
