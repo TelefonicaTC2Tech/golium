@@ -26,7 +26,10 @@ const contextKey ContextKey = "elasticsearchSession"
 // InitializeContext adds the elasticsearch session to the context.
 // The new context is returned because context is immutable.
 func InitializeContext(ctx context.Context) context.Context {
-	return context.WithValue(ctx, contextKey, &Session{})
+	return context.WithValue(
+		ctx,
+		contextKey,
+		&Session{ESServiceClient: *NewElasticsearchClientService()})
 }
 
 // GetSession returns the elasticsearch session stored in context.
