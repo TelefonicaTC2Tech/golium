@@ -235,8 +235,10 @@ func ConvertTableWithHeaderToStructSlice(ctx context.Context,
 // 		})
 // It will be equivalent to:
 //		testElement := TestElement{Name: "example 1", Value: 1}
-// Warning: still pending process values directly as arrays, i.e.: | addresses | ["http://localhost:8080"] |
-//          use by now a CONF tag, i.e.: | addresses | [CONF:elasticsearch.addresses] |
+// Warning: still pending process values directly as arrays, i.e.:
+//			| addresses | ["http://localhost:8080"] |
+// use by now a CONF tag, i.e.:
+//			| addresses | [CONF:elasticsearch.addresses] |
 
 func ConvertTableWithoutHeaderToStruct(ctx context.Context, t *godog.Table, v interface{}) error {
 	err := RemoveHeaders(t)
@@ -267,7 +269,10 @@ func ConvertTableWithoutHeaderToStruct(ctx context.Context, t *godog.Table, v in
 	return nil
 }
 
-func assignFieldInStruct(value reflect.Value, fieldName string, fieldValue interface{}) error {
+func assignFieldInStruct(
+	value reflect.Value,
+	fieldName string,
+	fieldValue interface{}) error {
 	if value.Kind() == reflect.Ptr {
 		value = reflect.Indirect(value)
 	}
