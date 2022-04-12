@@ -47,13 +47,13 @@ type Session struct {
 	// rabbit received delivery message
 	msg amqp.Delivery
 	// ampq service
-	AMQPService AMQPServiceFunctions
+	AMQPServiceClient AMQPServiceFunctions
 }
 
 // ConfigureConnection creates a rabbit connection based on the URI.
 func (s *Session) ConfigureConnection(ctx context.Context, uri string) error {
 	var err error
-	s.Connection, err = s.AMQPService.Dial(uri)
+	s.Connection, err = s.AMQPServiceClient.Dial(uri)
 	if err != nil {
 		return fmt.Errorf("failed configuring connection '%s': %w", uri, err)
 	}
@@ -81,23 +81,23 @@ func (s *Session) ConfigureStandardProperties(ctx context.Context, props amqp.Pu
 func (s *Session) SubscribeTopic(ctx context.Context, topic string) error {
 	GetLogger().LogSubscribedTopic(topic)
 	var err error
-	s.channel, err = s.AMQPService.ConnectionChannel(s.Connection)
+	s.channel, err = s.AMQPServiceClient.ConnectionChannel(s.Connection)
 	if err != nil {
 		return errors.Wrap(err, "failed to open a channel")
 	}
-	err = s.AMQPService.ChannelExchangeDeclare(s.channel, topic)
+	err = s.AMQPServiceClient.ChannelExchangeDeclare(s.channel, topic)
 	if err != nil {
 		return errors.Wrap(err, "failed to declare an exchange")
 	}
-	q, err := s.AMQPService.ChannelQueueDeclare(s.channel)
+	q, err := s.AMQPServiceClient.ChannelQueueDeclare(s.channel)
 	if err != nil {
 		return errors.Wrap(err, "failed to declare a queue")
 	}
-	err = s.AMQPService.ChannelQueueBind(s.channel, q.Name, topic)
+	err = s.AMQPServiceClient.ChannelQueueBind(s.channel, q.Name, topic)
 	if err != nil {
 		return errors.Wrap(err, "failed to bind a queue")
 	}
-	s.subCh, err = s.AMQPService.ChannelConsume(s.channel, q.Name)
+	s.subCh, err = s.AMQPServiceClient.ChannelConsume(s.channel, q.Name)
 	go func() {
 		logrus.Debugf("Receiving messages from topic %s...", topic)
 		for msg := range s.subCh {
@@ -119,23 +119,23 @@ func (s *Session) Unsubscribe(ctx context.Context) error {
 	if s.channel == nil {
 		return nil
 	}
-	return s.AMQPService.ChannelClose(s.channel)
+	return s.AMQPServiceClient.ChannelClose(s.channel)
 }
 
 // PublishTextMessage publishes a text message in a rabbit topic.
 func (s *Session) PublishTextMessage(ctx context.Context, topic, message string) error {
 	GetLogger().LogPublishedMessage(message, topic, s.Correlator)
 	var err error
-	s.channel, err = s.AMQPService.ConnectionChannel(s.Connection)
+	s.channel, err = s.AMQPServiceClient.ConnectionChannel(s.Connection)
 	if err != nil {
 		return errors.Wrap(err, "failed to open a channel")
 	}
-	err = s.AMQPService.ChannelExchangeDeclare(s.channel, topic)
+	err = s.AMQPServiceClient.ChannelExchangeDeclare(s.channel, topic)
 	if err != nil {
 		return fmt.Errorf("failed to declare an exchange")
 	}
 	publishing := s.buildPublishingMessage([]byte(message))
-	err = s.AMQPService.ChannelPublish(s.channel, topic, publishing)
+	err = s.AMQPServiceClient.ChannelPublish(s.channel, topic, publishing)
 	if err != nil {
 		return fmt.Errorf("failed publishing the message '%s' to topic '%s': %w", message, topic, err)
 	}

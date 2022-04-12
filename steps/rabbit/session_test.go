@@ -54,7 +54,7 @@ func TestConfigureConnection(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &Session{}
 			ctx := InitializeContext(context.Background())
-			s.AMQPService = AMQPServiceFuncMock{}
+			s.AMQPServiceClient = AMQPServiceFuncMock{}
 			DialError = tt.connError
 			if err := s.ConfigureConnection(ctx, tt.uri); (err != nil) != tt.wantErr {
 				t.Errorf("Session.ConfigureConnection() error = %v, wantErr %v", err, tt.wantErr)
@@ -185,7 +185,7 @@ func TestSubscribeTopic(t *testing.T) {
 			goliumCtx := golium.InitializeContext(context.Background())
 			ctx := InitializeContext(goliumCtx)
 			s := &Session{}
-			s.AMQPService = AMQPServiceFuncMock{}
+			s.AMQPServiceClient = AMQPServiceFuncMock{}
 			ConnectionChannelError = tt.connectionChannelError
 			ChannelExchangeDeclareError = tt.channelExchangeDeclareError
 			ChannelQueueDeclareError = tt.channelQueueDeclareError
@@ -219,7 +219,7 @@ func TestUnsubscribe(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &Session{}
-			s.AMQPService = AMQPServiceFuncMock{}
+			s.AMQPServiceClient = AMQPServiceFuncMock{}
 			s.channel = tt.channel
 			if err := s.Unsubscribe(context.Background()); (err != nil) != tt.wantErr {
 				t.Errorf("Session.Unsubscribe() error = %v, wantErr %v", err, tt.wantErr)
@@ -338,7 +338,7 @@ func setPublishTestEnv(
 	goliumCtx := golium.InitializeContext(context.Background())
 	ctx := InitializeContext(goliumCtx)
 	s := &Session{}
-	s.AMQPService = AMQPServiceFuncMock{}
+	s.AMQPServiceClient = AMQPServiceFuncMock{}
 	ConnectionChannelError = conChannelError
 	ChannelExchangeDeclareError = channelExchDecError
 	ChannelPublishError = channelPubError
