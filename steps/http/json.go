@@ -40,14 +40,15 @@ func GetParamFromJSON(ctx context.Context, file, code, param string) (interface{
 
 	paramValue, err := FindValueByCode(dataStruct, code, param)
 	if err != nil {
-		return nil, fmt.Errorf("Param value: '%s' not found in '%v' due to error: %w", param, dataStruct, err)
+		return nil, fmt.Errorf("param value: '%s' not found in '%v' due to error: %w",
+			param, dataStruct, err)
 	}
 	return paramValue, nil
 }
 
 // FindValueByCode
 // Find value by code and param from dataStruct
-func FindValueByCode(dataStruct []map[string]interface{}, code string, param string) (interface{}, error) {
+func FindValueByCode(dataStruct []map[string]interface{}, code, param string) (interface{}, error) {
 	for _, response := range dataStruct {
 		if fmt.Sprint(response["code"]) == code {
 			if value, ok := response[param]; ok {
@@ -65,10 +66,6 @@ func LoadJSONData(file string) ([]byte, error) {
 	filePath := fmt.Sprintf("%s%s%s.json", assetsDir, string(os.PathSeparator), file)
 
 	absPath, _ := filepath.Abs(filePath)
-	if _, err := os.Stat(absPath); err != nil {
-		return nil, fmt.Errorf("file path does not exist: %v", absPath)
-	}
-
 	data, readErr := os.ReadFile(absPath)
 	if readErr != nil {
 		return nil, fmt.Errorf("error reading file at %s due to error: %w", absPath, readErr)
@@ -89,6 +86,6 @@ func UnmarshalJSONData(data []byte) ([]map[string]interface{}, error) {
 
 // JSONEquals
 // Check if unmarshalled JSON maps are equal
-func JSONEquals(expected interface{}, current interface{}) bool {
+func JSONEquals(expected, current interface{}) bool {
 	return reflect.DeepEqual(expected, current)
 }
