@@ -113,6 +113,7 @@ func (c ClientService) IndexerAdd(
 	document *IndexedDocument,
 	correlator string,
 ) error {
+	logger := GetLogger()
 	return indexer.Add(ctx,
 		esutil.BulkIndexerItem{
 			Action:     "delete",
