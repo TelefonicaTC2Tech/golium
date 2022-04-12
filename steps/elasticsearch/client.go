@@ -27,7 +27,7 @@ import (
 )
 
 type ClientFunctions interface {
-	ElasticsearchNewClient(
+	NewClient(
 		config elasticsearch.Config,
 	) (*elasticsearch.Client, error)
 	Index(
@@ -62,7 +62,7 @@ func NewElasticsearchClientService() *ClientService {
 
 type ClientService struct{}
 
-func (c ClientService) ElasticsearchNewClient(
+func (c ClientService) NewClient(
 	config elasticsearch.Config,
 ) (*elasticsearch.Client, error) {
 	return elasticsearch.NewClient(config)

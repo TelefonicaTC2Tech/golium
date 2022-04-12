@@ -39,7 +39,7 @@ type Session struct {
 // ConfigureClient creates a elasticsearch connection based on the URI.
 func (s *Session) ConfigureClient(ctx context.Context, config elasticsearch.Config) error {
 	var err error
-	if s.Client, err = s.ESServiceClient.ElasticsearchNewClient(config); err != nil {
+	if s.Client, err = s.ESServiceClient.NewClient(config); err != nil {
 		return errors.Wrap(err, "failed configuring elasticsearch client")
 	}
 	s.Correlator = uuid.NewString()

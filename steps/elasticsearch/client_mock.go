@@ -43,7 +43,7 @@ type nopCloser struct {
 	io.Reader
 }
 
-func (c ClientServiceFuncMock) ElasticsearchNewClient(
+func (c ClientServiceFuncMock) NewClient(
 	config elasticsearch.Config,
 ) (*elasticsearch.Client, error) {
 	return nil, NewClientError
