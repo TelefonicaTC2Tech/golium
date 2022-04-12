@@ -8,7 +8,7 @@ require (
 	github.com/cucumber/godog v0.12.0
 	github.com/cucumber/messages-go/v16 v16.0.1
 	github.com/elastic/go-elasticsearch/v7 v7.12.0
-	github.com/go-redis/redis/v8 v8.7.1
+	github.com/go-redis/redis/v8 v8.8.0
 	github.com/google/uuid v1.2.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/lestrrat-go/jwx v1.1.4

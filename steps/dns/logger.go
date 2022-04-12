@@ -15,56 +15,33 @@
 package dns
 
 import (
-	"log"
-	"os"
-	"path"
-
 	"github.com/TelefonicaTC2Tech/golium"
 	"github.com/miekg/dns"
-	"github.com/sirupsen/logrus"
 )
 
-var logger *Logger
+var dnsLog *Logger
+
+// Logger logs the DNS request and response in a configurable file.
+type Logger struct {
+	Log *golium.Logger
+}
 
 // GetLogger returns the logger for DNS requests and responses.
 // If the logger is not created yet, it creates a new instance of Logger.
 func GetLogger() *Logger {
-	if logger != nil {
-		return logger
+	name := "dns"
+	if dnsLog == nil {
+		dnsLog = &Logger{Log: golium.LoggerFactory(name)}
 	}
-	dir := golium.GetConfig().Log.Directory
-	path := path.Join(dir, "dns.log")
-	logger, err := NewLogger(path)
-	if err != nil {
-		logrus.Fatalf("Error creating DNS logger with file: '%s'. %s", path, err)
-	}
-	return logger
-}
-
-// Logger logs the DNS request and response in a configurable file.
-type Logger struct {
-	log *log.Logger
-}
-
-// NewLogger creates an instance of the logger.
-// It configures the file path where the DNS request and response are written.
-func NewLogger(path string) (*Logger, error) {
-	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
-	if err != nil {
-		return nil, err
-	}
-	os.Chmod(file.Name(), 0766)
-	return &Logger{
-		log: log.New(file, "", log.Ldate|log.Lmicroseconds|log.LUTC),
-	}, nil
+	return dnsLog
 }
 
 // LogRequest logs a DNS request in the configured log file.
 func (l Logger) LogRequest(request *dns.Msg, corr string) {
-	l.log.Printf("Request [%s]:\n%+v\n\n", corr, request)
+	l.Log.Printf("Request [%s]:\n%+v\n\n", corr, request)
 }
 
 // LogResponse logs a DNS response in the configured log file.
 func (l Logger) LogResponse(response *dns.Msg, corr string) {
-	l.log.Printf("Response [%s]:\n%+v\n\n", corr, response)
+	l.Log.Printf("Response [%s]:\n%+v\n\n", corr, response)
 }

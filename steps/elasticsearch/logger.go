@@ -15,67 +15,44 @@
 package elasticsearch
 
 import (
-	"log"
-	"os"
-	"path"
-
 	"github.com/TelefonicaTC2Tech/golium"
 	"github.com/elastic/go-elasticsearch/v7/esapi"
-	"github.com/sirupsen/logrus"
 )
 
-var logger *Logger
+var elasticLog *Logger
+
+// Logger logs the elasticsearch requests and responses in a configurable file.
+type Logger struct {
+	Log *golium.Logger
+}
 
 // GetLogger returns the logger for elasticsearch requests and responses.
 // If the logger is not created yet, it creates a new instance of Logger.
 func GetLogger() *Logger {
-	if logger != nil {
-		return logger
+	name := "elasticsearch"
+	if elasticLog == nil {
+		elasticLog = &Logger{Log: golium.LoggerFactory(name)}
 	}
-	dir := golium.GetConfig().Log.Directory
-	path := path.Join(dir, "elasticsearch.log")
-	logger, err := NewLogger(path)
-	if err != nil {
-		logrus.Fatalf("Error creating elasticsearch logger with file: '%s'. %s", path, err)
-	}
-	return logger
-}
-
-// Logger logs the elasticsearch requests and responses in a configurable file.
-type Logger struct {
-	log *log.Logger
-}
-
-// NewLogger creates an instance of the logger.
-// It configures the file path where the elasticsearch requests and responses are written.
-func NewLogger(path string) (*Logger, error) {
-	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
-	if err != nil {
-		return nil, err
-	}
-	os.Chmod(file.Name(), 0766)
-	return &Logger{
-		log: log.New(file, "", log.Ldate|log.Lmicroseconds|log.LUTC),
-	}, nil
+	return elasticLog
 }
 
 // LogCreateIndex logs a creation in elasticsearch in the configured log file.
 func (l Logger) LogCreateIndex(res *esapi.Response, document, index, corr string) {
-	l.log.Printf("Create index '%s' [%s]:\n%s\n\n", index, corr, document)
+	l.Log.Printf("Create index '%s' [%s]:\n%s\n\n", index, corr, document)
 	l.logResponse(res, corr)
 }
 
 // LogSearchIndex logs a search in elasticsearch in the configured log file.
 func (l Logger) LogSearchIndex(res *esapi.Response, body, index, corr string) {
-	l.log.Printf("Search index '%s' [%s] with body:\n%s\n\n", index, corr, body)
+	l.Log.Printf("Search index '%s' [%s] with body:\n%s\n\n", index, corr, body)
 	l.logResponse(res, corr)
 }
 
 func (l Logger) logResponse(res *esapi.Response, corr string) {
-	l.log.Printf("Response [%s]:\n%s\n\n", corr, res.String())
+	l.Log.Printf("Response [%s]:\n%s\n\n", corr, res.String())
 }
 
 // LogError logs a creation in elasticsearch in the configured log file.
 func (l Logger) LogError(err error, corr string) {
-	l.log.Printf("Error [%s]:\n%s\n\n", corr, err.Error())
+	l.Log.Printf("Error [%s]:\n%s\n\n", corr, err.Error())
 }
