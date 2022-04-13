@@ -227,11 +227,10 @@ func (t NamedTag) processValuedTag(
 		composedTag := NewComposedTag(tagValue)
 		composedTagValue := composedTag.Value(ctx)
 		composedTagValueString := fmt.Sprintf("%v", composedTagValue)
-		input := funcInput{
+		return f(funcInput{
 			ctx: ctx,
 			s:   composedTagValueString,
-		}
-		return f(input)
+		})
 	}
 	return funcReturn{
 		ret: nil,
