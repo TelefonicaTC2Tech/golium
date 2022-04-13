@@ -44,7 +44,7 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 		if err := json.Unmarshal([]byte(golium.ValueAsString(ctx, body.Content)), &mockRequest); err != nil {
 			return fmt.Errorf("failed unmarshalling to mockRequest: %w", err)
 		}
-		return sendMockRequest(ctx, golium.ValueAsString(ctx, server), &mockRequest)
+		return sendMockRequest(golium.ValueAsString(ctx, server), &mockRequest)
 	})
 	return ctx
 }
@@ -52,11 +52,11 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 // MockRequestSimple mocks a HTTP request by sending a command to the HTTP mock server.
 // It only configures the request path, the response status code and the response body.
 // The "application/json" content type is applied implicitly to the response.
-func MockRequestSimple(ctx context.Context, server, path string, status int, body string) error {
+func MockRequestSimple(ctx context.Context, server, httpPath string, status int, body string) error {
 	mockRequest := &MockRequest{
 		Request: Request{
 			Method: http.MethodGet,
-			Path:   path,
+			Path:   httpPath,
 		},
 		Response: Response{
 			Status: status,
@@ -66,10 +66,10 @@ func MockRequestSimple(ctx context.Context, server, path string, status int, bod
 			Body: body,
 		},
 	}
-	return sendMockRequest(ctx, server, mockRequest)
+	return sendMockRequest(server, mockRequest)
 }
 
-func sendMockRequest(ctx context.Context, server string, mockRequest *MockRequest) error {
+func sendMockRequest(server string, mockRequest *MockRequest) error {
 	if mockRequest.Latency < 0 {
 		return fmt.Errorf("invalid latency: %d", mockRequest.Latency)
 	}
