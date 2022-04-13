@@ -16,7 +16,8 @@ package main
 
 import (
 	"flag"
-	"log"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/TelefonicaTC2Tech/golium/mock/http"
 )
