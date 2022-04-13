@@ -24,8 +24,13 @@ const values = `
 		"first": "John",
 		"last": "Doe"
 	},
-	"age": 47,
+	"age":47,
 	"commiter": true,
+	"developer": false,
+	"projects": [
+		"golium",
+		"toolium"
+	]
 }`
 
 func TestGet(t *testing.T) {
@@ -51,6 +56,21 @@ func TestGet(t *testing.T) {
 		{
 			name: "Get nil value from json map",
 			args: args{path: "none"},
+			want: nil,
+		},
+		{
+			name: "Get true value from json map",
+			args: args{path: "commiter"},
+			want: true,
+		},
+		{
+			name: "Get false value from json map",
+			args: args{path: "developer"},
+			want: false,
+		},
+		{
+			name: "Get nil value from json map",
+			args: args{path: "nil"},
 			want: nil,
 		},
 	}
