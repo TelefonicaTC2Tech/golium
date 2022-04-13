@@ -29,12 +29,11 @@ const contextKey ContextKey = "aggregatedSession"
 // The new context is returned because context is immutable.
 func InitializeContext(ctx context.Context) context.Context {
 	sessionRestored := ctx.Value(shared.ContextKey("sharedSession")).(*shared.Session)
-	var aggregatedSession *AggregatedSession = &AggregatedSession{session: sessionRestored}
-	return context.WithValue(ctx, contextKey, aggregatedSession)
+	return context.WithValue(ctx, contextKey, &Session{session: sessionRestored})
 }
 
 // GetSession returns the Aggregated session stored in context.
 // Note that the context should be previously initialized with InitializeContext function.
-func GetSession(ctx context.Context) *AggregatedSession {
-	return ctx.Value(contextKey).(*AggregatedSession)
+func GetSession(ctx context.Context) *Session {
+	return ctx.Value(contextKey).(*Session)
 }
