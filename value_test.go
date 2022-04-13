@@ -83,3 +83,19 @@ func TestComposedTag(t *testing.T) {
 		}
 	}
 }
+
+func TestTagWithChecks(t *testing.T) {
+	tcs := []string{
+		"[NOW]",
+		"[UUID]",
+		"[NOW:1s]",
+		"[NOW:-1:]",
+		"[NOW:300ms:]",
+		"[NOW::]",
+		"[NOW::unix]",
+	}
+	ctx := context.Background()
+	for _, s := range tcs {
+		_ = golium.NewComposedTag(s).Value(ctx)
+	}
+}
