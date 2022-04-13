@@ -16,8 +16,6 @@ package golium
 
 import (
 	"testing"
-
-	"github.com/tidwall/gjson"
 )
 
 const values = `
@@ -31,47 +29,35 @@ const values = `
 }`
 
 func TestGet(t *testing.T) {
-	type fields struct {
-		gmap gjson.Result
-	}
-
 	type args struct {
 		path string
 	}
 
-	fieldValues := fields{gmap: gjson.Parse(values)}
-
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   interface{}
+		name string
+		args args
+		want interface{}
 	}{
 		{
-			name:   "Get string value from json map",
-			fields: fieldValues,
-			args:   args{path: "name.first"},
-			want:   "John",
+			name: "Get string value from json map",
+			args: args{path: "name.first"},
+			want: "John",
 		},
 		{
-			name:   "Get number value from json map",
-			fields: fieldValues,
-			args:   args{path: "age"},
-			want:   float64(47),
+			name: "Get number value from json map",
+			args: args{path: "age"},
+			want: float64(47),
 		},
 		{
-			name:   "Get nil value from json map",
-			fields: fieldValues,
-			args:   args{path: "none"},
-			want:   nil,
+			name: "Get nil value from json map",
+			args: args{path: "none"},
+			want: nil,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			m := &gjsonMap{
-				gmap: tt.fields.gmap,
-			}
+			m := NewMapFromJSONBytes([]byte(values))
 			if got := m.Get(tt.args.path); got != tt.want {
 				t.Errorf("gjsonMap.Get() = %v, want %v", got, tt.want)
 			}
