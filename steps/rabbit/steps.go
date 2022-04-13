@@ -61,19 +61,6 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 		session.ConfigureStandardProperties(ctx, props)
 		return nil
 	})
-
-	publishMessageSteps(ctx, session, scenCtx)
-
-	waitRabbitMessageSteps(ctx, session, scenCtx)
-
-	rabbitMessageHasSteps(ctx, session, scenCtx)
-
-	scenCtx.After(func(ctx context.Context, sc *godog.Scenario, err error) (context.Context, error) {
-		return ctx, session.Unsubscribe(ctx)
-	})
-	return ctx
-}
-func publishMessageSteps(ctx context.Context, session *Session, scenCtx *godog.ScenarioContext) {
 	scenCtx.Step(`^I publish a message to the rabbit topic "([^"]*)" with the text$`, func(topic string, message *godog.DocString) error {
 		return session.PublishTextMessage(ctx, golium.ValueAsString(ctx, topic), golium.ValueAsString(ctx, message.Content))
 	})
@@ -84,9 +71,6 @@ func publishMessageSteps(ctx context.Context, session *Session, scenCtx *godog.S
 		}
 		return session.PublishJSONMessage(ctx, golium.ValueAsString(ctx, topic), props)
 	})
-}
-
-func waitRabbitMessageSteps(ctx context.Context, session *Session, scenCtx *godog.ScenarioContext) {
 	scenCtx.Step(`^I wait up to "(\d+)" seconds? for a rabbit message with the text$`, func(timeout int, message *godog.DocString) error {
 		timeoutDuration := time.Duration(timeout) * time.Second
 		return session.WaitForTextMessage(ctx, timeoutDuration, golium.ValueAsString(ctx, message.Content))
@@ -137,8 +121,13 @@ func waitRabbitMessageSteps(ctx context.Context, session *Session, scenCtx *godo
 		}
 		return nil
 	})
-}
-func rabbitMessageHasSteps(ctx context.Context, session *Session, scenCtx *godog.ScenarioContext) {
+	scenCtx.Step(`^the rabbit message has the rabbit headers$`, func(t *godog.Table) error {
+		headers, err := golium.ConvertTableToMap(ctx, t)
+		if err != nil {
+			return fmt.Errorf(convertTableToMapMessage+"%w", err)
+		}
+		return session.ValidateMessageHeaders(ctx, headers)
+	})
 	scenCtx.Step(`^the rabbit message has the standard rabbit properties$`, func(t *godog.Table) error {
 		var props amqp.Delivery
 		if err := golium.ConvertTableWithoutHeaderToStruct(ctx, t, &props); err != nil {
@@ -157,14 +146,6 @@ func rabbitMessageHasSteps(ctx context.Context, session *Session, scenCtx *godog
 		}
 		return session.ValidateMessageJSONBody(ctx, props, -1)
 	})
-	scenCtx.Step(`^the rabbit message has the rabbit headers$`, func(t *godog.Table) error {
-		headers, err := golium.ConvertTableToMap(ctx, t)
-		if err != nil {
-			return fmt.Errorf(convertTableToMapMessage+"%w", err)
-		}
-		return session.ValidateMessageHeaders(ctx, headers)
-	})
-
 	scenCtx.Step(`^the body of the rabbit message in position "(\d+)" has the JSON properties$`, func(pos int, t *godog.Table) error {
 		props, err := golium.ConvertTableToMap(ctx, t)
 		if err != nil {
@@ -172,4 +153,8 @@ func rabbitMessageHasSteps(ctx context.Context, session *Session, scenCtx *godog
 		}
 		return session.ValidateMessageJSONBody(ctx, props, pos)
 	})
+	scenCtx.After(func(ctx context.Context, sc *godog.Scenario, err error) (context.Context, error) {
+		return ctx, session.Unsubscribe(ctx)
+	})
+	return ctx
 }
