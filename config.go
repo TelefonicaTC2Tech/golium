@@ -48,7 +48,8 @@ func GetEnvironment() Map {
 // Load the environment configuration from yml files.
 // The mandatory environment configuration file is obtained from yml file located at:
 //    {config.Dir.Enviroments}/{config.Environment}.yml
-// An optional environment configuration file to allow hide or crypt sensitive data could be located at:
+// An optional environment configuration file to allow hide or crypt sensitive data
+// could be located at:
 //    {config.Dir.Enviroments}/{config.Environment}-private.yml
 func initEnvironment() Map {
 	pathEnv := path.Join(config.Dir.Environments, fmt.Sprintf("%s.yml", config.Environment))
@@ -57,9 +58,12 @@ func initEnvironment() Map {
 	if err := cfg.LoadYaml(pathEnv, &env); err != nil {
 		logrus.Fatalf("Error loading environment configuration from file: %s. %s", pathEnv, err)
 	}
-	pathEnvPrivate := path.Join(config.Dir.Environments, fmt.Sprintf("%s-private.yml", config.Environment))
+	pathEnvPrivate := path.Join(
+		config.Dir.Environments, fmt.Sprintf("%s-private.yml", config.Environment))
 	if err := cfg.LoadYaml(pathEnvPrivate, &env); err != nil {
-		logrus.Infof("Could not load private environment configuration from file: %s. %s", pathEnvPrivate, err)
+		logrus.Infof(
+			"Could not load private environment configuration from file: %s. %s",
+			pathEnvPrivate, err)
 	}
 	b, err := json.Marshal(env)
 	if err != nil {
