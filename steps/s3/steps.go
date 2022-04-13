@@ -78,12 +78,13 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 		}
 		return session.DeleteS3File(ctx, golium.ValueAsString(ctx, bucket), golium.ValueAsString(ctx, key))
 	})
-	scenCtx.AfterScenario(func(sc *godog.Scenario, err error) {
-		//	clean created documents
+	scenCtx.After(func(ctx context.Context, sc *godog.Scenario, err error) (context.Context, error) {
+		// clean created documents
 		cleanFiles := golium.Value(ctx, "[CONF:s3Autoclean]").(bool)
 		if cleanFiles {
 			session.CleanUp(ctx)
 		}
+		return ctx, nil
 	})
 	return ctx
 }
