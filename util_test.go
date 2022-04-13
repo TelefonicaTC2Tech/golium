@@ -17,32 +17,32 @@ package golium
 import "testing"
 
 func TestContainsString(t *testing.T) {
-	list := []string {"attribute1", "attribute2", "attribute3"}
-	
+	list := []string{"attribute1", "attribute2", "attribute3"}
+
 	tests := []struct {
-		name string
-		values []string
-		expectedValue string
+		name           string
+		values         []string
+		expectedValue  string
 		valueNonString int
 		expectedResult bool
 	}{
 		{
-			name:             "testing with a correct value",
-			values: 		  list,
-			expectedValue: 	  "attribute1",
-			expectedResult:   true,
+			name:           "testing with a correct value",
+			values:         list,
+			expectedValue:  "attribute1",
+			expectedResult: true,
 		},
 		{
-			name:             "testing with a incorrect value",
-			values: 		  list,
-			expectedValue: 	  "failValue",
-			expectedResult:   false,
+			name:           "testing with a incorrect value",
+			values:         list,
+			expectedValue:  "failValue",
+			expectedResult: false,
 		},
 		{
-			name:             "testing with a value that is not a string",
-			values: 		  list,
-			valueNonString:   3,
-			expectedResult:   false,
+			name:           "testing with a value that is not a string",
+			values:         list,
+			valueNonString: 3,
+			expectedResult: false,
 		},
 	}
 	for _, tt := range tests {
