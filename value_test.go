@@ -84,7 +84,7 @@ func TestComposedTag(t *testing.T) {
 	}
 }
 
-func TestTagWithChecks(t *testing.T) {
+func TestTagWithoutChecks(t *testing.T) {
 	tcs := []string{
 		"[NOW]",
 		"[UUID]",
