@@ -30,9 +30,8 @@ import (
 )
 
 const (
-	convertTableToMapMessage       = "failed processing table to a map for the rabbit message: "
-	convertTableToStructProperties = "failed processing table to a map for the standard rabbit properties: "
-	convertTableToMapBody          = "failed processing table to a map for the request body: "
+	convertTableToMapMessage = "failed processing table to a map for the rabbit message: "
+	convertTableToMapBody    = "failed processing table to a map for the request body: "
 )
 
 // Session contains the information of a rabbit session.
@@ -306,12 +305,10 @@ func (s *Session) ValidateMessageStandardProperties(
 					return nil
 				}
 				return fmt.Errorf("received a message with standard rabbit properties '%s'", value)
-			} else {
-				if !wantErr {
-					return fmt.Errorf(
-						"mismatch of standard rabbit property '%s': expected '%s', actual '%s'",
-						key, expectedValue, value)
-				}
+			} else if !wantErr {
+				return fmt.Errorf(
+					"mismatch of standard rabbit property '%s': expected '%s', actual '%s'",
+					key, expectedValue, value)
 			}
 		}
 	}
