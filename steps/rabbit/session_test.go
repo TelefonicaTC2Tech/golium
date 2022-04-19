@@ -491,8 +491,7 @@ func TestWaitForMessagesWithStandardProperties(t *testing.T) {
 			args: args{
 				count:   0,
 				timeout: time.Duration(5000),
-				table: golium.NewTable([][]string{
-					{"Priority", "5"}}),
+				table:   golium.NewTable([][]string{{"Priority", "5"}}),
 			},
 			wantErr: true,
 		},
@@ -501,17 +500,27 @@ func TestWaitForMessagesWithStandardProperties(t *testing.T) {
 			args: args{
 				count:   -1,
 				timeout: time.Duration(5000),
+				table:   golium.NewTable([][]string{{"param", "value"}, {"Priority", "5"}}),
+				wantErr: false,
 			},
 			wantErr: true,
+		},
+		{
+			name: "Message count < 0 expecting error",
+			args: args{
+				count:   -1,
+				timeout: time.Duration(5000),
+				table:   golium.NewTable([][]string{{"param", "value"}, {"Priority", "5"}}),
+				wantErr: true,
+			},
+			wantErr: false,
 		},
 		{
 			name: "Matching properties",
 			args: args{
 				count:   1,
 				timeout: time.Duration(5000),
-				table: golium.NewTable([][]string{
-					{"param", "value"},
-					{"Priority", "5"}}),
+				table:   golium.NewTable([][]string{{"param", "value"}, {"Priority", "5"}}),
 				wantErr: false,
 			},
 			wantErr: false,
@@ -521,9 +530,7 @@ func TestWaitForMessagesWithStandardProperties(t *testing.T) {
 			args: args{
 				count:   1,
 				timeout: time.Duration(5000),
-				table: golium.NewTable([][]string{
-					{"param", "value"},
-					{"Priority", "5"}}),
+				table:   golium.NewTable([][]string{{"param", "value"}, {"Priority", "5"}}),
 				wantErr: true,
 			},
 			wantErr: true,
@@ -533,9 +540,7 @@ func TestWaitForMessagesWithStandardProperties(t *testing.T) {
 			args: args{
 				count:   1,
 				timeout: time.Duration(5000),
-				table: golium.NewTable([][]string{
-					{"param", "value"},
-					{"Priority", "10"}}),
+				table:   golium.NewTable([][]string{{"param", "value"}, {"Priority", "10"}}),
 				wantErr: false,
 			},
 			wantErr: true,
@@ -545,9 +550,7 @@ func TestWaitForMessagesWithStandardProperties(t *testing.T) {
 			args: args{
 				count:   1,
 				timeout: time.Duration(5000),
-				table: golium.NewTable([][]string{
-					{"param", "value"},
-					{"Priority", "10"}}),
+				table:   golium.NewTable([][]string{{"param", "value"}, {"Priority", "10"}}),
 				wantErr: true,
 			},
 			wantErr: false,
@@ -556,11 +559,7 @@ func TestWaitForMessagesWithStandardProperties(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &Session{}
-			s.Messages = []amqp.Delivery{
-				{
-					Priority: 5,
-				},
-			}
+			s.Messages = []amqp.Delivery{{Priority: 5}}
 			if err := s.WaitForMessagesWithStandardProperties(
 				context.Background(),
 				tt.args.timeout,

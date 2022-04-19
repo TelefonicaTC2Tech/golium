@@ -262,15 +262,23 @@ func (s *Session) WaitForMessagesWithStandardProperties(
 	t *godog.Table,
 	wantErr bool,
 ) error {
+	var props amqp.Delivery
+	if err := golium.ConvertTableWithoutHeaderToStruct(ctx, t, &props); err != nil {
+		return fmt.Errorf("failed configuring rabbit endpoint: %w", err)
+	}
 	return waitUpTo(timeout, func() error {
-		err := fmt.Errorf("no message(s) received match(es) the standard properties")
+		var err error
 		if count < 0 {
-			return err
+			if !wantErr {
+				return fmt.Errorf("no message(s) received match(es) the standard properties")
+			}
+			return nil
 		}
+
 		for i := range s.Messages {
 			logrus.Debugf("Checking message: %s", s.Messages[i].Body)
 			s.msg = s.Messages[i]
-			if err = s.ValidateMessageStandardProperties(ctx, t, wantErr); err == nil {
+			if err = s.ValidateMessageStandardProperties(ctx, props, wantErr); err == nil {
 				count--
 				if count == 0 {
 					return nil
@@ -285,13 +293,9 @@ func (s *Session) WaitForMessagesWithStandardProperties(
 // the expected values.
 func (s *Session) ValidateMessageStandardProperties(
 	ctx context.Context,
-	table *godog.Table,
+	props amqp.Delivery,
 	wantErr bool,
 ) error {
-	var props amqp.Delivery
-	if err := golium.ConvertTableWithoutHeaderToStruct(ctx, table, &props); err != nil {
-		return fmt.Errorf("failed configuring rabbit endpoint: %w", err)
-	}
 	msg := reflect.ValueOf(s.msg)
 	expectedMsg := reflect.ValueOf(props)
 	t := expectedMsg.Type()

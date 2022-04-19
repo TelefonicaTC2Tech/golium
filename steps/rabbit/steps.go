@@ -16,10 +16,12 @@ package rabbit
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/TelefonicaTC2Tech/golium"
 	"github.com/cucumber/godog"
+	"github.com/streadway/amqp"
 )
 
 // Steps to initialize common steps.
@@ -78,7 +80,11 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 		return session.ValidateMessageHeaders(ctx, t)
 	})
 	scenCtx.Step(`^the rabbit message has the standard rabbit properties$`, func(t *godog.Table) error {
-		return session.ValidateMessageStandardProperties(ctx, t, false)
+		var props amqp.Delivery
+		if err := golium.ConvertTableWithoutHeaderToStruct(ctx, t, &props); err != nil {
+			return fmt.Errorf("failed configuring rabbit endpoint: %w", err)
+		}
+		return session.ValidateMessageStandardProperties(ctx, props, false)
 	})
 	scenCtx.Step(`^the rabbit message body has the text$`, func(m *godog.DocString) error {
 		message := golium.ValueAsString(ctx, m.Content)
