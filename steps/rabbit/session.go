@@ -21,11 +21,18 @@ import (
 	"time"
 
 	"github.com/TelefonicaTC2Tech/golium"
+	"github.com/cucumber/godog"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 	"github.com/tidwall/sjson"
+)
+
+const (
+	convertTableToMapMessage       = "failed processing table to a map for the rabbit message: "
+	convertTableToStructProperties = "failed processing table to a map for the standard rabbit properties: "
+	convertTableToMapBody          = "failed processing table to a map for the request body: "
 )
 
 // Session contains the information of a rabbit session.
@@ -64,7 +71,11 @@ func (s *Session) ConfigureConnection(ctx context.Context, uri string) error {
 }
 
 // ConfigureHeaders stores a table of rabbit headers in the application context.
-func (s *Session) ConfigureHeaders(ctx context.Context, headers map[string]interface{}) error {
+func (s *Session) ConfigureHeaders(ctx context.Context, t *godog.Table) error {
+	headers, err := golium.ConvertTableToMap(ctx, t)
+	if err != nil {
+		return fmt.Errorf(convertTableToMapBody+"%w", err)
+	}
 	s.headers = headers
 	if err := s.headers.Validate(); err != nil {
 		return errors.Wrap(err, "failed setting rabbit headers")
@@ -73,8 +84,13 @@ func (s *Session) ConfigureHeaders(ctx context.Context, headers map[string]inter
 }
 
 // ConfigureStandardProperties stores a table of rabbit properties in the application context.
-func (s *Session) ConfigureStandardProperties(ctx context.Context, props amqp.Publishing) {
+func (s *Session) ConfigureStandardProperties(ctx context.Context, t *godog.Table) error {
+	var props amqp.Publishing
+	if err := golium.ConvertTableWithoutHeaderToStruct(ctx, t, &props); err != nil {
+		return fmt.Errorf("failed configuring rabbit endpoint: %w", err)
+	}
 	s.publishing = props
+	return nil
 }
 
 // SubscribeTopic subscribes to a rabbit topic to receive messages via a channel.
@@ -162,10 +178,13 @@ func (s *Session) buildPublishingMessage(body []byte) amqp.Publishing {
 func (s *Session) PublishJSONMessage(
 	ctx context.Context,
 	topic string,
-	props map[string]interface{},
+	t *godog.Table,
 ) error {
+	props, err := golium.ConvertTableToMap(ctx, t)
+	if err != nil {
+		return fmt.Errorf(convertTableToMapBody+"%w", err)
+	}
 	var json string
-	var err error
 	for key, value := range props {
 		if json, err = sjson.Set(json, key, value); err != nil {
 			return fmt.Errorf("failed setting property '%s' with value '%s' in the message: %w",
@@ -195,19 +214,31 @@ func (s *Session) WaitForTextMessage(ctx context.Context,
 
 // WaitForJSONMessageWithProperties waits up to timeout and verifies if there is a message received
 // in the topic with the requested properties.
+// When wantError is set to true
 func (s *Session) WaitForJSONMessageWithProperties(ctx context.Context,
 	timeout time.Duration,
-	props map[string]interface{},
+	t *godog.Table,
+	wantError bool,
 ) error {
+	props, err := golium.ConvertTableToMap(ctx, t)
+	if err != nil {
+		return fmt.Errorf(convertTableToMapMessage+"%w", err)
+	}
 	return waitUpTo(timeout, func() error {
 		for i := range s.Messages {
 			logrus.Debugf("Checking message: %s", s.Messages[i].Body)
 			if matchMessage(string(s.Messages[i].Body), props) {
 				s.msg = s.Messages[i]
-				return nil
+				if !wantError {
+					return nil
+				}
+				return fmt.Errorf("received message with JSON properties '%+v'", props)
 			}
 		}
-		return fmt.Errorf("not received message with JSON properties '%+v'", props)
+		if !wantError {
+			return fmt.Errorf("not received message with JSON properties '%+v'", props)
+		}
+		return nil
 	})
 }
 
@@ -229,7 +260,8 @@ func (s *Session) WaitForMessagesWithStandardProperties(
 	ctx context.Context,
 	timeout time.Duration,
 	count int,
-	props amqp.Delivery,
+	t *godog.Table,
+	wantErr bool,
 ) error {
 	return waitUpTo(timeout, func() error {
 		err := fmt.Errorf("no message(s) received match(es) the standard properties")
@@ -239,7 +271,7 @@ func (s *Session) WaitForMessagesWithStandardProperties(
 		for i := range s.Messages {
 			logrus.Debugf("Checking message: %s", s.Messages[i].Body)
 			s.msg = s.Messages[i]
-			if err = s.ValidateMessageStandardProperties(ctx, props); err == nil {
+			if err = s.ValidateMessageStandardProperties(ctx, t, wantErr); err == nil {
 				count--
 				if count == 0 {
 					return nil
@@ -254,8 +286,13 @@ func (s *Session) WaitForMessagesWithStandardProperties(
 // the expected values.
 func (s *Session) ValidateMessageStandardProperties(
 	ctx context.Context,
-	props amqp.Delivery,
+	table *godog.Table,
+	wantErr bool,
 ) error {
+	var props amqp.Delivery
+	if err := golium.ConvertTableWithoutHeaderToStruct(ctx, table, &props); err != nil {
+		return fmt.Errorf("failed configuring rabbit endpoint: %w", err)
+	}
 	msg := reflect.ValueOf(s.msg)
 	expectedMsg := reflect.ValueOf(props)
 	t := expectedMsg.Type()
@@ -264,10 +301,17 @@ func (s *Session) ValidateMessageStandardProperties(
 			key := t.Field(i).Name
 			value := msg.Field(i).Interface()
 			expectedValue := expectedMsg.Field(i).Interface()
-			if value != expectedValue {
-				return fmt.Errorf(
-					"mismatch of standard rabbit property '%s': expected '%s', actual '%s'",
-					key, expectedValue, value)
+			if value == expectedValue {
+				if !wantErr {
+					return nil
+				}
+				return fmt.Errorf("received a message with standard rabbit properties '%s'", value)
+			} else {
+				if !wantErr {
+					return fmt.Errorf(
+						"mismatch of standard rabbit property '%s': expected '%s', actual '%s'",
+						key, expectedValue, value)
+				}
 			}
 		}
 	}
@@ -277,8 +321,12 @@ func (s *Session) ValidateMessageStandardProperties(
 // ValidateMessageHeaders checks if the message rabbit headers are equal the expected values.
 func (s *Session) ValidateMessageHeaders(
 	ctx context.Context,
-	headers map[string]interface{},
+	t *godog.Table,
 ) error {
+	headers, err := golium.ConvertTableToMap(ctx, t)
+	if err != nil {
+		return fmt.Errorf(convertTableToMapMessage+"%w", err)
+	}
 	h := s.msg.Headers
 	for key, expectedValue := range headers {
 		value, found := h[key]
@@ -307,9 +355,13 @@ func (s *Session) ValidateMessageTextBody(ctx context.Context, expectedMsg strin
 // are equal the expected values.
 // if pos == -1 then it means last message stored, that is the one stored in s.msg
 func (s *Session) ValidateMessageJSONBody(ctx context.Context,
-	props map[string]interface{},
+	t *godog.Table,
 	pos int,
 ) error {
+	props, err := golium.ConvertTableToMap(ctx, t)
+	if err != nil {
+		return fmt.Errorf(convertTableToMapMessage+"%w", err)
+	}
 	m := golium.NewMapFromJSONBytes(s.msg.Body)
 	if pos != -1 {
 		nMessages := len(s.Messages)

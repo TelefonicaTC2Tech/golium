@@ -64,33 +64,30 @@ func TestConfigureConnection(t *testing.T) {
 }
 
 func TestConfigureHeaders(t *testing.T) {
-	var wrongRabbitHeader = make(map[string]interface{})
-	wrongRabbitHeader["wrongParam"] = uint(5)
-
-	var rabbitHeader = make(map[string]interface{})
-	rabbitHeader["param"] = "value"
-	rabbitHeader["Header1"] = "value1"
-	rabbitHeader["Header2"] = "Value2"
 	tests := []struct {
 		name    string
-		headers map[string]interface{}
+		table   *godog.Table
 		wantErr bool
 	}{
 		{
 			name:    "Validate headers error",
 			wantErr: true,
-			headers: wrongRabbitHeader,
+			table: golium.NewTable([][]string{
+				{"wrongParam", "5"}}),
 		},
 		{
-			name:    "No error",
-			headers: rabbitHeader,
+			name: "No error",
+			table: golium.NewTable([][]string{
+				{"param", "value"},
+				{"Header1", "value1"},
+				{"Header2", "value2"}}),
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &Session{}
-			if err := s.ConfigureHeaders(context.Background(), tt.headers); (err != nil) != tt.wantErr {
+			if err := s.ConfigureHeaders(context.Background(), tt.table); (err != nil) != tt.wantErr {
 				t.Errorf("Session.ConfigureHeaders() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -98,8 +95,6 @@ func TestConfigureHeaders(t *testing.T) {
 }
 
 func TestConfigureStandardProperties(t *testing.T) {
-	rabbitHeaders := amqp.Publishing{}
-
 	tests := []struct {
 		name      string
 		propTable *godog.Table
@@ -112,9 +107,7 @@ func TestConfigureStandardProperties(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &Session{}
-			ctx := InitializeContext(context.Background())
-			golium.ConvertTableWithoutHeaderToStruct(ctx, tt.propTable, &rabbitHeaders)
-			s.ConfigureStandardProperties(context.Background(), rabbitHeaders)
+			s.ConfigureStandardProperties(context.Background(), tt.propTable)
 		})
 	}
 }
@@ -292,12 +285,9 @@ func TestPublishTextMessage(t *testing.T) {
 func TestPublishJSONMessage(t *testing.T) {
 	os.MkdirAll(logsPath, os.ModePerm)
 	defer os.RemoveAll(logsPath)
-	propsOk := make(map[string]interface{})
-	propsOk["id"] = "1"
-	propsOk["name"] = "test"
 	type args struct {
 		topic string
-		props map[string]interface{}
+		table *godog.Table
 	}
 	tests := []struct {
 		name                        string
@@ -314,9 +304,21 @@ func TestPublishJSONMessage(t *testing.T) {
 			channelPublishError:         nil,
 			args: args{
 				topic: "test_topic",
-				props: propsOk,
+				table: golium.NewTable([][]string{
+					{"param", "value"},
+					{"id", "1"},
+					{"name", "test"}}),
 			},
 			wantErr: false,
+		},
+		{
+			name: "Convert table error",
+			args: args{
+				topic: "test_topic",
+				table: golium.NewTable([][]string{
+					{"name", "test"}}),
+			},
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
@@ -325,7 +327,7 @@ func TestPublishJSONMessage(t *testing.T) {
 				tt.connectionChannelError,
 				tt.channelExchangeDeclareError,
 				tt.channelPublishError)
-			if err := s.PublishJSONMessage(ctx, tt.args.topic, tt.args.props); (err != nil) != tt.wantErr {
+			if err := s.PublishJSONMessage(ctx, tt.args.topic, tt.args.table); (err != nil) != tt.wantErr {
 				t.Errorf("Session.PublishJSONMessage() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -387,14 +389,10 @@ func TestWaitForTextMessage(t *testing.T) {
 }
 
 func TestWaitForJSONMessageWithProperties(t *testing.T) {
-	expectedJSON := make(map[string]interface{})
-	expectedJSON["id"] = "1"
-	wrongExpectedJSON := make(map[string]interface{})
-	wrongExpectedJSON["id"] = "5"
-
 	type args struct {
 		timeout time.Duration
-		props   map[string]interface{}
+		table   *godog.Table
+		wantErr bool
 	}
 	tests := []struct {
 		name    string
@@ -402,20 +400,58 @@ func TestWaitForJSONMessageWithProperties(t *testing.T) {
 		wantErr bool
 	}{
 		{
+			name: "Convert table error",
+			args: args{
+				timeout: time.Duration(5000),
+				table: golium.NewTable([][]string{
+					{"id", "1"}}),
+				wantErr: false,
+			},
+			wantErr: true,
+		},
+		{
 			name: "Expected json found",
 			args: args{
 				timeout: time.Duration(5000),
-				props:   expectedJSON,
+				table: golium.NewTable([][]string{
+					{"param", "value"},
+					{"id", "1"}}),
+				wantErr: false,
 			},
 			wantErr: false,
+		},
+		{
+			name: "Expected json found but want error",
+			args: args{
+				timeout: time.Duration(5000),
+				table: golium.NewTable([][]string{
+					{"param", "value"},
+					{"id", "1"}}),
+				wantErr: true,
+			},
+			wantErr: true,
 		},
 		{
 			name: "Expected json not found",
 			args: args{
 				timeout: time.Duration(5000),
-				props:   wrongExpectedJSON,
+				table: golium.NewTable([][]string{
+					{"param", "value"},
+					{"id", "5"}}),
+				wantErr: false,
 			},
 			wantErr: true,
+		},
+		{
+			name: "Expected json not found but want error",
+			args: args{
+				timeout: time.Duration(5000),
+				table: golium.NewTable([][]string{
+					{"param", "value"},
+					{"id", "5"}}),
+				wantErr: true,
+			},
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
@@ -427,7 +463,11 @@ func TestWaitForJSONMessageWithProperties(t *testing.T) {
 				},
 			}
 			if err := s.WaitForJSONMessageWithProperties(
-				context.Background(), tt.args.timeout, tt.args.props); (err != nil) != tt.wantErr {
+				context.Background(),
+				tt.args.timeout,
+				tt.args.table,
+				tt.args.wantErr,
+			); (err != nil) != tt.wantErr {
 				t.Errorf("Session.WaitForJSONMessageWithProperties() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -438,13 +478,24 @@ func TestWaitForMessagesWithStandardProperties(t *testing.T) {
 	type args struct {
 		timeout time.Duration
 		count   int
-		props   amqp.Delivery
+		table   *godog.Table
+		wantErr bool
 	}
 	tests := []struct {
 		name    string
 		args    args
 		wantErr bool
 	}{
+		{
+			name: "Convert table error",
+			args: args{
+				count:   0,
+				timeout: time.Duration(5000),
+				table: golium.NewTable([][]string{
+					{"Priority", "5"}}),
+			},
+			wantErr: true,
+		},
 		{
 			name: "Message count < 0",
 			args: args{
@@ -458,22 +509,48 @@ func TestWaitForMessagesWithStandardProperties(t *testing.T) {
 			args: args{
 				count:   1,
 				timeout: time.Duration(5000),
-				props: amqp.Delivery{
-					Priority: 5,
-				},
+				table: golium.NewTable([][]string{
+					{"param", "value"},
+					{"Priority", "5"}}),
+				wantErr: false,
 			},
 			wantErr: false,
+		},
+		{
+			name: "Matching properties expecting error",
+			args: args{
+				count:   1,
+				timeout: time.Duration(5000),
+				table: golium.NewTable([][]string{
+					{"param", "value"},
+					{"Priority", "5"}}),
+				wantErr: true,
+			},
+			wantErr: true,
 		},
 		{
 			name: "Not matching properties",
 			args: args{
 				count:   1,
 				timeout: time.Duration(5000),
-				props: amqp.Delivery{
-					Priority: 10,
-				},
+				table: golium.NewTable([][]string{
+					{"param", "value"},
+					{"Priority", "10"}}),
+				wantErr: false,
 			},
 			wantErr: true,
+		},
+		{
+			name: "Not matching properties expecting error",
+			args: args{
+				count:   1,
+				timeout: time.Duration(5000),
+				table: golium.NewTable([][]string{
+					{"param", "value"},
+					{"Priority", "10"}}),
+				wantErr: true,
+			},
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
@@ -487,7 +564,9 @@ func TestWaitForMessagesWithStandardProperties(t *testing.T) {
 			if err := s.WaitForMessagesWithStandardProperties(
 				context.Background(),
 				tt.args.timeout,
-				tt.args.count, tt.args.props); (err != nil) != tt.wantErr {
+				tt.args.count,
+				tt.args.table,
+				tt.args.wantErr); (err != nil) != tt.wantErr {
 				t.Errorf(
 					"Session.WaitForMessagesWithStandardProperties() error = %v, wantErr %v",
 					err, tt.wantErr)
@@ -500,31 +579,37 @@ func TestValidateMessageHeaders(t *testing.T) {
 	refHeaders := make(amqp.Table)
 	refHeaders["id"] = "1"
 
-	testHeaders := make(map[string]interface{})
-
 	tests := []struct {
-		name      string
-		testKey   string
-		testValue string
-		wantErr   bool
+		name    string
+		table   *godog.Table
+		wantErr bool
 	}{
 		{
-			name:      "Key found and value matches",
-			testKey:   "id",
-			testValue: "1",
-			wantErr:   false,
+			name: "Convert table error",
+			table: golium.NewTable([][]string{
+				{"id", "1"}}),
+			wantErr: true,
 		},
 		{
-			name:      "Key not found",
-			testKey:   "ids",
-			testValue: "1",
-			wantErr:   true,
+			name: "Key found and value matches",
+			table: golium.NewTable([][]string{
+				{"param", "value"},
+				{"id", "1"}}),
+			wantErr: false,
 		},
 		{
-			name:      "Key found wrong value",
-			testKey:   "id",
-			testValue: "2",
-			wantErr:   true,
+			name: "Key not found",
+			table: golium.NewTable([][]string{
+				{"param", "value"},
+				{"ids", "1"}}),
+			wantErr: true,
+		},
+		{
+			name: "Key found wrong value",
+			table: golium.NewTable([][]string{
+				{"param", "value"},
+				{"id", "2"}}),
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
@@ -533,9 +618,8 @@ func TestValidateMessageHeaders(t *testing.T) {
 			s.msg = amqp.Delivery{
 				Headers: refHeaders,
 			}
-			testHeaders[tt.testKey] = tt.testValue
 			if err := s.ValidateMessageHeaders(
-				context.Background(), testHeaders); (err != nil) != tt.wantErr {
+				context.Background(), tt.table); (err != nil) != tt.wantErr {
 				t.Errorf("Session.ValidateMessageHeaders() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -576,12 +660,8 @@ func TestValidateMessageTextBody(t *testing.T) {
 }
 
 func TestValidateMessageJSONBody(t *testing.T) {
-	expectedJSON := make(map[string]interface{})
-	expectedJSON["id"] = "1"
-	wrongExpectedJSON := make(map[string]interface{})
-	wrongExpectedJSON["id"] = "5"
 	type args struct {
-		props map[string]interface{}
+		table *godog.Table
 		pos   int
 	}
 	tests := []struct {
@@ -590,34 +670,51 @@ func TestValidateMessageJSONBody(t *testing.T) {
 		wantErr bool
 	}{
 		{
+			name: "Convert table error",
+			args: args{
+				pos: -1,
+				table: golium.NewTable([][]string{
+					{"id", "1"}}),
+			},
+			wantErr: true,
+		},
+		{
 			name: "JSON body match with pos -1",
 			args: args{
-				pos:   -1,
-				props: expectedJSON,
+				pos: -1,
+				table: golium.NewTable([][]string{
+					{"param", "value"},
+					{"id", "1"}}),
 			},
 			wantErr: false,
 		},
 		{
 			name: "JSON body match with pos != -1",
 			args: args{
-				pos:   0,
-				props: expectedJSON,
+				pos: 0,
+				table: golium.NewTable([][]string{
+					{"param", "value"},
+					{"id", "1"}}),
 			},
 			wantErr: false,
 		},
 		{
 			name: "pos != -1 without messages",
 			args: args{
-				pos:   1,
-				props: expectedJSON,
+				pos: 1,
+				table: golium.NewTable([][]string{
+					{"param", "value"},
+					{"id", "1"}}),
 			},
 			wantErr: true,
 		},
 		{
 			name: "JSON body mismatch with pos -1",
 			args: args{
-				pos:   -1,
-				props: wrongExpectedJSON,
+				pos: -1,
+				table: golium.NewTable([][]string{
+					{"param", "value"},
+					{"id", "5"}}),
 			},
 			wantErr: true,
 		},
@@ -635,7 +732,7 @@ func TestValidateMessageJSONBody(t *testing.T) {
 			}
 
 			if err := s.ValidateMessageJSONBody(
-				context.Background(), tt.args.props, tt.args.pos); (err != nil) != tt.wantErr {
+				context.Background(), tt.args.table, tt.args.pos); (err != nil) != tt.wantErr {
 				t.Errorf("Session.ValidateMessageJSONBody() error = %v, wantErr %v",
 					err, tt.wantErr)
 			}
