@@ -16,47 +16,55 @@ package golium
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"testing"
 )
 
 type Project struct {
-	Name      string
-	Commiters []string
-	Commits   int
+	Name       string
+	Commiters  []string
+	Commits    int
+	Archived   bool
+	Stars      float64
+	Branches   uint64
+	Complexity complex128
+}
+
+type typeParser struct {
+	destination reflect.Value
+	name        string
+	fieldValue  interface{}
+	value       interface{}
 }
 
 func TestStringType(t *testing.T) {
 	var project = &Project{}
-	type args struct {
-		destination   reflect.Value
-		fieldValueStr string
-		value         interface{}
-	}
 
 	ctx := context.Background()
 	tests := []struct {
 		name    string
-		args    args
+		args    typeParser
 		wantErr bool
 	}{
 		{
 			name: "Set string type value",
-			args: args{
-				destination:   reflect.ValueOf(project).Elem(),
-				fieldValueStr: "golium",
-				value:         Value(ctx, "golium"),
+			args: typeParser{
+				destination: reflect.ValueOf(project).Elem(),
+				name:        "Name",
+				fieldValue:  "golium",
+				value:       Value(ctx, "golium"),
 			},
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := validatedField(&tt.args.destination, "Name")
-			if (err != nil) != tt.wantErr {
-				t.Errorf("validatedField() error = %v, wantErr %v", err, tt.wantErr)
+			err := exctractField(&tt.args.destination, tt.args.name)
+			if err != nil {
+				t.Errorf("exctractField() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			err = stringType(tt.args.destination, tt.args.fieldValueStr, tt.args.value)
+			err = stringType(tt.args.destination, fmt.Sprint(tt.args.fieldValue), tt.args.value)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("sliceType() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -64,7 +72,232 @@ func TestStringType(t *testing.T) {
 	}
 }
 
-func TestValidatedField(t *testing.T) {
+func TestIntType(t *testing.T) {
+	var project = &Project{}
+
+	ctx := context.Background()
+	tests := []struct {
+		name    string
+		field   string
+		args    typeParser
+		wantErr bool
+	}{
+		{
+			name: "Set int64 type value",
+			args: typeParser{
+				destination: reflect.ValueOf(project).Elem(),
+				name:        "Commits",
+				fieldValue:  123,
+				value:       Value(ctx, "123"),
+			},
+			wantErr: false,
+		},
+		{
+			name: "Set error non int64 type value",
+			args: typeParser{
+				destination: reflect.ValueOf(project).Elem(),
+				name:        "Commits",
+				fieldValue:  "not a number",
+				value:       Value(ctx, "not a number"),
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := exctractField(&tt.args.destination, tt.args.name)
+			if err != nil {
+				t.Errorf("exctractField() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			err = int64Type(tt.args.destination, fmt.Sprint(tt.args.fieldValue), tt.args.value)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("int64Type() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestBoolType(t *testing.T) {
+	var project = &Project{}
+
+	ctx := context.Background()
+	tests := []struct {
+		name    string
+		field   string
+		args    typeParser
+		wantErr bool
+	}{
+		{
+			name: "Set bool type value",
+			args: typeParser{
+				destination: reflect.ValueOf(project).Elem(),
+				name:        "Archived",
+				fieldValue:  false,
+				value:       Value(ctx, "false"),
+			},
+			wantErr: false,
+		},
+		{
+			name: "Set error non bool type value",
+			args: typeParser{
+				destination: reflect.ValueOf(project).Elem(),
+				name:        "Archived",
+				fieldValue:  "not a bool",
+				value:       Value(ctx, "not a bool"),
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := exctractField(&tt.args.destination, tt.args.name)
+			if err != nil {
+				t.Errorf("exctractField() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			err = boolType(tt.args.destination, fmt.Sprint(tt.args.fieldValue), tt.args.value)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("boolType() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestFloat64Type(t *testing.T) {
+	var project = &Project{}
+
+	ctx := context.Background()
+	tests := []struct {
+		name    string
+		field   string
+		args    typeParser
+		wantErr bool
+	}{
+		{
+			name: "Set float64 type value",
+			args: typeParser{
+				destination: reflect.ValueOf(project).Elem(),
+				name:        "Stars",
+				fieldValue:  float64(34),
+				value:       Value(ctx, fmt.Sprint(float64(34))),
+			},
+			wantErr: false,
+		},
+		{
+			name: "Set error non float64 type value",
+			args: typeParser{
+				destination: reflect.ValueOf(project).Elem(),
+				name:        "Stars",
+				fieldValue:  "not a float64",
+				value:       Value(ctx, "not a float64"),
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := exctractField(&tt.args.destination, tt.args.name)
+			if err != nil {
+				t.Errorf("exctractField() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			err = float64Type(tt.args.destination, fmt.Sprint(tt.args.fieldValue), tt.args.value)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("float64Type() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestUInt64Type(t *testing.T) {
+	var project = &Project{}
+
+	ctx := context.Background()
+	tests := []struct {
+		name    string
+		field   string
+		args    typeParser
+		wantErr bool
+	}{
+		{
+			name: "Set uint64 type value",
+			args: typeParser{
+				destination: reflect.ValueOf(project).Elem(),
+				name:        "Branches",
+				fieldValue:  uint64(55),
+				value:       Value(ctx, fmt.Sprint(uint64(55))),
+			},
+			wantErr: false,
+		},
+		{
+			name: "Set error non uint64 type value",
+			args: typeParser{
+				destination: reflect.ValueOf(project).Elem(),
+				name:        "Branches",
+				fieldValue:  "not a uint64",
+				value:       Value(ctx, "not a uint64"),
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := exctractField(&tt.args.destination, tt.args.name)
+			if err != nil {
+				t.Errorf("exctractField() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			err = uint64Type(tt.args.destination, fmt.Sprint(tt.args.fieldValue), tt.args.value)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("uint64Type() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestComplex64Type(t *testing.T) {
+	var project = &Project{}
+
+	ctx := context.Background()
+	tests := []struct {
+		name    string
+		field   string
+		args    typeParser
+		wantErr bool
+	}{
+		{
+			name: "Set complex64 type value",
+			args: typeParser{
+				destination: reflect.ValueOf(project).Elem(),
+				name:        "Complexity",
+				fieldValue:  complex64(100),
+				value:       Value(ctx, fmt.Sprint(complex64(100))),
+			},
+			wantErr: false,
+		},
+		{
+			name: "Set error non complex64 type value",
+			args: typeParser{
+				destination: reflect.ValueOf(project).Elem(),
+				name:        "Complexity",
+				fieldValue:  "not a complex",
+				value:       Value(ctx, "not a complex"),
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := exctractField(&tt.args.destination, tt.args.name)
+			if err != nil {
+				t.Errorf("exctractField() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			err = complex64Type(tt.args.destination, fmt.Sprint(tt.args.fieldValue), tt.args.value)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("complex64Type() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestExtractField(t *testing.T) {
 	var project = &Project{}
 	type args struct {
 		destination reflect.Value
@@ -92,8 +325,8 @@ func TestValidatedField(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := validatedField(&tt.args.destination, tt.args.name); (err != nil) != tt.wantErr {
-				t.Errorf("validatedField() error = %v, wantErr %v", err, tt.wantErr)
+			if err := exctractField(&tt.args.destination, tt.args.name); (err != nil) != tt.wantErr {
+				t.Errorf("exctractField() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

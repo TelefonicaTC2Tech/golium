@@ -268,7 +268,7 @@ func ConvertTableWithoutHeaderToStruct(ctx context.Context, t *godog.Table, v in
 
 func assignValue(destination reflect.Value, name string, value interface{}) error {
 	fieldValueStr := fmt.Sprintf("%v", value)
-	if err := validatedField(&destination, name); err != nil {
+	if err := exctractField(&destination, name); err != nil {
 		return err
 	}
 	return StrategyFormat[destination.Kind()].format(destination, fieldValueStr, value)

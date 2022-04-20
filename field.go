@@ -184,8 +184,8 @@ func complex64Type(destination reflect.Value, fieldValueStr string, value interf
 	return nil
 }
 
-// validatedField to apply pattern
-func validatedField(destination *reflect.Value, name string) error {
+// exctractField to apply pattern
+func exctractField(destination *reflect.Value, name string) error {
 	if destination.Kind() == reflect.Ptr {
 		*destination = reflect.Indirect(*destination)
 	}
