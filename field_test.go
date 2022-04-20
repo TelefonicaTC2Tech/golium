@@ -39,14 +39,19 @@ type typeParser struct {
 	value       interface{}
 }
 
-func TestStrategyFormatTypes(t *testing.T) {
+type TestArg struct {
+	name    string
+	args    typeParser
+	wantErr bool
+}
+
+var testArgs []TestArg
+
+func setup() {
+	var ctx = context.Background()
 	var project = &Project{}
-	ctx := context.Background()
-	tests := []struct {
-		name    string
-		args    typeParser
-		wantErr bool
-	}{
+
+	testArgs = []TestArg{
 		{
 			name: "Format to set string type value",
 			args: typeParser{
@@ -169,7 +174,11 @@ func TestStrategyFormatTypes(t *testing.T) {
 			wantErr: true,
 		},
 	}
-	for _, tt := range tests {
+}
+
+func TestStrategyFormatTypes(t *testing.T) {
+	setup()
+	for _, tt := range testArgs {
 		t.Run(tt.name, func(t *testing.T) {
 			err := exctractField(&tt.args.destination, tt.args.name)
 			if err != nil {
