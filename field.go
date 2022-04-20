@@ -54,7 +54,7 @@ var StrategyFormat = map[reflect.Kind]*FieldConversor{
 	reflect.Int32:      NewInt64Converter(),
 	reflect.Int64:      NewInt64Converter(),
 	reflect.Uint:       NewUInt64Converter(),
-	reflect.Uint8:      NewInt64Converter(),
+	reflect.Uint8:      NewUInt64Converter(),
 	reflect.Uint16:     NewUInt64Converter(),
 	reflect.Uint32:     NewUInt64Converter(),
 	reflect.Uint64:     NewUInt64Converter(),
