@@ -69,12 +69,12 @@ func NewSliceConverter() *FieldConversor {
 	return &FieldConversor{Pattern: sliceType}
 }
 
-// sliceType conversion pattern to appy
+// sliceType conversion pattern to apply
 func sliceType(destination reflect.Value, fieldValueStr string, value interface{}) error {
 	array, ok := value.([]gjson.Result)
 	if !ok {
 		return fmt.Errorf(
-			"failed parsing destination '%v', not a JSON array",
+			"failed parsing value '%v', not a JSON array",
 			value)
 	}
 	length := len(array)
@@ -94,7 +94,7 @@ func NewStringConverter() *FieldConversor {
 	return &FieldConversor{Pattern: stringType}
 }
 
-// stringType conversion pattern to appy
+// stringType conversion pattern to apply
 func stringType(destination reflect.Value, fieldValueStr string, value interface{}) error {
 	destination.SetString(fieldValueStr)
 	return nil
@@ -105,7 +105,7 @@ func NewBoolConverter() *FieldConversor {
 	return &FieldConversor{Pattern: boolType}
 }
 
-// boolType conversion pattern to appy
+// boolType conversion pattern to apply
 func boolType(destination reflect.Value, fieldValueStr string, value interface{}) error {
 	v, err := strconv.ParseBool(fieldValueStr)
 	if err != nil {
@@ -121,7 +121,7 @@ func NewInt64Converter() *FieldConversor {
 	return &FieldConversor{Pattern: int64Type}
 }
 
-// int64Type conversion pattern to appy
+// int64Type conversion pattern to apply
 func int64Type(destination reflect.Value, fieldValueStr string, value interface{}) error {
 	v, err := strconv.ParseInt(fieldValueStr, 10, 64)
 	if err != nil {
@@ -138,7 +138,7 @@ func NewUInt64Converter() *FieldConversor {
 	return &FieldConversor{Pattern: uint64Type}
 }
 
-// uint64Type conversion pattern to appy
+// uint64Type conversion pattern to apply
 func uint64Type(destination reflect.Value, fieldValueStr string, value interface{}) error {
 	v, err := strconv.ParseUint(fieldValueStr, 10, 64)
 	if err != nil {
@@ -155,7 +155,7 @@ func NewFloat64Converter() *FieldConversor {
 	return &FieldConversor{Pattern: float64Type}
 }
 
-// float64Type conversion pattern to appy
+// float64Type conversion pattern to apply
 func float64Type(destination reflect.Value, fieldValueStr string, value interface{}) error {
 	v, err := strconv.ParseFloat(fieldValueStr, 64)
 	if err != nil {
@@ -172,7 +172,7 @@ func NewComplex64Converter() *FieldConversor {
 	return &FieldConversor{Pattern: complex64Type}
 }
 
-// complex64Type conversion pattern to appy
+// complex64Type conversion pattern to apply
 func complex64Type(destination reflect.Value, fieldValueStr string, value interface{}) error {
 	v, err := strconv.ParseComplex(fieldValueStr, 128)
 	if err != nil {
