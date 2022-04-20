@@ -32,15 +32,15 @@ type Project struct {
 }
 
 type typeParser struct {
+	kind        reflect.Kind
 	destination reflect.Value
 	name        string
 	fieldValue  interface{}
 	value       interface{}
 }
 
-func TestStringType(t *testing.T) {
+func TestStrategyFormatTypes(t *testing.T) {
 	var project = &Project{}
-
 	ctx := context.Background()
 	tests := []struct {
 		name    string
@@ -48,8 +48,9 @@ func TestStringType(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "Set string type value",
+			name: "Format to set string type value",
 			args: typeParser{
+				kind:        reflect.String,
 				destination: reflect.ValueOf(project).Elem(),
 				name:        "Name",
 				fieldValue:  "golium",
@@ -57,34 +58,10 @@ func TestStringType(t *testing.T) {
 			},
 			wantErr: false,
 		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := exctractField(&tt.args.destination, tt.args.name)
-			if err != nil {
-				t.Errorf("exctractField() error = %v, wantErr %v", err, tt.wantErr)
-			}
-			err = stringType(tt.args.destination, fmt.Sprint(tt.args.fieldValue), tt.args.value)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("sliceType() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestIntType(t *testing.T) {
-	var project = &Project{}
-
-	ctx := context.Background()
-	tests := []struct {
-		name    string
-		field   string
-		args    typeParser
-		wantErr bool
-	}{
 		{
-			name: "Set int64 type value",
+			name: "Format to set int64 type value",
 			args: typeParser{
+				kind:        reflect.Int64,
 				destination: reflect.ValueOf(project).Elem(),
 				name:        "Commits",
 				fieldValue:  123,
@@ -93,8 +70,9 @@ func TestIntType(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "Set error non int64 type value",
+			name: "Format error when set a non int64 type value",
 			args: typeParser{
+				kind:        reflect.Int64,
 				destination: reflect.ValueOf(project).Elem(),
 				name:        "Commits",
 				fieldValue:  "not a number",
@@ -102,34 +80,10 @@ func TestIntType(t *testing.T) {
 			},
 			wantErr: true,
 		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := exctractField(&tt.args.destination, tt.args.name)
-			if err != nil {
-				t.Errorf("exctractField() error = %v, wantErr %v", err, tt.wantErr)
-			}
-			err = int64Type(tt.args.destination, fmt.Sprint(tt.args.fieldValue), tt.args.value)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("int64Type() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestBoolType(t *testing.T) {
-	var project = &Project{}
-
-	ctx := context.Background()
-	tests := []struct {
-		name    string
-		field   string
-		args    typeParser
-		wantErr bool
-	}{
 		{
-			name: "Set bool type value",
+			name: "Format to set bool type value",
 			args: typeParser{
+				kind:        reflect.Bool,
 				destination: reflect.ValueOf(project).Elem(),
 				name:        "Archived",
 				fieldValue:  false,
@@ -138,8 +92,9 @@ func TestBoolType(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "Set error non bool type value",
+			name: "Format error when set a non bool type value",
 			args: typeParser{
+				kind:        reflect.Bool,
 				destination: reflect.ValueOf(project).Elem(),
 				name:        "Archived",
 				fieldValue:  "not a bool",
@@ -147,34 +102,10 @@ func TestBoolType(t *testing.T) {
 			},
 			wantErr: true,
 		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := exctractField(&tt.args.destination, tt.args.name)
-			if err != nil {
-				t.Errorf("exctractField() error = %v, wantErr %v", err, tt.wantErr)
-			}
-			err = boolType(tt.args.destination, fmt.Sprint(tt.args.fieldValue), tt.args.value)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("boolType() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestFloat64Type(t *testing.T) {
-	var project = &Project{}
-
-	ctx := context.Background()
-	tests := []struct {
-		name    string
-		field   string
-		args    typeParser
-		wantErr bool
-	}{
 		{
-			name: "Set float64 type value",
+			name: "Format to set float64 type value",
 			args: typeParser{
+				kind:        reflect.Float64,
 				destination: reflect.ValueOf(project).Elem(),
 				name:        "Stars",
 				fieldValue:  float64(34),
@@ -183,8 +114,9 @@ func TestFloat64Type(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "Set error non float64 type value",
+			name: "Format error when set a non float64 type value",
 			args: typeParser{
+				kind:        reflect.Float64,
 				destination: reflect.ValueOf(project).Elem(),
 				name:        "Stars",
 				fieldValue:  "not a float64",
@@ -192,34 +124,10 @@ func TestFloat64Type(t *testing.T) {
 			},
 			wantErr: true,
 		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := exctractField(&tt.args.destination, tt.args.name)
-			if err != nil {
-				t.Errorf("exctractField() error = %v, wantErr %v", err, tt.wantErr)
-			}
-			err = float64Type(tt.args.destination, fmt.Sprint(tt.args.fieldValue), tt.args.value)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("float64Type() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestUInt64Type(t *testing.T) {
-	var project = &Project{}
-
-	ctx := context.Background()
-	tests := []struct {
-		name    string
-		field   string
-		args    typeParser
-		wantErr bool
-	}{
 		{
-			name: "Set uint64 type value",
+			name: "Format to set uint64 type value",
 			args: typeParser{
+				kind:        reflect.Uint64,
 				destination: reflect.ValueOf(project).Elem(),
 				name:        "Branches",
 				fieldValue:  uint64(55),
@@ -228,8 +136,9 @@ func TestUInt64Type(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "Set error non uint64 type value",
+			name: "Format error when set a non uint64 type value",
 			args: typeParser{
+				kind:        reflect.Uint64,
 				destination: reflect.ValueOf(project).Elem(),
 				name:        "Branches",
 				fieldValue:  "not a uint64",
@@ -237,34 +146,10 @@ func TestUInt64Type(t *testing.T) {
 			},
 			wantErr: true,
 		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := exctractField(&tt.args.destination, tt.args.name)
-			if err != nil {
-				t.Errorf("exctractField() error = %v, wantErr %v", err, tt.wantErr)
-			}
-			err = uint64Type(tt.args.destination, fmt.Sprint(tt.args.fieldValue), tt.args.value)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("uint64Type() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestComplex64Type(t *testing.T) {
-	var project = &Project{}
-
-	ctx := context.Background()
-	tests := []struct {
-		name    string
-		field   string
-		args    typeParser
-		wantErr bool
-	}{
 		{
-			name: "Set complex64 type value",
+			name: "Format to set complex64 type value",
 			args: typeParser{
+				kind:        reflect.Complex64,
 				destination: reflect.ValueOf(project).Elem(),
 				name:        "Complexity",
 				fieldValue:  complex64(100),
@@ -273,8 +158,9 @@ func TestComplex64Type(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "Set error non complex64 type value",
+			name: "Format error when set a non complex64 type value",
 			args: typeParser{
+				kind:        reflect.Complex64,
 				destination: reflect.ValueOf(project).Elem(),
 				name:        "Complexity",
 				fieldValue:  "not a complex",
@@ -289,9 +175,10 @@ func TestComplex64Type(t *testing.T) {
 			if err != nil {
 				t.Errorf("exctractField() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			err = complex64Type(tt.args.destination, fmt.Sprint(tt.args.fieldValue), tt.args.value)
+			err = StrategyFormat[tt.args.kind].
+				format(tt.args.destination, fmt.Sprint(tt.args.fieldValue), tt.args.value)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("complex64Type() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("format for kind %s error = %v, wantErr %v", tt.args.kind, err, tt.wantErr)
 			}
 		})
 	}
