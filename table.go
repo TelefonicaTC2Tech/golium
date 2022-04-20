@@ -27,24 +27,10 @@ import (
 
 // Remove headers form table
 func RemoveHeaders(t *godog.Table) error {
-	rows := make([]*messages.PickleTableRow, len(t.Rows)-1)
-
 	if len(t.Rows) < 2 {
 		return errors.New("cannot remove header: table must have at least one header and one useful row")
 	}
-
-	for i := 1; i < len(t.Rows); i++ {
-		pickleTableCells := make([]*messages.PickleTableCell, len(t.Rows[i].Cells))
-		for j, cell := range t.Rows[i].Cells {
-			pickleTableCells[j] = &messages.PickleTableCell{
-				Value: cell.Value,
-			}
-		}
-		rows[i-1] = &messages.PickleTableRow{Cells: pickleTableCells}
-	}
-
-	t.Rows = rows
-
+	t.Rows = t.Rows[1:]
 	return nil
 }
 
