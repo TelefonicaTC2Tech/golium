@@ -94,6 +94,11 @@ func setup() {
 			wantErr: false,
 		},
 		{
+			name:    "Format error when set array slice type value",
+			args:    typeSlice("Commiters", "[results]"),
+			wantErr: true,
+		},
+		{
 			name:    "Format error when set a non bool type value",
 			args:    typeParserBuilder(ctx, reflect.Bool, "Archived", "not a bool"),
 			wantErr: true,
