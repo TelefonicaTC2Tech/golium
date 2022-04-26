@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
+
+	"github.com/tidwall/gjson"
 )
 
 type Project struct {
@@ -62,27 +64,33 @@ func typeParserBuilder(ctx context.Context,
 	}
 }
 
+func typeSlice(
+	name string,
+	fieldValue interface{},
+) typeParser {
+	return typeParser{
+		kind:        reflect.Slice,
+		destination: reflect.ValueOf(&Project{}).Elem(),
+		name:        name,
+		value:       fieldValue,
+	}
+}
+
 func setup() {
 	var ctx = context.Background()
+	gjsonArg := gjson.Result{
+		Index:   140,
+		Indexes: []int{},
+		Num:     float64(0),
+		Raw:     "[ricardogarfe, jordipuigbou, sarmar11]",
+		Str:     "[ricardogarfe, jordipuigbou, sarmar11]",
+		Type:    3}
+	var results []gjson.Result
+	results = append(results, gjsonArg)
 	testArgs = []TestArg{
 		{
-			name:    "Format to set string type value",
-			args:    typeParserBuilder(ctx, reflect.String, "Name", "golium"),
-			wantErr: false,
-		},
-		{
-			name:    "Format to set int64 type value",
-			args:    typeParserBuilder(ctx, reflect.Int64, "Commits", 123),
-			wantErr: false,
-		},
-		{
-			name:    "Format error when set a non int64 type value",
-			args:    typeParserBuilder(ctx, reflect.Int64, "Commits", "not a number"),
-			wantErr: true,
-		},
-		{
-			name:    "Format to set bool type value",
-			args:    typeParserBuilder(ctx, reflect.Bool, "Archived", false),
+			name:    "Format to set array slice type value",
+			args:    typeSlice("Commiters", results),
 			wantErr: false,
 		},
 		{
