@@ -47,130 +47,77 @@ type TestArg struct {
 
 var testArgs []TestArg
 
+// typeParserBuilder to create test input values
+func typeParserBuilder(ctx context.Context,
+	kind reflect.Kind,
+	name string,
+	fieldValue interface{},
+) typeParser {
+	return typeParser{
+		kind:        kind,
+		destination: reflect.ValueOf(&Project{}).Elem(),
+		name:        name,
+		fieldValue:  fieldValue,
+		value:       Value(ctx, fmt.Sprintf("%v", fieldValue)),
+	}
+}
+
 func setup() {
 	var ctx = context.Background()
-	var project = &Project{}
-
 	testArgs = []TestArg{
 		{
-			name: "Format to set string type value",
-			args: typeParser{
-				kind:        reflect.String,
-				destination: reflect.ValueOf(project).Elem(),
-				name:        "Name",
-				fieldValue:  "golium",
-				value:       Value(ctx, "golium"),
-			},
+			name:    "Format to set string type value",
+			args:    typeParserBuilder(ctx, reflect.String, "Name", "golium"),
 			wantErr: false,
 		},
 		{
-			name: "Format to set int64 type value",
-			args: typeParser{
-				kind:        reflect.Int64,
-				destination: reflect.ValueOf(project).Elem(),
-				name:        "Commits",
-				fieldValue:  123,
-				value:       Value(ctx, "123"),
-			},
+			name:    "Format to set int64 type value",
+			args:    typeParserBuilder(ctx, reflect.Int64, "Commits", 123),
 			wantErr: false,
 		},
 		{
-			name: "Format error when set a non int64 type value",
-			args: typeParser{
-				kind:        reflect.Int64,
-				destination: reflect.ValueOf(project).Elem(),
-				name:        "Commits",
-				fieldValue:  "not a number",
-				value:       Value(ctx, "not a number"),
-			},
+			name:    "Format error when set a non int64 type value",
+			args:    typeParserBuilder(ctx, reflect.Int64, "Commits", "not a number"),
 			wantErr: true,
 		},
 		{
-			name: "Format to set bool type value",
-			args: typeParser{
-				kind:        reflect.Bool,
-				destination: reflect.ValueOf(project).Elem(),
-				name:        "Archived",
-				fieldValue:  false,
-				value:       Value(ctx, "false"),
-			},
+			name:    "Format to set bool type value",
+			args:    typeParserBuilder(ctx, reflect.Bool, "Archived", false),
 			wantErr: false,
 		},
 		{
-			name: "Format error when set a non bool type value",
-			args: typeParser{
-				kind:        reflect.Bool,
-				destination: reflect.ValueOf(project).Elem(),
-				name:        "Archived",
-				fieldValue:  "not a bool",
-				value:       Value(ctx, "not a bool"),
-			},
+			name:    "Format error when set a non bool type value",
+			args:    typeParserBuilder(ctx, reflect.Bool, "Archived", "not a bool"),
 			wantErr: true,
 		},
 		{
-			name: "Format to set float64 type value",
-			args: typeParser{
-				kind:        reflect.Float64,
-				destination: reflect.ValueOf(project).Elem(),
-				name:        "Stars",
-				fieldValue:  float64(34),
-				value:       Value(ctx, fmt.Sprint(float64(34))),
-			},
+			name:    "Format to set float64 type value",
+			args:    typeParserBuilder(ctx, reflect.Float64, "Stars", float64(34)),
 			wantErr: false,
 		},
 		{
-			name: "Format error when set a non float64 type value",
-			args: typeParser{
-				kind:        reflect.Float64,
-				destination: reflect.ValueOf(project).Elem(),
-				name:        "Stars",
-				fieldValue:  "not a float64",
-				value:       Value(ctx, "not a float64"),
-			},
+			name:    "Format error when set a non float64 type value",
+			args:    typeParserBuilder(ctx, reflect.Float64, "Stars", "not a float64"),
 			wantErr: true,
 		},
 		{
-			name: "Format to set uint64 type value",
-			args: typeParser{
-				kind:        reflect.Uint64,
-				destination: reflect.ValueOf(project).Elem(),
-				name:        "Branches",
-				fieldValue:  uint64(55),
-				value:       Value(ctx, fmt.Sprint(uint64(55))),
-			},
+			name:    "Format to set uint64 type value",
+			args:    typeParserBuilder(ctx, reflect.Uint64, "Branches", uint64(55)),
 			wantErr: false,
 		},
 		{
-			name: "Format error when set a non uint64 type value",
-			args: typeParser{
-				kind:        reflect.Uint64,
-				destination: reflect.ValueOf(project).Elem(),
-				name:        "Branches",
-				fieldValue:  "not a uint64",
-				value:       Value(ctx, "not a uint64"),
-			},
+			name:    "Format error when set a non uint64 type value",
+			args:    typeParserBuilder(ctx, reflect.Uint64, "Branches", "not a uint64"),
 			wantErr: true,
 		},
 		{
-			name: "Format to set complex64 type value",
-			args: typeParser{
-				kind:        reflect.Complex64,
-				destination: reflect.ValueOf(project).Elem(),
-				name:        "Complexity",
-				fieldValue:  complex64(100),
-				value:       Value(ctx, fmt.Sprint(complex64(100))),
-			},
+			name:    "Format to set complex64 type value",
+			args:    typeParserBuilder(ctx, reflect.Complex64, "Complexity", complex64(100)),
 			wantErr: false,
 		},
 		{
-			name: "Format error when set a non complex64 type value",
-			args: typeParser{
-				kind:        reflect.Complex64,
-				destination: reflect.ValueOf(project).Elem(),
-				name:        "Complexity",
-				fieldValue:  "not a complex",
-				value:       Value(ctx, "not a complex"),
-			},
+			name:    "Format error when set a non complex64 type value",
+			args:    typeParserBuilder(ctx, reflect.Complex64, "Complexity", "not a complex"),
 			wantErr: true,
 		},
 	}
