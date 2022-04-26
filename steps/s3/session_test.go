@@ -22,6 +22,7 @@ import (
 
 	"github.com/TelefonicaTC2Tech/golium"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/session"
 )
 
 const (
@@ -37,6 +38,7 @@ minioEndpoint: http://miniomock:9000
 )
 
 type testMockedError struct {
+	clientSessionErr     bool
 	uploadErr            error
 	createBucketErr      error
 	deleteBucketErr      error
@@ -159,6 +161,13 @@ func TestValidateS3BucketExists(t *testing.T) {
 func TestValidateS3FileExists(t *testing.T) {
 	tests := []testS3{
 		{
+			name: "Client nil session error",
+			errors: &testMockedError{
+				clientSessionErr: true,
+			},
+			wantErr: true,
+		},
+		{
 			name: "Key exists error",
 			errors: &testMockedError{
 				headObjectErr: fmt.Errorf("head object error"),
@@ -195,7 +204,11 @@ func TestValidateS3FileExists(t *testing.T) {
 func setS3SessionMockedClient(testErrors *testMockedError) *Session {
 	s := &Session{}
 	s.S3ServiceClient = ClientServiceFuncMock{}
-
+	if !testErrors.clientSessionErr {
+		s.Client, _ = session.NewSession()
+	} else {
+		s.Client = nil
+	}
 	UploadError = testErrors.uploadErr
 	CreateBucketError = testErrors.createBucketErr
 	DeleteBucketError = testErrors.deleteBucketErr
@@ -210,6 +223,20 @@ func setS3SessionMockedClient(testErrors *testMockedError) *Session {
 func fillS3Tests(name string, err *testMockedError) []testS3 {
 	tests := []testS3{
 		{
+			name: "Nil session client error",
+			errors: &testMockedError{
+				clientSessionErr:     true,
+				createBucketErr:      nil,
+				uploadErr:            nil,
+				deleteBucketErr:      nil,
+				getBucketLocationErr: nil,
+				headObjectErr:        nil,
+				downloadErr:          nil,
+				deleteObjectErr:      nil,
+			},
+			wantErr: true,
+		},
+		{
 			name:    name + " error",
 			errors:  err,
 			wantErr: true,
@@ -217,6 +244,7 @@ func fillS3Tests(name string, err *testMockedError) []testS3 {
 		{
 			name: name + " without error",
 			errors: &testMockedError{
+				clientSessionErr:     false,
 				createBucketErr:      nil,
 				uploadErr:            nil,
 				deleteBucketErr:      nil,
@@ -240,6 +268,13 @@ func TestValidateS3FileExistsWithContent(t *testing.T) {
 		errors  *testMockedError
 		wantErr bool
 	}{
+		{
+			name: "Client nil session error",
+			errors: &testMockedError{
+				clientSessionErr: true,
+			},
+			wantErr: true,
+		},
 		{
 			name: "Download error",
 			errors: &testMockedError{
