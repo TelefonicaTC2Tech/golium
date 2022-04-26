@@ -57,7 +57,8 @@ func ValueAsInt(ctx context.Context, s string) (int, error) {
 //   time.ParseDuration function. Currently, it supports the following units:
 //   "ns", "us", "ms", "s", "m", "h".
 //   The format can be "unix" or a layout valid for time.Format function.
-//   It is possible to use [NOW]. In that case, it returns an int64 with the now timestamp in unix format.
+//   It is possible to use [NOW]. In that case, it returns an int64 with the now timestamp
+//   in unix format.
 //
 // Most cases, the return value is a string except for the following cases:
 // - [TRUE] and [FALSE] return a bool type.
