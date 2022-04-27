@@ -20,34 +20,17 @@ import (
 	"fmt"
 	"net/url"
 	"reflect"
-	"strconv"
-	"strings"
 
 	"github.com/cucumber/godog"
 	"github.com/cucumber/messages-go/v16"
-	"github.com/tidwall/gjson"
 )
 
 // Remove headers form table
 func RemoveHeaders(t *godog.Table) error {
-	rows := make([]*messages.PickleTableRow, len(t.Rows)-1)
-
 	if len(t.Rows) < 2 {
 		return errors.New("cannot remove header: table must have at least one header and one useful row")
 	}
-
-	for i := 1; i < len(t.Rows); i++ {
-		pickleTableCells := make([]*messages.PickleTableCell, len(t.Rows[i].Cells))
-		for j, cell := range t.Rows[i].Cells {
-			pickleTableCells[j] = &messages.PickleTableCell{
-				Value: cell.Value,
-			}
-		}
-		rows[i-1] = &messages.PickleTableRow{Cells: pickleTableCells}
-	}
-
-	t.Rows = rows
-
+	t.Rows = t.Rows[1:]
 	return nil
 }
 
@@ -203,7 +186,7 @@ func ConvertTableWithHeaderToStructSlice(ctx context.Context,
 	for i := 1; i < len(t.Rows); i++ {
 		elemValue := reflect.New(sliceElemType).Elem()
 		for n, cell := range t.Rows[i].Cells {
-			if err := assignFieldInStruct(elemValue, header[n].Value, Value(ctx, cell.Value)); err != nil {
+			if err := assignValue(elemValue, header[n].Value, Value(ctx, cell.Value)); err != nil {
 				return fmt.Errorf("failed setting element '%s' in struct of type '%s': %w",
 					header[n].Value, sliceElemType, err)
 			}
@@ -235,8 +218,10 @@ func ConvertTableWithHeaderToStructSlice(ctx context.Context,
 // 		})
 // It will be equivalent to:
 //		testElement := TestElement{Name: "example 1", Value: 1}
-// Warning: still pending process values directly as arrays, i.e.: | addresses | ["http://localhost:8080"] |
-//          use by now a CONF tag, i.e.: | addresses | [CONF:elasticsearch.addresses] |
+// Warning: still pending process values directly as arrays, i.e.:
+//			| addresses | ["http://localhost:8080"] |
+// use by now a CONF tag, i.e.:
+//			| addresses | [CONF:elasticsearch.addresses] |
 
 func ConvertTableWithoutHeaderToStruct(ctx context.Context, t *godog.Table, v interface{}) error {
 	err := RemoveHeaders(t)
@@ -258,7 +243,7 @@ func ConvertTableWithoutHeaderToStruct(ctx context.Context, t *godog.Table, v in
 		cells := t.Rows[i].Cells
 		propKey := cells[0].Value
 		propValue := cells[1].Value
-		if err := assignFieldInStruct(value, propKey, Value(ctx, propValue)); err != nil {
+		if err := assignValue(value, propKey, Value(ctx, propValue)); err != nil {
 			errStr := fmt.Sprintf("failed setting element '%s' in struct of type '%s': %s",
 				propKey, value.Type(), err.Error())
 			return errors.New(errStr)
@@ -267,118 +252,10 @@ func ConvertTableWithoutHeaderToStruct(ctx context.Context, t *godog.Table, v in
 	return nil
 }
 
-func assignFieldInStruct(value reflect.Value, fieldName string, fieldValue interface{}) error {
-	if value.Kind() == reflect.Ptr {
-		value = reflect.Indirect(value)
+func assignValue(destination reflect.Value, name string, value interface{}) error {
+	fieldValueStr := fmt.Sprintf("%v", value)
+	if err := exctractField(&destination, name); err != nil {
+		return err
 	}
-	if value.Kind() != reflect.Struct {
-		return fmt.Errorf("value must be a struct")
-	}
-	f := value.FieldByNameFunc(func(n string) bool {
-		return strings.EqualFold(n, fieldName)
-	})
-	if !f.IsValid() {
-		return fmt.Errorf("field '%s' is not valid", fieldName)
-	}
-	if !f.CanSet() {
-		return fmt.Errorf("field '%s' cannot be set", fieldName)
-	}
-	if f.Kind() == reflect.Ptr {
-		if fieldValue == nil {
-			f.SetPointer(nil)
-			return nil
-		}
-		fv := reflect.New(f.Type().Elem())
-		f.Set(fv)
-		f = fv.Elem()
-	}
-	fieldValueStr := fmt.Sprintf("%v", fieldValue)
-	if f.Kind() == reflect.Slice {
-		array, ok := fieldValue.([]gjson.Result)
-		if !ok {
-			return fmt.Errorf("failed setting the field '%s' with value '%s', not an array/slice", fieldName, fieldValueStr)
-		}
-		length := len(array)
-		var fv reflect.Value
-		if length > 0 {
-			fv = makeSlice(array[0], length)
-			for i, v := range array {
-				setSliceValue(fv.Index(i), v)
-			}
-		}
-		f.Set(fv)
-		return nil
-	}
-	if f.Kind() == reflect.String {
-		f.SetString(fieldValueStr)
-		return nil
-	}
-	if f.Kind() == reflect.Bool {
-		v, err := strconv.ParseBool(fieldValueStr)
-		if err != nil {
-			return fmt.Errorf("failed parsing to boolean the field '%s' with value '%s'", fieldName, fieldValueStr)
-		}
-		f.SetBool(v)
-		return nil
-	}
-	if f.Kind() == reflect.Int || f.Kind() == reflect.Int8 || f.Kind() == reflect.Int16 || f.Kind() == reflect.Int32 || f.Kind() == reflect.Int64 {
-		v, err := strconv.ParseInt(fieldValueStr, 10, 64)
-		if err != nil {
-			return fmt.Errorf("failed parsing to integer the field '%s' with value '%s'", fieldName, fieldValueStr)
-		}
-		f.SetInt(v)
-		return nil
-	}
-	if f.Kind() == reflect.Uint || f.Kind() == reflect.Uint8 || f.Kind() == reflect.Uint16 || f.Kind() == reflect.Uint32 || f.Kind() == reflect.Uint64 {
-		v, err := strconv.ParseUint(fieldValueStr, 10, 64)
-		if err != nil {
-			return fmt.Errorf("failed parsing to unsigned integer the field '%s' with value '%s'", fieldName, fieldValueStr)
-		}
-		f.SetUint(v)
-		return nil
-	}
-	if f.Kind() == reflect.Float32 || f.Kind() == reflect.Float64 {
-		v, err := strconv.ParseFloat(fieldValueStr, 64)
-		if err != nil {
-			return fmt.Errorf("failed parsing to float the field '%s' with value '%s'", fieldName, fieldValueStr)
-		}
-		f.SetFloat(v)
-		return nil
-	}
-	if f.Kind() == reflect.Complex64 || f.Kind() == reflect.Complex128 {
-		v, err := strconv.ParseComplex(fieldValueStr, 128)
-		if err != nil {
-			return fmt.Errorf("failed parsing to complex the field '%s' with value '%s'", fieldName, fieldValueStr)
-		}
-		f.SetComplex(v)
-		return nil
-	}
-	return nil
-}
-
-func makeSlice(element gjson.Result, length int) reflect.Value {
-	var rv reflect.Value
-	switch element.Type {
-	case gjson.False, gjson.True:
-		var b bool
-		rv = reflect.ValueOf(b)
-	case gjson.Number:
-		var i int
-		rv = reflect.ValueOf(i)
-	case gjson.String, gjson.JSON, gjson.Null:
-		var s string
-		rv = reflect.ValueOf(s)
-	}
-	return reflect.MakeSlice(reflect.SliceOf(rv.Type()), length, length)
-}
-
-func setSliceValue(field reflect.Value, value gjson.Result) {
-	switch value.Type {
-	case gjson.False, gjson.True:
-		field.Set(reflect.ValueOf(value.Bool()))
-	case gjson.Number:
-		field.Set(reflect.ValueOf(value.Int()))
-	case gjson.String, gjson.JSON, gjson.Null:
-		field.Set(reflect.ValueOf(value.String()))
-	}
+	return StrategyFormat[destination.Kind()].format(destination, fieldValueStr, value)
 }

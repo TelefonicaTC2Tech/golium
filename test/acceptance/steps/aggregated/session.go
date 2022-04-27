@@ -20,12 +20,12 @@ import (
 	"github.com/TelefonicaTC2Tech/golium/test/acceptance/steps/shared"
 )
 
-// AggregatedSession contains the information of shared session
-type AggregatedSession struct {
+// Session contains the information of shared session
+type Session struct {
 	session *shared.Session
 }
 
 // SaveStatusCode saves code in shared session.
-func (a *AggregatedSession) SaveStatusCode(ctx context.Context, code int) error {
-	return a.session.SaveStatusCode(ctx, code)
+func (s *Session) SaveStatusCode(ctx context.Context, code int) error {
+	return s.session.SaveStatusCode(ctx, code)
 }

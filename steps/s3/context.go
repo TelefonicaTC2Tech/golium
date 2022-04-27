@@ -26,7 +26,7 @@ const contextKey ContextKey = "s3Session"
 // InitializeContext adds the s3 session to the context.
 // The new context is returned because context is immutable.
 func InitializeContext(ctx context.Context) context.Context {
-	return context.WithValue(ctx, contextKey, &Session{})
+	return context.WithValue(ctx, contextKey, &Session{S3ServiceClient: *NewS3ClientService()})
 }
 
 // GetSession returns the s3 session stored in context.

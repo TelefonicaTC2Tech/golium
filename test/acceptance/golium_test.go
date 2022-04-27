@@ -16,6 +16,7 @@ package main
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"github.com/TelefonicaTC2Tech/golium"
@@ -37,6 +38,8 @@ func TestMain(m *testing.M) {
 	launcher := golium.NewLauncher()
 	InitializeMocks()
 	launcher.Launch(InitializeTestSuite, InitializeScenario)
+	exitVal := m.Run()
+	os.Exit(exitVal)
 }
 
 func InitializeMocks() {

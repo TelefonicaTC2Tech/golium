@@ -21,7 +21,6 @@ import (
 // Map is an interface to get elements from a data structure with a dot notation.
 type Map interface {
 	Get(path string) interface{}
-	GetAsString(path string) *string
 }
 
 // gjsonMap provides methods to get elements from a JSON document with a dot notation.
@@ -34,16 +33,6 @@ func NewMapFromJSONBytes(buf []byte) Map {
 	return &gjsonMap{
 		gmap: gjson.ParseBytes(buf),
 	}
-}
-
-// GetAsString returns an element as a string. It returns a pointer to support nil.
-func (m *gjsonMap) GetAsString(path string) *string {
-	result := m.gmap.Get(path)
-	if result.Type == gjson.Null {
-		return nil
-	}
-	v := result.String()
-	return &v
 }
 
 // Get an element from the map by a path with dot notation.

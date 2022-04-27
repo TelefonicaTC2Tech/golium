@@ -177,19 +177,19 @@ Feature: HTTP client
 
   @http
   Scenario: Follow redirection
-    Given the HTTP endpoint "http://www.elevenpaths.com"
+    Given the HTTP endpoint "http://www.github.com"
      When I send a HTTP "GET" request
       And the HTTP status code must be "200"
 
   @http
   Scenario: Follow no redirection
-    Given the HTTP endpoint "http://www.elevenpaths.com"
+    Given the HTTP endpoint "http://www.github.com"
       And the HTTP client does not follow any redirection
      When I send a HTTP "GET" request
       And the HTTP status code must be "301"
       And the HTTP response must contain the headers
           | param    | value                        |
-          | Location | https://www.elevenpaths.com/ |
+          | Location | https://www.github.com/ |
       And I store the header "Location" from the HTTP response in context "header.location"
 
   @http

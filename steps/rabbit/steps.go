@@ -41,29 +41,16 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 		return session.SubscribeTopic(ctx, golium.ValueAsString(ctx, topic))
 	})
 	scenCtx.Step(`^I set rabbit headers$`, func(t *godog.Table) error {
-		props, err := golium.ConvertTableToMap(ctx, t)
-		if err != nil {
-			return fmt.Errorf("failed processing table to a map for the request body: %w", err)
-		}
-		return session.ConfigureHeaders(ctx, props)
+		return session.ConfigureHeaders(ctx, t)
 	})
 	scenCtx.Step(`^I set standard rabbit properties$`, func(t *godog.Table) error {
-		var props amqp.Publishing
-		if err := golium.ConvertTableWithoutHeaderToStruct(ctx, t, &props); err != nil {
-			return fmt.Errorf("failed configuring rabbit endpoint: %w", err)
-		}
-		session.ConfigureStandardProperties(ctx, props)
-		return nil
+		return session.ConfigureStandardProperties(ctx, t)
 	})
 	scenCtx.Step(`^I publish a message to the rabbit topic "([^"]*)" with the text$`, func(topic string, message *godog.DocString) error {
 		return session.PublishTextMessage(ctx, golium.ValueAsString(ctx, topic), golium.ValueAsString(ctx, message.Content))
 	})
 	scenCtx.Step(`^I publish a message to the rabbit topic "([^"]*)" with the JSON properties$`, func(topic string, t *godog.Table) error {
-		props, err := golium.ConvertTableToMap(ctx, t)
-		if err != nil {
-			return fmt.Errorf("failed processing table to a map for the request body: %w", err)
-		}
-		return session.PublishJSONMessage(ctx, golium.ValueAsString(ctx, topic), props)
+		return session.PublishJSONMessage(ctx, golium.ValueAsString(ctx, topic), t)
 	})
 	scenCtx.Step(`^I wait up to "(\d+)" seconds? for a rabbit message with the text$`, func(timeout int, message *godog.DocString) error {
 		timeoutDuration := time.Duration(timeout) * time.Second
@@ -71,81 +58,43 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 	})
 	scenCtx.Step(`^I wait up to "(\d+)" seconds? for a rabbit message with the JSON properties$`, func(timeout int, t *godog.Table) error {
 		timeoutDuration := time.Duration(timeout) * time.Second
-		props, err := golium.ConvertTableToMap(ctx, t)
-		if err != nil {
-			return fmt.Errorf("failed processing table to a map for the rabbit message: %w", err)
-		}
-		return session.WaitForJSONMessageWithProperties(ctx, timeoutDuration, props)
+		return session.WaitForJSONMessageWithProperties(ctx, timeoutDuration, t, false)
 	})
 	scenCtx.Step(`^I wait up to "(\d+)" seconds? without a rabbit message with the JSON properties$`, func(timeout int, t *godog.Table) error {
 		timeoutDuration := time.Duration(timeout) * time.Second
-		props, err := golium.ConvertTableToMap(ctx, t)
-		if err != nil {
-			return fmt.Errorf("failed processing table to a map for the rabbit message: %w", err)
-		}
-		if err := session.WaitForJSONMessageWithProperties(ctx, timeoutDuration, props); err == nil {
-			return fmt.Errorf("received a message with JSON properties '%+v'", props)
-		}
-		return nil
+		return session.WaitForJSONMessageWithProperties(ctx, timeoutDuration, t, true)
 	})
 	scenCtx.Step(`^I wait up to "(\d+)" seconds? for a rabbit message with the standard properties$`, func(timeout int, t *godog.Table) error {
 		timeoutDuration := time.Duration(timeout) * time.Second
-		var props amqp.Delivery
-		if err := golium.ConvertTableWithoutHeaderToStruct(ctx, t, &props); err != nil {
-			return fmt.Errorf("failed processing table to a map for the standard rabbit properties: %w", err)
-		}
-		return session.WaitForMessagesWithStandardProperties(ctx, timeoutDuration, 1, props)
+		return session.WaitForMessagesWithStandardProperties(ctx, timeoutDuration, 1, t, false)
 	})
 	scenCtx.Step(`^I wait up to "(\d+)" seconds? for "(\d+)" rabbit messages with the standard properties$`, func(timeout int, count int, t *godog.Table) error {
 		timeoutDuration := time.Duration(timeout) * time.Second
-		var props amqp.Delivery
-		if err := golium.ConvertTableWithoutHeaderToStruct(ctx, t, &props); err != nil {
-			return fmt.Errorf("failed processing table to a map for the standard rabbit properties: %w", err)
-		}
-		return session.WaitForMessagesWithStandardProperties(ctx, timeoutDuration, count, props)
+		return session.WaitForMessagesWithStandardProperties(ctx, timeoutDuration, count, t, false)
 	})
 	scenCtx.Step(`^I wait up to "(\d+)" seconds? without a rabbit message with the standard properties$`, func(timeout int, t *godog.Table) error {
 		timeoutDuration := time.Duration(timeout) * time.Second
-		var props amqp.Delivery
-		if err := golium.ConvertTableWithoutHeaderToStruct(ctx, t, &props); err != nil {
-			return fmt.Errorf("failed processing table to a map for the standard rabbit properties: %w", err)
-		}
-		if err := session.WaitForMessagesWithStandardProperties(ctx, timeoutDuration, 1, props); err == nil {
-			return fmt.Errorf("received a message with standard rabbit properties '%+v'", props)
-		}
-		return nil
+		return session.WaitForMessagesWithStandardProperties(ctx, timeoutDuration, 1, t, true)
 	})
 	scenCtx.Step(`^the rabbit message has the rabbit headers$`, func(t *godog.Table) error {
-		headers, err := golium.ConvertTableToMap(ctx, t)
-		if err != nil {
-			return fmt.Errorf("failed processing table to a map for the rabbit message: %w", err)
-		}
-		return session.ValidateMessageHeaders(ctx, headers)
+		return session.ValidateMessageHeaders(ctx, t)
 	})
 	scenCtx.Step(`^the rabbit message has the standard rabbit properties$`, func(t *godog.Table) error {
 		var props amqp.Delivery
 		if err := golium.ConvertTableWithoutHeaderToStruct(ctx, t, &props); err != nil {
 			return fmt.Errorf("failed configuring rabbit endpoint: %w", err)
 		}
-		return session.ValidateMessageStandardProperties(ctx, props)
+		return session.ValidateMessageStandardProperties(ctx, props, false)
 	})
 	scenCtx.Step(`^the rabbit message body has the text$`, func(m *godog.DocString) error {
 		message := golium.ValueAsString(ctx, m.Content)
 		return session.ValidateMessageTextBody(ctx, message)
 	})
 	scenCtx.Step(`^the rabbit message body has the JSON properties$`, func(t *godog.Table) error {
-		props, err := golium.ConvertTableToMap(ctx, t)
-		if err != nil {
-			return fmt.Errorf("failed processing table to a map for the rabbit message: %w", err)
-		}
-		return session.ValidateMessageJSONBody(ctx, props, -1)
+		return session.ValidateMessageJSONBody(ctx, t, -1)
 	})
 	scenCtx.Step(`^the body of the rabbit message in position "(\d+)" has the JSON properties$`, func(pos int, t *godog.Table) error {
-		props, err := golium.ConvertTableToMap(ctx, t)
-		if err != nil {
-			return fmt.Errorf("failed processing table to a map for the rabbit message: %w", err)
-		}
-		return session.ValidateMessageJSONBody(ctx, props, pos)
+		return session.ValidateMessageJSONBody(ctx, t, pos)
 	})
 	scenCtx.After(func(ctx context.Context, sc *godog.Scenario, err error) (context.Context, error) {
 		return ctx, session.Unsubscribe(ctx)

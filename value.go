@@ -54,9 +54,11 @@ func ValueAsInt(ctx context.Context, s string) (int, error) {
 // - BASE64: [BASE64:text.to.be.base64.encoded]
 // - Time: [NOW:+24h:unix] with the format: [NOW:{duration}:{format}]
 //   The value {duration} can be empty (there is no change from now timestamp) or a format valid for
-//   time.ParseDuration function. Currently, it supports the following units: "ns", "us", "ms", "s", "m", "h".
+//   time.ParseDuration function. Currently, it supports the following units:
+//   "ns", "us", "ms", "s", "m", "h".
 //   The format can be "unix" or a layout valid for time.Format function.
-//   It is possible to use [NOW]. In that case, it returns an int64 with the now timestamp in unix format.
+//   It is possible to use [NOW]. In that case, it returns an int64 with the now timestamp
+//   in unix format.
 //
 // Most cases, the return value is a string except for the following cases:
 // - [TRUE] and [FALSE] return a bool type.
@@ -67,40 +69,70 @@ func Value(ctx context.Context, s string) interface{} {
 	return composedTag.Value(ctx)
 }
 
-var simpleTagFuncs = map[string]func(ctx context.Context) (interface{}, error){
-	"TRUE":  func(ctx context.Context) (interface{}, error) { return true, nil },
-	"FALSE": func(ctx context.Context) (interface{}, error) { return false, nil },
-	"EMPTY": func(ctx context.Context) (interface{}, error) { return "", nil },
-	"NOW":   func(ctx context.Context) (interface{}, error) { return time.Now().Unix(), nil },
-	"NULL":  func(ctx context.Context) (interface{}, error) { return nil, nil },
-	"UUID": func(ctx context.Context) (interface{}, error) {
+var simpleTagFuncs = map[string]func() funcReturn{
+	"TRUE":  func() funcReturn { return funcReturn{ret: true, err: nil} },
+	"FALSE": func() funcReturn { return funcReturn{ret: false, err: nil} },
+	"EMPTY": func() funcReturn { return funcReturn{ret: "", err: nil} },
+	"NOW":   func() funcReturn { return funcReturn{ret: time.Now().Unix(), err: nil} },
+	"NULL":  func() funcReturn { return funcReturn{ret: nil, err: nil} },
+	"UUID": func() funcReturn {
 		guid, err := uuid.NewRandom()
 		if err != nil {
-			return "", err
+			return funcReturn{ret: "", err: err}
 		}
-		return guid.String(), nil
+		return funcReturn{ret: guid.String(), err: nil}
 	},
 }
 
-var valuedTagFuncs = map[string]func(ctx context.Context, s string) (interface{}, error){
-	"CONF": func(ctx context.Context, s string) (interface{}, error) {
+type funcInput struct {
+	ctx context.Context
+	s   string
+}
+type funcReturn struct {
+	ret interface{}
+	err error
+}
+
+var valuedTagFuncs = map[string]func(input funcInput) funcReturn{
+	"CONF": func(input funcInput) funcReturn {
 		m := GetEnvironment()
-		return m.Get(s), nil
+		return funcReturn{
+			ret: m.Get(input.s),
+			err: nil,
+		}
 	},
-	"CTXT": func(ctx context.Context, s string) (interface{}, error) {
-		return GetContext(ctx).Get(s), nil
+	"CTXT": func(input funcInput) funcReturn {
+		return funcReturn{
+			ret: GetContext(input.ctx).Get(input.s),
+			err: nil,
+		}
 	},
-	"SHA256": func(ctx context.Context, s string) (interface{}, error) {
-		return fmt.Sprintf("%x", sha256.Sum256([]byte(s))), nil
+	"SHA256": func(input funcInput) funcReturn {
+		return funcReturn{
+			ret: fmt.Sprintf("%x", sha256.Sum256([]byte(input.s))),
+			err: nil,
+		}
 	},
-	"BASE64": func(ctx context.Context, s string) (interface{}, error) {
-		return base64.StdEncoding.EncodeToString([]byte(s)), nil
+	"BASE64": func(input funcInput) funcReturn {
+		return funcReturn{
+			ret: base64.StdEncoding.EncodeToString([]byte(input.s)),
+			err: nil,
+		}
 	},
-	"NUMBER": func(ctx context.Context, s string) (interface{}, error) {
-		return strconv.ParseFloat(s, 64)
+	"NUMBER": func(input funcInput) funcReturn {
+		parse, err := strconv.ParseFloat(input.s, 64)
+		return funcReturn{
+			ret: parse,
+			err: err,
+		}
 	},
-	"NOW": func(ctx context.Context, s string) (interface{}, error) {
-		return processNow(s)
+	"NOW": func(input funcInput) funcReturn {
+		process, err := processNow(input.s)
+		r := funcReturn{
+			ret: process,
+			err: err,
+		}
+		return r
 	},
 }
 
@@ -162,38 +194,49 @@ func NewNamedTag(s string) Tag {
 }
 
 func (t NamedTag) Value(ctx context.Context) interface{} {
-	if v, err := t.valueWithError(ctx); err == nil {
-		return v
+	value := t.valueWithError(ctx)
+	if value.err == nil {
+		return value.ret
 	}
 	return t.s
 }
 
-func (t NamedTag) valueWithError(ctx context.Context) (interface{}, error) {
+func (t NamedTag) valueWithError(ctx context.Context) funcReturn {
 	tag := t.s[1 : len(t.s)-1]
 	parts := strings.SplitN(tag, ":", 2)
 	tagName := parts[0]
 	if len(parts) == 2 {
 		tagValue := parts[1]
-		return t.processValuedTag(ctx, tagName, tagValue)
+		procValuedTag := t.processValuedTag(ctx, tagName, tagValue)
+		return funcReturn{ret: procValuedTag.ret, err: procValuedTag.err}
 	}
-	return t.processSimpleTag(ctx, tagName)
+	return t.processSimpleTag(tagName)
 }
 
-func (t NamedTag) processSimpleTag(ctx context.Context, tagName string) (interface{}, error) {
+func (t NamedTag) processSimpleTag(tagName string) funcReturn {
 	if f, ok := simpleTagFuncs[tagName]; ok {
-		return f(ctx)
+		return f()
 	}
-	return nil, fmt.Errorf("invalid tag '%s'", tagName)
+	return funcReturn{ret: nil, err: fmt.Errorf("invalid tag '%s'", tagName)}
 }
 
-func (t NamedTag) processValuedTag(ctx context.Context, tagName, tagValue string) (interface{}, error) {
+func (t NamedTag) processValuedTag(
+	ctx context.Context,
+	tagName, tagValue string,
+) funcReturn {
 	if f, ok := valuedTagFuncs[tagName]; ok {
 		composedTag := NewComposedTag(tagValue)
 		composedTagValue := composedTag.Value(ctx)
 		composedTagValueString := fmt.Sprintf("%v", composedTagValue)
-		return f(ctx, composedTagValueString)
+		return f(funcInput{
+			ctx: ctx,
+			s:   composedTagValueString,
+		})
 	}
-	return nil, fmt.Errorf("invalid tag '%s'", tagName)
+	return funcReturn{
+		ret: nil,
+		err: fmt.Errorf("invalid tag '%s'", tagName),
+	}
 }
 
 type separator struct {

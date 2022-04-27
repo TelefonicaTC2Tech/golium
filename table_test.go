@@ -11,10 +11,12 @@ import (
 
 var (
 	withoutHeaders       = [][]string{{"John", "182"}}
+	withoutHeadersValues = [][]string{{"John", "182"}, {"Doe", "190"}}
 	withName             = [][]string{{"name"}, {"John"}}
 	withNameAndHeight    = [][]string{{"name", "height"}, {"John", "182"}}
 	withNameHeightAndAge = [][]string{{"name", "height", "age"}, {"John", "182", "32"}}
 	withParamAndValue    = [][]string{{"param", "value"}, {"Name", "182"}, {"Height", "162"}}
+	withNameAndValue     = [][]string{{"Name", "Value"}, {"example 1", "1"}, {"example 2", "10"}}
 )
 
 type Headers struct {
@@ -218,6 +220,42 @@ func TestConvertTableWithoutHeaderToStruct(t *testing.T) {
 			err := ConvertTableWithoutHeaderToStruct(ctx, tc.table, &props)
 
 			require.Equal(t, tc.expectedErr, err)
+		})
+	}
+}
+
+func TestConvertTableWithHeaderToStructSlice(t *testing.T) {
+	type TestElement struct {
+		Name  string
+		Value int
+	}
+	testSlice := []TestElement{}
+
+	tcs := []struct {
+		name    string
+		table   *godog.Table
+		wantErr bool
+	}{
+		{
+			name:    "Convert table with header to struct ok",
+			table:   NewTable(withNameAndValue),
+			wantErr: false,
+		},
+		{
+			name:    "Convert table without header to struct fail",
+			table:   NewTable(withoutHeadersValues),
+			wantErr: true,
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx := context.Background()
+			if err := ConvertTableWithHeaderToStructSlice(
+				ctx, tc.table, &testSlice); (err != nil) != tc.wantErr {
+				t.Errorf(
+					"ConvertTableWithHeaderToStructSlice() error = %v, wantErr %v", err, tc.wantErr)
+			}
 		})
 	}
 }
