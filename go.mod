@@ -49,10 +49,11 @@ require (
 	github.com/lestrrat-go/iter v1.0.0 // indirect
 	github.com/lestrrat-go/option v1.0.0 // indirect
 	github.com/lestrrat-go/pdebug/v3 v3.0.1 // indirect
-	github.com/lucas-clemente/quic-go v0.24.0 // indirect
+	github.com/lucas-clemente/quic-go v0.26.0 // indirect
 	github.com/magefile/mage v1.10.0 // indirect
-	github.com/marten-seemann/qtls-go1-16 v0.1.4 // indirect
-	github.com/marten-seemann/qtls-go1-17 v0.1.0 // indirect
+	github.com/marten-seemann/qtls-go1-16 v0.1.5 // indirect
+	github.com/marten-seemann/qtls-go1-17 v0.1.1 // indirect
+	github.com/marten-seemann/qtls-go1-18 v0.1.1 // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
 	github.com/onsi/ginkgo v1.16.5 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
