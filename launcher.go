@@ -22,7 +22,6 @@ import (
 	"github.com/TelefonicaTC2Tech/golium/cfg"
 	"github.com/cucumber/godog"
 	"github.com/cucumber/godog/colors"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 )
 
@@ -53,13 +52,14 @@ func NewLauncher() *Launcher {
 // The yaml file is merged with environment variables.
 func NewLauncherWithYaml(path string) *Launcher {
 	config := GetConfig()
+	log := GetLogger()
 	if path != "" {
 		if err := cfg.LoadYaml(path, config); err != nil {
-			logrus.Fatalf("Error configuring golium with yaml file: %s. %s", path, err)
+			log.Fatalf("Error configuring golium with yaml file: %s. %s", path, err)
 		}
 	}
 	if err := cfg.LoadEnv(config); err != nil {
-		logrus.Fatalf("Error configuring golium with environment variables. %s", err)
+		log.Fatalf("Error configuring golium with environment variables. %s", err)
 	}
 	return &Launcher{log: GetLogger()}
 }

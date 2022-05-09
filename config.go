@@ -20,7 +20,6 @@ import (
 	"path"
 
 	"github.com/TelefonicaTC2Tech/golium/cfg"
-	"github.com/sirupsen/logrus"
 )
 
 // Global variables for storing the configuration and the environment configuration.
@@ -52,22 +51,23 @@ func GetEnvironment() Map {
 // could be located at:
 //    {config.Dir.Enviroments}/{config.Environment}-private.yml
 func initEnvironment() Map {
+	log := GetLogger()
 	pathEnv := path.Join(config.Dir.Environments, fmt.Sprintf("%s.yml", config.Environment))
-	logrus.Infof("Loading environment configuration from file: %s", pathEnv)
+	log.Infof("Loading environment configuration from file: %s", pathEnv)
 	env := make(map[string]interface{})
 	if err := cfg.LoadYaml(pathEnv, &env); err != nil {
-		logrus.Fatalf("Error loading environment configuration from file: %s. %s", pathEnv, err)
+		log.Fatalf("Error loading environment configuration from file: %s. %s", pathEnv, err)
 	}
 	pathEnvPrivate := path.Join(
 		config.Dir.Environments, fmt.Sprintf("%s-private.yml", config.Environment))
 	if err := cfg.LoadYaml(pathEnvPrivate, &env); err != nil {
-		logrus.Infof(
+		log.Infof(
 			"Could not load private environment configuration from file: %s. %s",
 			pathEnvPrivate, err)
 	}
 	b, err := json.Marshal(env)
 	if err != nil {
-		logrus.Fatalf("Error converting the yaml to json. %s", err)
+		log.Fatalf("Error converting the yaml to json. %s", err)
 	}
 	return NewMapFromJSONBytes(b)
 }

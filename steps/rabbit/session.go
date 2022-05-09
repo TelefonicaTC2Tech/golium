@@ -24,7 +24,6 @@ import (
 	"github.com/cucumber/godog"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 	"github.com/tidwall/sjson"
 )
@@ -54,6 +53,15 @@ type Session struct {
 	msg amqp.Delivery
 	// ampq service
 	AMQPServiceClient AMQPServiceFunctions
+	// Log
+	logger Logger
+}
+
+// Initialize rabbit Session
+func NewSession() *Session {
+	return &Session{
+		AMQPServiceClient: *NewAMQPService(),
+		logger:            *GetLogger()}
 }
 
 // ConfigureConnection creates a rabbit connection based on the URI.
@@ -94,7 +102,7 @@ func (s *Session) ConfigureStandardProperties(ctx context.Context, t *godog.Tabl
 
 // SubscribeTopic subscribes to a rabbit topic to receive messages via a channel.
 func (s *Session) SubscribeTopic(ctx context.Context, topic string) error {
-	GetLogger().LogSubscribedTopic(topic)
+	s.logger.LogSubscribedTopic(topic)
 	var err error
 	s.channel, err = s.AMQPServiceClient.ConnectionChannel(s.Connection)
 	if err != nil {
@@ -114,12 +122,12 @@ func (s *Session) SubscribeTopic(ctx context.Context, topic string) error {
 	}
 	s.subCh, err = s.AMQPServiceClient.ChannelConsume(s.channel, q.Name)
 	go func() {
-		logrus.Debugf("Receiving messages from topic %s...", topic)
+		s.logger.Log.Debugf("Receiving messages from topic %s...", topic)
 		for msg := range s.subCh {
-			GetLogger().LogReceivedMessage(string(msg.Body), topic, s.Correlator)
+			s.logger.LogReceivedMessage(string(msg.Body), topic, s.Correlator)
 			s.Messages = append(s.Messages, msg)
 		}
-		logrus.Debugf("Stop receiving messages from topic %s", topic)
+		s.logger.Log.Debugf("Stop receiving messages from topic %s", topic)
 	}()
 	if err != nil {
 		return errors.Wrap(err, "failed to register a consumer")
@@ -139,7 +147,7 @@ func (s *Session) Unsubscribe(ctx context.Context) error {
 
 // PublishTextMessage publishes a text message in a rabbit topic.
 func (s *Session) PublishTextMessage(ctx context.Context, topic, message string) error {
-	GetLogger().LogPublishedMessage(message, topic, s.Correlator)
+	s.logger.LogPublishedMessage(message, topic, s.Correlator)
 	var err error
 	s.channel, err = s.AMQPServiceClient.ConnectionChannel(s.Connection)
 	if err != nil {
@@ -225,8 +233,8 @@ func (s *Session) WaitForJSONMessageWithProperties(ctx context.Context,
 	}
 	return waitUpTo(timeout, func() error {
 		for i := range s.Messages {
-			logrus.Debugf("Checking message: %s", s.Messages[i].Body)
-			if matchMessage(string(s.Messages[i].Body), props) {
+			s.logger.Log.Debugf("Checking message: %s", s.Messages[i].Body)
+			if s.matchMessage(string(s.Messages[i].Body), props) {
 				s.msg = s.Messages[i]
 				if !wantError {
 					return nil
@@ -241,12 +249,12 @@ func (s *Session) WaitForJSONMessageWithProperties(ctx context.Context,
 	})
 }
 
-func matchMessage(msg string, expectedProps map[string]interface{}) bool {
+func (s *Session) matchMessage(msg string, expectedProps map[string]interface{}) bool {
 	m := golium.NewMapFromJSONBytes([]byte(msg))
 	for key, expectedValue := range expectedProps {
 		value := m.Get(key)
 		if value != expectedValue {
-			logrus.Debugf("Invalid value: %+v. Expected: %+v", value, expectedValue)
+			s.logger.Log.Debugf("Invalid value: %+v. Expected: %+v", value, expectedValue)
 			return false
 		}
 	}
@@ -276,7 +284,7 @@ func (s *Session) WaitForMessagesWithStandardProperties(
 		}
 
 		for i := range s.Messages {
-			logrus.Debugf("Checking message: %s", s.Messages[i].Body)
+			s.logger.Log.Debugf("Checking message: %s", s.Messages[i].Body)
 			s.msg = s.Messages[i]
 			if err = s.ValidateMessageStandardProperties(ctx, props, wantErr); err == nil {
 				count--

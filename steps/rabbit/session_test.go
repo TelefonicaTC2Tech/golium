@@ -52,7 +52,7 @@ func TestConfigureConnection(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Session{}
+			s := NewSession()
 			ctx := InitializeContext(context.Background())
 			s.AMQPServiceClient = AMQPServiceFuncMock{}
 			DialError = tt.connError
@@ -86,7 +86,7 @@ func TestConfigureHeaders(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Session{}
+			s := NewSession()
 			if err := s.ConfigureHeaders(context.Background(), tt.table); (err != nil) != tt.wantErr {
 				t.Errorf("Session.ConfigureHeaders() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -106,7 +106,7 @@ func TestConfigureStandardProperties(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Session{}
+			s := NewSession()
 			s.ConfigureStandardProperties(context.Background(), tt.propTable)
 		})
 	}
@@ -177,7 +177,7 @@ func TestSubscribeTopic(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			goliumCtx := golium.InitializeContext(context.Background())
 			ctx := InitializeContext(goliumCtx)
-			s := &Session{}
+			s := NewSession()
 			s.AMQPServiceClient = AMQPServiceFuncMock{}
 			ConnectionChannelError = tt.connectionChannelError
 			ChannelExchangeDeclareError = tt.channelExchangeDeclareError
@@ -211,7 +211,7 @@ func TestUnsubscribe(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Session{}
+			s := NewSession()
 			s.AMQPServiceClient = AMQPServiceFuncMock{}
 			s.channel = tt.channel
 			if err := s.Unsubscribe(context.Background()); (err != nil) != tt.wantErr {
@@ -339,7 +339,7 @@ func setPublishTestEnv(
 ) (context.Context, *Session) {
 	goliumCtx := golium.InitializeContext(context.Background())
 	ctx := InitializeContext(goliumCtx)
-	s := &Session{}
+	s := NewSession()
 	s.AMQPServiceClient = AMQPServiceFuncMock{}
 	ConnectionChannelError = conChannelError
 	ChannelExchangeDeclareError = channelExchDecError
@@ -376,7 +376,7 @@ func TestWaitForTextMessage(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Session{}
+			s := NewSession()
 			s.Messages = []amqp.Delivery{
 				{Body: []byte("expected string")},
 			}
@@ -456,7 +456,7 @@ func TestWaitForJSONMessageWithProperties(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Session{}
+			s := NewSession()
 			s.Messages = []amqp.Delivery{
 				{
 					Body: []byte(`{"id": "1"}`),
@@ -558,7 +558,7 @@ func TestWaitForMessagesWithStandardProperties(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Session{}
+			s := NewSession()
 			s.Messages = []amqp.Delivery{{Priority: 5}}
 			if err := s.WaitForMessagesWithStandardProperties(
 				context.Background(),
@@ -613,7 +613,7 @@ func TestValidateMessageHeaders(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Session{}
+			s := NewSession()
 			s.msg = amqp.Delivery{
 				Headers: refHeaders,
 			}
@@ -644,7 +644,7 @@ func TestValidateMessageTextBody(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Session{}
+			s := NewSession()
 			s.msg = amqp.Delivery{
 				Body: []byte("message"),
 			}
@@ -720,7 +720,7 @@ func TestValidateMessageJSONBody(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Session{}
+			s := NewSession()
 			s.Messages = []amqp.Delivery{
 				{
 					Body: []byte(`{"id": "1"}`),
