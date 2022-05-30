@@ -213,11 +213,12 @@ func (s *Session) WaitForTextMessage(ctx context.Context,
 
 // WaitForJSONMessageWithProperties waits up to timeout and verifies if there is a message received
 // in the topic with the requested properties.
-// When wantError is set to true
+// When wantErr is set to true function returns error if message is found with the JSON properties
+// and returns no error when message is not found after timeout.
 func (s *Session) WaitForJSONMessageWithProperties(ctx context.Context,
 	timeout time.Duration,
 	t *godog.Table,
-	wantError bool,
+	wantErr bool,
 ) error {
 	props, err := golium.ConvertTableToMap(ctx, t)
 	if err != nil {
@@ -233,13 +234,19 @@ func (s *Session) WaitForJSONMessageWithProperties(ctx context.Context,
 		}
 		return fmt.Errorf("not received message with JSON properties '%+v'", props)
 	})
+	return WaitForWithWantedErrorNormalizer(wantErr, err, "JSON")
+}
+
+// WaitForWithWantedErrorNormalizer Normalizes error for wait for steps depending if you are
+// expecting error or not.
+func WaitForWithWantedErrorNormalizer(wantError bool, err error, propertiesType string) error {
 	if !wantError {
 		if err != nil {
-			return fmt.Errorf("no message(s) received match(es) the with JSON properties")
+			return fmt.Errorf("no message(s) received match(es) the with %s properties", propertiesType)
 		}
 	} else {
 		if err == nil {
-			return fmt.Errorf("received a message with JSON properties")
+			return fmt.Errorf("received a message with %s properties", propertiesType)
 		}
 	}
 	return nil
@@ -259,6 +266,8 @@ func matchMessage(msg string, expectedProps map[string]interface{}) bool {
 
 // WaitForMessagesWithStandardProperties waits for 'count' messages with standard rabbit properties
 // that are equal to the expected values.
+// When wantErr is set to true function returns error if message is found with the JSON properties
+// and returns no error when message is not found after timeout.
 func (s *Session) WaitForMessagesWithStandardProperties(
 	ctx context.Context,
 	timeout time.Duration,
@@ -288,16 +297,7 @@ func (s *Session) WaitForMessagesWithStandardProperties(
 		}
 		return err
 	})
-	if !wantErr {
-		if err != nil {
-			return fmt.Errorf("no message(s) received match(es) the standard properties")
-		}
-	} else {
-		if err == nil {
-			return fmt.Errorf("received a message with standard properties")
-		}
-	}
-	return nil
+	return WaitForWithWantedErrorNormalizer(wantErr, err, "standard")
 }
 
 // ValidateMessageStandardProperties checks if the message standard rabbit properties are equal
