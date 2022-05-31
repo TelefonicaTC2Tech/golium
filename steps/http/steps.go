@@ -98,6 +98,9 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 	scenCtx.Step(`^the HTTP client does not follow any redirection$`, func() {
 		session.ConfigureNoRedirection(ctx)
 	})
+	scenCtx.Step(`^the HTTP client does not verify https cert$`, func() {
+		session.ConfigureInsecureSkipVerify(ctx)
+	})
 	scenCtx.Step(`^I send a HTTP "([^"]*)" request$`, func(method string) error {
 		return session.SendHTTPRequest(ctx, golium.ValueAsString(ctx, method))
 	})
