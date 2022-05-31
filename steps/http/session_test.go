@@ -271,7 +271,9 @@ func TestSendHTTPRequest(t *testing.T) {
 			s.Request.Username = "QA"
 			s.Request.Password = "QATesting#"
 			s.NoRedirect = true
-			s.InsecureSkipVerify = tt.selfSigned
+			if tt.selfSigned {
+				s.ConfigureInsecureSkipVerify(ctx)
+			}
 			if tt.preHeader {
 				s.Request.Headers = map[string][]string{
 					"Content-Type":  {"application/json"},
