@@ -255,7 +255,7 @@ func (s *Session) SendHTTPRequest(ctx context.Context, method string) error {
 			return http.ErrUseLastResponse
 		}
 	}
-	if s.InsecureSkipVerify {
+	if s.InsecureSkipVerify { // #nosec G402
 		tlsConfig := &tls.Config{InsecureSkipVerify: true}
 		client.Transport = &http.Transport{TLSClientConfig: tlsConfig}
 	}
