@@ -226,3 +226,10 @@ Feature: HTTP client
         And the HTTP response must not contain the headers
             | param               |
             | non-existent-header |
+
+  @http
+    Scenario: Send a GET request to a site with self-signed cert and not verify it
+      Given the HTTP endpoint "[CONF:urlSelfSigned]"
+        And the HTTP client does not verify https cert
+       When I send a HTTP "GET" request
+       Then the HTTP status code must be "200"

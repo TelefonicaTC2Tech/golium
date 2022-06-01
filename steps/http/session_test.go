@@ -27,6 +27,7 @@ import (
 )
 
 const httpbinURL = "https://httpbin.org"
+const httpSelfSignedURL = "https://self-signed.badssl.com"
 const logsPath = "./logs"
 
 func TestURL(t *testing.T) {
@@ -208,44 +209,58 @@ func TestSendHTTPRequest(t *testing.T) {
 	defer os.RemoveAll(logsPath)
 
 	tests := []struct {
-		name      string
-		endpoint  string
-		method    string
-		host      string
-		preHeader bool
-		wantErr   bool
+		name       string
+		endpoint   string
+		method     string
+		host       string
+		preHeader  bool
+		wantErr    bool
+		selfSigned bool
 	}{
 		{
-			name:      "testing with correct method",
-			endpoint:  httpbinURL,
-			method:    "POST",
-			host:      "",
-			preHeader: false,
-			wantErr:   false,
+			name:       "testing with correct method",
+			endpoint:   httpbinURL,
+			method:     "POST",
+			host:       "",
+			preHeader:  false,
+			wantErr:    false,
+			selfSigned: false,
 		},
 		{
-			name:      "testing empty endpoint",
-			endpoint:  "",
-			method:    "POST",
-			host:      "",
-			preHeader: false,
-			wantErr:   true,
+			name:       "testing empty endpoint",
+			endpoint:   "",
+			method:     "POST",
+			host:       "",
+			preHeader:  false,
+			wantErr:    true,
+			selfSigned: false,
 		},
 		{
-			name:      "testing invalid method",
-			endpoint:  "httpbinURL",
-			method:    "invalid Method",
-			host:      "",
-			preHeader: false,
-			wantErr:   true,
+			name:       "testing invalid method",
+			endpoint:   "httpbinURL",
+			method:     "invalid Method",
+			host:       "",
+			preHeader:  false,
+			wantErr:    true,
+			selfSigned: false,
 		},
 		{
-			name:      "testing headers auth",
-			endpoint:  "httpbinURL",
-			method:    "POST",
-			host:      "httpbin.org",
-			preHeader: true,
-			wantErr:   true,
+			name:       "testing headers auth",
+			endpoint:   "httpbinURL",
+			method:     "POST",
+			host:       "httpbin.org",
+			preHeader:  true,
+			wantErr:    true,
+			selfSigned: false,
+		},
+		{
+			name:       "testing skip verify cert",
+			endpoint:   httpSelfSignedURL,
+			method:     "GET",
+			host:       "",
+			preHeader:  false,
+			wantErr:    false,
+			selfSigned: true,
 		},
 	}
 	for _, tt := range tests {
@@ -256,6 +271,9 @@ func TestSendHTTPRequest(t *testing.T) {
 			s.Request.Username = "QA"
 			s.Request.Password = "QATesting#"
 			s.NoRedirect = true
+			if tt.selfSigned {
+				s.ConfigureInsecureSkipVerify(ctx)
+			}
 			if tt.preHeader {
 				s.Request.Headers = map[string][]string{
 					"Content-Type":  {"application/json"},
