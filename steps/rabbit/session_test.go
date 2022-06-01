@@ -360,7 +360,7 @@ func TestWaitForTextMessage(t *testing.T) {
 		{
 			name: "Expected message found",
 			args: args{
-				timeout:     time.Duration(5000),
+				timeout:     1 * time.Second,
 				expectedMsg: "expected string",
 			},
 			wantErr: false,
@@ -368,7 +368,7 @@ func TestWaitForTextMessage(t *testing.T) {
 		{
 			name: "Expected message not found",
 			args: args{
-				timeout:     time.Duration(5000),
+				timeout:     1 * time.Second,
 				expectedMsg: "error expected string",
 			},
 			wantErr: true,
@@ -402,7 +402,7 @@ func TestWaitForJSONMessageWithProperties(t *testing.T) {
 		{
 			name: "Convert table error",
 			args: args{
-				timeout: time.Duration(5000),
+				timeout: 1 * time.Second,
 				table: golium.NewTable([][]string{
 					{"id", "1"}}),
 				wantErr: false,
@@ -412,7 +412,7 @@ func TestWaitForJSONMessageWithProperties(t *testing.T) {
 		{
 			name: "Expected json found",
 			args: args{
-				timeout: time.Duration(5000),
+				timeout: 1 * time.Second,
 				table: golium.NewTable([][]string{
 					{"param", "value"},
 					{"id", "1"}}),
@@ -423,7 +423,7 @@ func TestWaitForJSONMessageWithProperties(t *testing.T) {
 		{
 			name: "Expected json found but want error",
 			args: args{
-				timeout: time.Duration(5000),
+				timeout: 1 * time.Second,
 				table: golium.NewTable([][]string{
 					{"param", "value"},
 					{"id", "1"}}),
@@ -434,7 +434,7 @@ func TestWaitForJSONMessageWithProperties(t *testing.T) {
 		{
 			name: "Expected json not found",
 			args: args{
-				timeout: time.Duration(5000),
+				timeout: 1 * time.Second,
 				table: golium.NewTable([][]string{
 					{"param", "value"},
 					{"id", "5"}}),
@@ -445,7 +445,7 @@ func TestWaitForJSONMessageWithProperties(t *testing.T) {
 		{
 			name: "Expected json not found but want error",
 			args: args{
-				timeout: time.Duration(5000),
+				timeout: 1 * time.Second,
 				table: golium.NewTable([][]string{
 					{"param", "value"},
 					{"id", "5"}}),
@@ -490,7 +490,7 @@ func TestWaitForMessagesWithStandardProperties(t *testing.T) {
 			name: "Convert table error",
 			args: args{
 				count:   0,
-				timeout: time.Duration(5000),
+				timeout: 1 * time.Second,
 				table:   golium.NewTable([][]string{{"Priority", "5"}}),
 			},
 			wantErr: true,
@@ -499,7 +499,7 @@ func TestWaitForMessagesWithStandardProperties(t *testing.T) {
 			name: "Message count < 0",
 			args: args{
 				count:   -1,
-				timeout: time.Duration(5000),
+				timeout: 1 * time.Second,
 				table:   golium.NewTable([][]string{{"param", "value"}, {"Priority", "5"}}),
 				wantErr: false,
 			},
@@ -509,7 +509,7 @@ func TestWaitForMessagesWithStandardProperties(t *testing.T) {
 			name: "Message count < 0 expecting error",
 			args: args{
 				count:   -1,
-				timeout: time.Duration(5000),
+				timeout: 1 * time.Second,
 				table:   golium.NewTable([][]string{{"param", "value"}, {"Priority", "5"}}),
 				wantErr: true,
 			},
@@ -519,7 +519,7 @@ func TestWaitForMessagesWithStandardProperties(t *testing.T) {
 			name: "Matching properties",
 			args: args{
 				count:   1,
-				timeout: time.Duration(5000),
+				timeout: 1 * time.Second,
 				table:   golium.NewTable([][]string{{"param", "value"}, {"Priority", "5"}}),
 				wantErr: false,
 			},
@@ -529,7 +529,7 @@ func TestWaitForMessagesWithStandardProperties(t *testing.T) {
 			name: "Matching properties expecting error",
 			args: args{
 				count:   1,
-				timeout: time.Duration(5000),
+				timeout: 1 * time.Second,
 				table:   golium.NewTable([][]string{{"param", "value"}, {"Priority", "5"}}),
 				wantErr: true,
 			},
@@ -539,7 +539,7 @@ func TestWaitForMessagesWithStandardProperties(t *testing.T) {
 			name: "Not matching properties",
 			args: args{
 				count:   1,
-				timeout: time.Duration(5000),
+				timeout: 1 * time.Second,
 				table:   golium.NewTable([][]string{{"param", "value"}, {"Priority", "10"}}),
 				wantErr: false,
 			},
@@ -549,7 +549,7 @@ func TestWaitForMessagesWithStandardProperties(t *testing.T) {
 			name: "Not matching properties expecting error",
 			args: args{
 				count:   1,
-				timeout: time.Duration(5000),
+				timeout: 1 * time.Second,
 				table:   golium.NewTable([][]string{{"param", "value"}, {"Priority", "10"}}),
 				wantErr: true,
 			},

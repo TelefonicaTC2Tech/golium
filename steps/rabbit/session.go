@@ -213,32 +213,43 @@ func (s *Session) WaitForTextMessage(ctx context.Context,
 
 // WaitForJSONMessageWithProperties waits up to timeout and verifies if there is a message received
 // in the topic with the requested properties.
-// When wantError is set to true
+// When wantErr is set to true function returns error if message is found with the JSON properties
+// and returns no error when message is not found after timeout.
 func (s *Session) WaitForJSONMessageWithProperties(ctx context.Context,
 	timeout time.Duration,
 	t *godog.Table,
-	wantError bool,
+	wantErr bool,
 ) error {
 	props, err := golium.ConvertTableToMap(ctx, t)
 	if err != nil {
 		return fmt.Errorf(convertTableToMapMessage+"%w", err)
 	}
-	return waitUpTo(timeout, func() error {
+	err = waitUpTo(timeout, func() error {
 		for i := range s.Messages {
 			logrus.Debugf("Checking message: %s", s.Messages[i].Body)
 			if matchMessage(string(s.Messages[i].Body), props) {
 				s.msg = s.Messages[i]
-				if !wantError {
-					return nil
-				}
-				return fmt.Errorf("received message with JSON properties '%+v'", props)
+				return nil
 			}
 		}
-		if !wantError {
-			return fmt.Errorf("not received message with JSON properties '%+v'", props)
-		}
-		return nil
+		return fmt.Errorf("not received message with JSON properties '%+v'", props)
 	})
+	return WaitForWithWantedErrorNormalizer(wantErr, err, "JSON")
+}
+
+// WaitForWithWantedErrorNormalizer Normalizes error for "wait for" steps depending if you are
+// expecting error or not.
+func WaitForWithWantedErrorNormalizer(wantErr bool, err error, propertiesType string) error {
+	if !wantErr {
+		if err != nil {
+			return fmt.Errorf("no message(s) received match(es) the with %s properties", propertiesType)
+		}
+	} else {
+		if err == nil {
+			return fmt.Errorf("received a message with %s properties", propertiesType)
+		}
+	}
+	return nil
 }
 
 func matchMessage(msg string, expectedProps map[string]interface{}) bool {
@@ -255,6 +266,8 @@ func matchMessage(msg string, expectedProps map[string]interface{}) bool {
 
 // WaitForMessagesWithStandardProperties waits for 'count' messages with standard rabbit properties
 // that are equal to the expected values.
+// When wantErr is set to true function returns error if message is found with the JSON properties
+// and returns no error when message is not found after timeout.
 func (s *Session) WaitForMessagesWithStandardProperties(
 	ctx context.Context,
 	timeout time.Duration,
@@ -266,19 +279,16 @@ func (s *Session) WaitForMessagesWithStandardProperties(
 	if err := golium.ConvertTableWithoutHeaderToStruct(ctx, t, &props); err != nil {
 		return fmt.Errorf("failed configuring rabbit endpoint: %w", err)
 	}
-	return waitUpTo(timeout, func() error {
-		var err error
+	err := waitUpTo(timeout, func() error {
+		err := fmt.Errorf("no message(s) received match(es) the standard properties")
 		if count < 0 {
-			if !wantErr {
-				return fmt.Errorf("no message(s) received match(es) the standard properties")
-			}
-			return nil
+			return err
 		}
 
 		for i := range s.Messages {
 			logrus.Debugf("Checking message: %s", s.Messages[i].Body)
 			s.msg = s.Messages[i]
-			if err = s.ValidateMessageStandardProperties(ctx, props, wantErr); err == nil {
+			if err = s.ValidateMessageStandardProperties(ctx, props); err == nil {
 				count--
 				if count == 0 {
 					return nil
@@ -287,6 +297,7 @@ func (s *Session) WaitForMessagesWithStandardProperties(
 		}
 		return err
 	})
+	return WaitForWithWantedErrorNormalizer(wantErr, err, "standard")
 }
 
 // ValidateMessageStandardProperties checks if the message standard rabbit properties are equal
@@ -294,7 +305,6 @@ func (s *Session) WaitForMessagesWithStandardProperties(
 func (s *Session) ValidateMessageStandardProperties(
 	ctx context.Context,
 	props amqp.Delivery,
-	wantErr bool,
 ) error {
 	msg := reflect.ValueOf(s.msg)
 	expectedMsg := reflect.ValueOf(props)
@@ -304,12 +314,7 @@ func (s *Session) ValidateMessageStandardProperties(
 			key := t.Field(i).Name
 			value := msg.Field(i).Interface()
 			expectedValue := expectedMsg.Field(i).Interface()
-			if value == expectedValue {
-				if !wantErr {
-					return nil
-				}
-				return fmt.Errorf("received a message with standard rabbit properties '%s'", value)
-			} else if !wantErr {
+			if value != expectedValue {
 				return fmt.Errorf(
 					"mismatch of standard rabbit property '%s': expected '%s', actual '%s'",
 					key, expectedValue, value)
