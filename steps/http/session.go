@@ -440,7 +440,7 @@ func (s *Session) ValidateResponseBodyText(ctx context.Context, expectedText str
 		return nil
 	}
 	return fmt.Errorf("response payload: '%v' is not the expected: '%s'",
-		s.Request.RequestBody, expectedText)
+		s.Response.ResponseBody, expectedText)
 }
 
 // StoreResponseBodyJSONPropertyInContext extracts a JSON property from
