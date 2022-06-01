@@ -1,5 +1,6 @@
 # HTTP settings
 url: https://httpbin.org
+urlSelfSigned: https://self-signed.badssl.com
 host: httpbin.org
 
 # DNS settings
