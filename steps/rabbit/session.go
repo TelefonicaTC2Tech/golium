@@ -237,10 +237,10 @@ func (s *Session) WaitForJSONMessageWithProperties(ctx context.Context,
 	return WaitForWithWantedErrorNormalizer(wantErr, err, "JSON")
 }
 
-// WaitForWithWantedErrorNormalizer Normalizes error for wait for steps depending if you are
+// WaitForWithWantedErrorNormalizer Normalizes error for "wait for" steps depending if you are
 // expecting error or not.
-func WaitForWithWantedErrorNormalizer(wantError bool, err error, propertiesType string) error {
-	if !wantError {
+func WaitForWithWantedErrorNormalizer(wantErr bool, err error, propertiesType string) error {
+	if !wantErr {
 		if err != nil {
 			return fmt.Errorf("no message(s) received match(es) the with %s properties", propertiesType)
 		}
