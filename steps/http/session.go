@@ -17,6 +17,7 @@ package http
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"io"
@@ -67,11 +68,12 @@ type Response struct {
 
 // Session contains the information of a HTTP session (request and response).
 type Session struct {
-	Request    Request
-	Response   Response
-	NoRedirect bool
-	Timeout    time.Duration
-	Timedout   bool
+	Request            Request
+	Response           Response
+	NoRedirect         bool
+	InsecureSkipVerify bool
+	Timeout            time.Duration
+	Timedout           bool
 }
 
 // URL composes the endpoint, the resource, and query parameters to build a URL.
@@ -216,6 +218,11 @@ func (s *Session) ConfigureNoRedirection(ctx context.Context) {
 	s.NoRedirect = true
 }
 
+// ConfigureInsecureSkipVerify configures insecure skip verify for the HTTP client in HTTPS calls.
+func (s *Session) ConfigureInsecureSkipVerify(ctx context.Context) {
+	s.InsecureSkipVerify = true
+}
+
 // SendHTTPRequest sends a HTTP request using the configuration in the application context.
 func (s *Session) SendHTTPRequest(ctx context.Context, method string) error {
 	logger := GetLogger()
@@ -247,6 +254,10 @@ func (s *Session) SendHTTPRequest(ctx context.Context, method string) error {
 		client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		}
+	}
+	if s.InsecureSkipVerify { // #nosec G402
+		tlsConfig := &tls.Config{InsecureSkipVerify: true}
+		client.Transport = &http.Transport{TLSClientConfig: tlsConfig}
 	}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -429,7 +440,7 @@ func (s *Session) ValidateResponseBodyText(ctx context.Context, expectedText str
 		return nil
 	}
 	return fmt.Errorf("response payload: '%v' is not the expected: '%s'",
-		s.Request.RequestBody, expectedText)
+		s.Response.ResponseBody, expectedText)
 }
 
 // StoreResponseBodyJSONPropertyInContext extracts a JSON property from
