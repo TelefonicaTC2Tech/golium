@@ -28,7 +28,8 @@ import (
 	"github.com/TelefonicaTC2Tech/golium/steps/jwt"
 	"github.com/TelefonicaTC2Tech/golium/steps/rabbit"
 	"github.com/TelefonicaTC2Tech/golium/steps/redis"
-	s3steps "github.com/TelefonicaTC2Tech/golium/steps/s3"
+
+	s3steps "github.com/TelefonicaTC2Tech/golium/steps/aws/s3"
 	"github.com/TelefonicaTC2Tech/golium/test/acceptance/steps/aggregated"
 	"github.com/TelefonicaTC2Tech/golium/test/acceptance/steps/shared"
 	"github.com/cucumber/godog"

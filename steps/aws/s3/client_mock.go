@@ -15,12 +15,12 @@
 package s3steps
 
 import (
+	"context"
 	"io"
 
-	"github.com/aws/aws-sdk-go/aws"
-	aws_s "github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	s3manager "github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
 var (
@@ -36,57 +36,60 @@ var (
 
 type ClientServiceFuncMock struct{}
 
-func (c ClientServiceFuncMock) NewSession(cfgs *aws.Config) (*aws_s.Session, error) {
-	return nil, NewSessionError
+func (c ClientServiceFuncMock) NewSession(cfgs aws.Config) *s3.Client {
+	return nil
 }
 
-func (c ClientServiceFuncMock) NewUploader(client *aws_s.Session) *s3manager.Uploader {
+func (c ClientServiceFuncMock) NewUploader(s3Client *s3.Client) *s3manager.Uploader {
 	return nil
 }
 
 func (c ClientServiceFuncMock) Upload(
+	ctx context.Context,
+	s3Client *s3.Client,
 	uploader *s3manager.Uploader,
 	bucket, key, message string,
 ) (*s3manager.UploadOutput, error) {
 	return nil, UploadError
 }
 
-func (c ClientServiceFuncMock) New(client *aws_s.Session) *s3.S3 {
-	return nil
-}
-
-func (c ClientServiceFuncMock) CreateBucket(
-	s3Client *s3.S3,
+func (c ClientServiceFuncMock) CreateBucket(ctx context.Context,
+	s3Client *s3.Client,
 	input *s3.CreateBucketInput,
 ) (*s3.CreateBucketOutput, error) {
 	return nil, CreateBucketError
 }
 
 func (c ClientServiceFuncMock) DeleteBucket(
-	s3Client *s3.S3,
+	ctx context.Context,
+	s3Client *s3.Client,
 	input *s3.DeleteBucketInput,
 ) (*s3.DeleteBucketOutput, error) {
 	return nil, DeleteBucketError
 }
 
 func (c ClientServiceFuncMock) GetBucketLocation(
-	s3Client *s3.S3,
+	ctx context.Context,
+	s3Client *s3.Client,
 	input *s3.GetBucketLocationInput,
 ) (*s3.GetBucketLocationOutput, error) {
 	return nil, GetBucketLocationError
 }
 func (c ClientServiceFuncMock) HeadObject(
-	s3Client *s3.S3,
+	ctx context.Context,
+	s3Client *s3.Client,
 	input *s3.HeadObjectInput,
 ) (*s3.HeadObjectOutput, error) {
 	return nil, HeadObjectError
 }
 
-func (c ClientServiceFuncMock) NewDownloader(client *aws_s.Session) *s3manager.Downloader {
+func (c ClientServiceFuncMock) NewDownloader(s3Client *s3.Client) *s3manager.Downloader {
 	return nil
 }
 
 func (c ClientServiceFuncMock) Download(
+	ctx context.Context,
+	s3Client *s3.Client,
 	downloader *s3manager.Downloader,
 	w io.WriterAt,
 	input *s3.GetObjectInput,
@@ -94,7 +97,9 @@ func (c ClientServiceFuncMock) Download(
 	return 0, DownloadError
 }
 
-func (c ClientServiceFuncMock) DeleteObject(s3Client *s3.S3,
+func (c ClientServiceFuncMock) DeleteObject(
+	ctx context.Context,
+	s3Client *s3.Client,
 	input *s3.DeleteObjectInput,
 ) (*s3.DeleteObjectOutput, error) {
 	return nil, DeleteObjectError
