@@ -192,6 +192,17 @@ func TestValidateS3FileExists(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			name: "Key not exists other error",
+			errors: &testMockedError{
+				headObjectErr: &awserr.GenericAPIError{
+					Code:    "OtherError",
+					Message: "other error",
+					Fault:   awserr.FaultUnknown,
+				},
+			},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
