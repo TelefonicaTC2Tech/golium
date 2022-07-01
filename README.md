@@ -29,6 +29,7 @@ The library has a default configuration. However, these settings can be changed 
 ## Example
 
 The library includes a complete example with some scenarios for HTTP and DNS protocols in the directory [test/acceptance](test/acceptance).
+
 ### Environment
 
 Using `docker-compose` to build test environment with all dependent services for each example: redis, rabbit, elasticsearch and minio:
@@ -39,10 +40,16 @@ docker-compose build
 
 ### Tests
 
-Run tests:
+Run acceptance tests:
 
 ```bash
-docker-compose run --rm golium sh -c "cd test/acceptance && go test -v ./..."
+docker-compose run --rm golium sh -c "make test-acceptance"
+```
+
+Run tests filtering by tag:
+
+```bash
+docker-compose run --rm golium sh -c "make test-run-tag TAG=@rabbit"
 ```
 
 The examples contains the following directories:

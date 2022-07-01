@@ -15,46 +15,54 @@
 package s3steps
 
 import (
+	"context"
 	"io"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	aws_s "github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	s3manager "github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
 type ClientFunctions interface {
-	NewSession(cfgs *aws.Config) (*aws_s.Session, error)
-	NewUploader(client *aws_s.Session) *s3manager.Uploader
+	New(cfgs aws.Config) *s3.Client
+	NewUploader(s3Client *s3.Client) *s3manager.Uploader
 	Upload(
+		ctx context.Context,
+		s3Client *s3.Client,
 		uploader *s3manager.Uploader,
 		bucket, key, message string,
 	) (*s3manager.UploadOutput, error)
-	New(client *aws_s.Session) *s3.S3
-	CreateBucket(
-		s3Client *s3.S3,
+	CreateBucket(ctx context.Context,
+		s3Client *s3.Client,
 		input *s3.CreateBucketInput,
 	) (*s3.CreateBucketOutput, error)
 	DeleteBucket(
-		s3Client *s3.S3,
+		ctx context.Context,
+		s3Client *s3.Client,
 		input *s3.DeleteBucketInput,
 	) (*s3.DeleteBucketOutput, error)
 	GetBucketLocation(
-		s3Client *s3.S3,
+		ctx context.Context,
+		s3Client *s3.Client,
 		input *s3.GetBucketLocationInput,
 	) (*s3.GetBucketLocationOutput, error)
 	HeadObject(
-		s3Client *s3.S3,
+		ctx context.Context,
+		s3Client *s3.Client,
 		input *s3.HeadObjectInput,
 	) (*s3.HeadObjectOutput, error)
-	NewDownloader(client *aws_s.Session) *s3manager.Downloader
+	NewDownloader(s3Client *s3.Client) *s3manager.Downloader
 	Download(
+		ctx context.Context,
+		s3Client *s3.Client,
 		downloader *s3manager.Downloader,
 		w io.WriterAt,
 		input *s3.GetObjectInput,
 	) (int64, error)
-	DeleteObject(s3Client *s3.S3,
+	DeleteObject(
+		ctx context.Context,
+		s3Client *s3.Client,
 		input *s3.DeleteObjectInput,
 	) (*s3.DeleteObjectOutput, error)
 }
@@ -65,70 +73,77 @@ func NewS3ClientService() *ClientService {
 	return &ClientService{}
 }
 
-func (c ClientService) NewSession(cfgs *aws.Config) (*aws_s.Session, error) {
-	return aws_s.NewSession(cfgs)
+func (c ClientService) New(cfgs aws.Config) *s3.Client {
+	return s3.NewFromConfig(cfgs)
 }
-
-func (c ClientService) NewUploader(client *aws_s.Session) *s3manager.Uploader {
-	return s3manager.NewUploader(client)
+func (c ClientService) NewUploader(s3Client *s3.Client) *s3manager.Uploader {
+	return s3manager.NewUploader(s3Client)
 }
 
 func (c ClientService) Upload(
+	ctx context.Context,
+	s3Client *s3.Client,
 	uploader *s3manager.Uploader,
 	bucket, key, message string,
 ) (*s3manager.UploadOutput, error) {
-	return uploader.Upload(&s3manager.UploadInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(key),
-		Body:   strings.NewReader(message),
-	})
-}
-
-func (c ClientService) New(client *aws_s.Session) *s3.S3 {
-	return s3.New(client)
+	return uploader.Upload(
+		ctx,
+		&s3.PutObjectInput{
+			Bucket: aws.String(bucket),
+			Key:    aws.String(key),
+			Body:   strings.NewReader(message),
+		})
 }
 
 func (c ClientService) CreateBucket(
-	s3Client *s3.S3,
+	ctx context.Context,
+	s3Client *s3.Client,
 	input *s3.CreateBucketInput,
 ) (*s3.CreateBucketOutput, error) {
-	return s3Client.CreateBucket(input)
+	return s3Client.CreateBucket(ctx, input)
 }
 
 func (c ClientService) DeleteBucket(
-	s3Client *s3.S3,
+	ctx context.Context,
+	s3Client *s3.Client,
 	input *s3.DeleteBucketInput,
 ) (*s3.DeleteBucketOutput, error) {
-	return s3Client.DeleteBucket(input)
+	return s3Client.DeleteBucket(ctx, input)
 }
+
 func (c ClientService) GetBucketLocation(
-	s3Client *s3.S3,
+	ctx context.Context,
+	s3Client *s3.Client,
 	input *s3.GetBucketLocationInput,
 ) (*s3.GetBucketLocationOutput, error) {
-	return s3Client.GetBucketLocation(input)
+	return s3Client.GetBucketLocation(ctx, input)
 }
 
 func (c ClientService) HeadObject(
-	s3Client *s3.S3,
+	ctx context.Context,
+	s3Client *s3.Client,
 	input *s3.HeadObjectInput,
 ) (*s3.HeadObjectOutput, error) {
-	return s3Client.HeadObject(input)
+	return s3Client.HeadObject(ctx, input)
 }
-
-func (c ClientService) NewDownloader(client *aws_s.Session) *s3manager.Downloader {
-	return s3manager.NewDownloader(client)
+func (c ClientService) NewDownloader(s3Client *s3.Client) *s3manager.Downloader {
+	return s3manager.NewDownloader(s3Client)
 }
 
 func (c ClientService) Download(
+	ctx context.Context,
+	s3Client *s3.Client,
 	downloader *s3manager.Downloader,
 	w io.WriterAt,
 	input *s3.GetObjectInput,
 ) (int64, error) {
-	return downloader.Download(w, input)
+	return downloader.Download(ctx, w, input)
 }
 
-func (c ClientService) DeleteObject(s3Client *s3.S3,
+func (c ClientService) DeleteObject(
+	ctx context.Context,
+	s3Client *s3.Client,
 	input *s3.DeleteObjectInput,
 ) (*s3.DeleteObjectOutput, error) {
-	return s3Client.DeleteObject(input)
+	return s3Client.DeleteObject(ctx, input)
 }

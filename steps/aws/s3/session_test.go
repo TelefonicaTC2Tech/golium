@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/TelefonicaTC2Tech/golium"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/aws/session"
+	awsconfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	awserr "github.com/aws/smithy-go"
 )
 
 const (
@@ -63,19 +64,12 @@ func TestNewS3Session(t *testing.T) {
 
 	os.WriteFile("./environments/local.yml", []byte(localConfFile), os.ModePerm)
 	tests := []struct {
-		name            string
-		newS3SessionErr error
-		wantErr         bool
+		name    string
+		wantErr bool
 	}{
 		{
-			name:            "New session error",
-			newS3SessionErr: fmt.Errorf("new s3 session error"),
-			wantErr:         true,
-		},
-		{
-			name:            "New session without error",
-			newS3SessionErr: nil,
-			wantErr:         false,
+			name:    "New session without error",
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
@@ -83,8 +77,6 @@ func TestNewS3Session(t *testing.T) {
 			s := &Session{}
 			s.S3ServiceClient = ClientServiceFuncMock{}
 			goliumCtx := golium.InitializeContext(context.Background())
-
-			NewSessionError = tt.newS3SessionErr
 
 			if err := s.NewS3Session(goliumCtx); (err != nil) != tt.wantErr {
 				t.Errorf("Session.NewS3Session() error = %v, wantErr %v", err, tt.wantErr)
@@ -101,9 +93,10 @@ func TestUploadS3FileWithContent(t *testing.T) {
 	})
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := setS3SessionMockedClient(tt.errors)
+			ctx := context.Background()
+			s := setS3SessionMockedClient(ctx, tt.errors)
 			if err := s.UploadS3FileWithContent(
-				context.Background(),
+				ctx,
 				testBucket,
 				testKey,
 				testMessage,
@@ -120,8 +113,9 @@ func TestCreateS3Bucket(t *testing.T) {
 	})
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := setS3SessionMockedClient(tt.errors)
-			if err := s.CreateS3Bucket(context.Background(), testBucket); (err != nil) != tt.wantErr {
+			ctx := context.Background()
+			s := setS3SessionMockedClient(ctx, tt.errors)
+			if err := s.CreateS3Bucket(ctx, testBucket); (err != nil) != tt.wantErr {
 				t.Errorf("Session.CreateS3Bucket() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -134,8 +128,9 @@ func TestDeleteS3Bucket(t *testing.T) {
 	})
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := setS3SessionMockedClient(tt.errors)
-			if err := s.DeleteS3Bucket(context.Background(), testBucket); (err != nil) != tt.wantErr {
+			ctx := context.Background()
+			s := setS3SessionMockedClient(ctx, tt.errors)
+			if err := s.DeleteS3Bucket(ctx, testBucket); (err != nil) != tt.wantErr {
 				t.Errorf("Session.DeleteS3Bucket() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -148,9 +143,10 @@ func TestValidateS3BucketExists(t *testing.T) {
 	})
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := setS3SessionMockedClient(tt.errors)
+			ctx := context.Background()
+			s := setS3SessionMockedClient(ctx, tt.errors)
 			if err := s.ValidateS3BucketExists(
-				context.Background(), testBucket); (err != nil) != tt.wantErr {
+				ctx, testBucket); (err != nil) != tt.wantErr {
 				t.Errorf(
 					"Session.ValidateS3BucketExists() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -184,16 +180,33 @@ func TestValidateS3FileExists(t *testing.T) {
 		{
 			name: "Key not exists",
 			errors: &testMockedError{
-				headObjectErr: awserr.New("NotFound", "error", fmt.Errorf("error")),
+				headObjectErr: &awserr.GenericAPIError{
+					Code:    "NotFound",
+					Message: "error",
+					Fault:   awserr.FaultUnknown,
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "Key not exists other error",
+			errors: &testMockedError{
+				headObjectErr: &awserr.GenericAPIError{
+					Code:    "OtherError",
+					Message: "other error",
+					Fault:   awserr.FaultUnknown,
+				},
 			},
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := setS3SessionMockedClient(tt.errors)
+			ctx := context.Background()
+			s := setS3SessionMockedClient(ctx, tt.errors)
+
 			if err := s.ValidateS3FileExists(
-				context.Background(), testBucket, testKey); (err != nil) != tt.wantErr {
+				ctx, testBucket, testKey); (err != nil) != tt.wantErr {
 				t.Errorf(
 					"Session.ValidateS3FileExists() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -201,11 +214,12 @@ func TestValidateS3FileExists(t *testing.T) {
 	}
 }
 
-func setS3SessionMockedClient(testErrors *testMockedError) *Session {
+func setS3SessionMockedClient(ctx context.Context, testErrors *testMockedError) *Session {
 	s := &Session{}
 	s.S3ServiceClient = ClientServiceFuncMock{}
 	if !testErrors.clientSessionErr {
-		s.Client, _ = session.NewSession()
+		cfg, _ := awsconfig.LoadDefaultConfig(ctx)
+		s.Client = s3.NewFromConfig(cfg)
 	} else {
 		s.Client = nil
 	}
@@ -300,9 +314,10 @@ func TestValidateS3FileExistsWithContent(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := setS3SessionMockedClient(tt.errors)
+			ctx := context.Background()
+			s := setS3SessionMockedClient(ctx, tt.errors)
 			if err := s.ValidateS3FileExistsWithContent(
-				context.Background(),
+				ctx,
 				testBucket,
 				testKey,
 				tt.message,
@@ -323,9 +338,10 @@ func TestDeleteS3File(t *testing.T) {
 	})
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := setS3SessionMockedClient(tt.errors)
+			ctx := context.Background()
+			s := setS3SessionMockedClient(ctx, tt.errors)
 			if err := s.DeleteS3File(
-				context.Background(),
+				ctx,
 				testBucket,
 				testKey,
 			); (err != nil) != tt.wantErr {
@@ -368,7 +384,8 @@ func TestCleanUp(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := setS3SessionMockedClient(tt.errors)
+			ctx := context.Background()
+			s := setS3SessionMockedClient(ctx, tt.errors)
 			testDocument := &CreatedDocument{
 				bucket: testBucket,
 				key:    testKey,
@@ -383,7 +400,7 @@ func TestCleanUp(t *testing.T) {
 				testBucket,
 			}
 
-			s.CleanUp(context.Background())
+			s.CleanUp(ctx)
 		})
 	}
 }
