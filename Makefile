@@ -3,6 +3,7 @@ GO_PATH:=$(shell go env GOPATH)
 
 LINTER_ARGS = run -c .golangci.yml --timeout 5m
 GODOG_FORMAT = pretty
+GOLANGCI_LINT_VERSION	= v1.46.2
 
 .PHONY: help
 help:	## Show a list of available commands
@@ -19,7 +20,7 @@ test-run-tag:	## Run feature from tag using variable TAG='<@tag_name>'
 .PHONY: download-tools
 download-tools:	## Download all required tools to validate and generate documentation, code analysis...
 	@echo "Installing tools on $(GO_PATH)/bin"
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.46.0
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
 	@echo "Tools installed"
 
 .PHONY: lint
