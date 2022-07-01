@@ -64,14 +64,12 @@ func TestNewS3Session(t *testing.T) {
 
 	os.WriteFile("./environments/local.yml", []byte(localConfFile), os.ModePerm)
 	tests := []struct {
-		name            string
-		newS3SessionErr error
-		wantErr         bool
+		name    string
+		wantErr bool
 	}{
 		{
-			name:            "New session without error",
-			newS3SessionErr: nil,
-			wantErr:         false,
+			name:    "New session without error",
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
@@ -79,8 +77,6 @@ func TestNewS3Session(t *testing.T) {
 			s := &Session{}
 			s.S3ServiceClient = ClientServiceFuncMock{}
 			goliumCtx := golium.InitializeContext(context.Background())
-
-			NewSessionError = tt.newS3SessionErr
 
 			if err := s.NewS3Session(goliumCtx); (err != nil) != tt.wantErr {
 				t.Errorf("Session.NewS3Session() error = %v, wantErr %v", err, tt.wantErr)

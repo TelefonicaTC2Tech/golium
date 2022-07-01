@@ -73,7 +73,7 @@ func (s *Session) NewS3Session(ctx context.Context) error {
 		}
 	}
 
-	s.Client = s.S3ServiceClient.NewSession(s3Config)
+	s.Client = s.S3ServiceClient.New(s3Config)
 
 	return nil
 }

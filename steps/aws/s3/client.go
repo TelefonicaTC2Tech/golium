@@ -25,7 +25,7 @@ import (
 )
 
 type ClientFunctions interface {
-	NewSession(cfgs aws.Config) *s3.Client
+	New(cfgs aws.Config) *s3.Client
 	NewUploader(s3Client *s3.Client) *s3manager.Uploader
 	Upload(
 		ctx context.Context,
@@ -73,7 +73,7 @@ func NewS3ClientService() *ClientService {
 	return &ClientService{}
 }
 
-func (c ClientService) NewSession(cfgs aws.Config) *s3.Client {
+func (c ClientService) New(cfgs aws.Config) *s3.Client {
 	return s3.NewFromConfig(cfgs)
 }
 func (c ClientService) NewUploader(s3Client *s3.Client) *s3manager.Uploader {

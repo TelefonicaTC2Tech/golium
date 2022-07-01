@@ -24,7 +24,6 @@ import (
 )
 
 var (
-	NewSessionError        error
 	UploadError            error
 	CreateBucketError      error
 	DeleteBucketError      error
@@ -36,7 +35,7 @@ var (
 
 type ClientServiceFuncMock struct{}
 
-func (c ClientServiceFuncMock) NewSession(cfgs aws.Config) *s3.Client {
+func (c ClientServiceFuncMock) New(cfgs aws.Config) *s3.Client {
 	return nil
 }
 
