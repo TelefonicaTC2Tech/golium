@@ -2,7 +2,7 @@ Feature: HTTP client
 
   @http
   Scenario: Send a GET request
-    Given the HTTP endpoint "[CONF:url]/anything"
+    Given the HTTP endpoint "[CONF:http_bin_url]/anything"
       And the HTTP path "/test-query"
       And the HTTP query parameters
           | param  | value |
@@ -25,11 +25,11 @@ Feature: HTTP client
           | args.exists           | true                                                 |
           | args.sort             | name                                                 |
           | method                | GET                                                  |
-          | url                   | [CONF:url]/anything/test-query?exists=true&sort=name |
+          | url                   | [CONF:http_bin_url]/anything/test-query?exists=true&sort=name |
 
   @http
   Scenario: Send a POST request with a JSON body using a table of properties
-    Given the HTTP endpoint "[CONF:url]/anything"
+    Given the HTTP endpoint "[CONF:http_bin_url]/anything"
       And the HTTP path "/test-json"
       And the HTTP request headers
           | param         | value               |
@@ -55,7 +55,7 @@ Feature: HTTP client
           | headers.Content-Type  | application/json              |
           | headers.Host          | [CONF:host]                   |
           | method                | POST                          |
-          | url                   | [CONF:url]/anything/test-json |
+          | url                   | [CONF:http_bin_url]/anything/test-json |
           | json.name             | golium                        |
           | json.active           | [TRUE]                        |
           | json.inactive         | [FALSE]                       |
@@ -66,7 +66,7 @@ Feature: HTTP client
 
   @http
   Scenario: Send a POST request with a x-www-form-urlencoded body using a table of properties
-    Given the HTTP endpoint "[CONF:url]/anything"
+    Given the HTTP endpoint "[CONF:http_bin_url]/anything"
       And the HTTP path "/test-urlencoded"
       And the HTTP request headers
           | param         | value               |
@@ -89,7 +89,7 @@ Feature: HTTP client
           | headers.Content-Type  | application/x-www-form-urlencoded   |
           | headers.Host          | [CONF:host]                         |
           | method                | POST                                |
-          | url                   | [CONF:url]/anything/test-urlencoded |
+          | url                   | [CONF:http_bin_url]/anything/test-urlencoded |
           | form.name             | test                                |
           | form.surname          | golium                              |
           | form.boolean          | true                                |
@@ -97,7 +97,7 @@ Feature: HTTP client
 
   @http
   Scenario: Send a POST request defined by a json string using the context storage
-    Given the HTTP endpoint "[CONF:url]/anything"
+    Given the HTTP endpoint "[CONF:http_bin_url]/anything"
       And the HTTP path "/test-content"
       And the HTTP request headers
           | param        | value            |
@@ -130,7 +130,7 @@ Feature: HTTP client
           | json.list.2.value     | value2     |
       And I store the element "json.list.0.attribute" from the JSON HTTP response body in context "attr"
       And I store the element "json.list.0.value" from the JSON HTTP response body in context "val"
-     Then the HTTP endpoint "[CONF:url]/anything"
+     Then the HTTP endpoint "[CONF:http_bin_url]/anything"
       And the HTTP path "/test3-2"
       And the HTTP request headers
           | param        | value            |
@@ -149,7 +149,7 @@ Feature: HTTP client
   
   @http
   Scenario: Send a POST request defined by a json string in file and check the response
-    Given the HTTP endpoint "[CONF:url]/anything"
+    Given the HTTP endpoint "[CONF:http_bin_url]/anything"
       And the HTTP path "/test-content"
       And the HTTP request headers
           | param        | value            |
@@ -161,7 +161,7 @@ Feature: HTTP client
 
   @http
   Scenario: Send a POST request defined by a json string in file removing parameters and check the response
-    Given the HTTP endpoint "[CONF:url]/anything"
+    Given the HTTP endpoint "[CONF:http_bin_url]/anything"
       And the HTTP path "/test-content"
       And the HTTP request headers
           | param        | value            |
@@ -194,7 +194,7 @@ Feature: HTTP client
 
   @http
   Scenario: Set HTTP request host
-    Given the HTTP endpoint "[CONF:url]/headers"
+    Given the HTTP endpoint "[CONF:http_bin_url]/headers"
       And the HTTP request headers
           | param | value       |
           | Host  | example.com |
@@ -206,13 +206,13 @@ Feature: HTTP client
 
   @http
   Scenario: Validate Not found path with trailing slash
-    Given the HTTP endpoint "[CONF:url]/image/jpeg/"
+    Given the HTTP endpoint "[CONF:http_bin_url]/image/jpeg/"
      When I send a HTTP "POST" request
      Then the HTTP status code must be "404"
 
   @http
     Scenario: Send a GET request and check if a specific header is not in response headers
-      Given the HTTP endpoint "[CONF:url]/anything"
+      Given the HTTP endpoint "[CONF:http_bin_url]/anything"
         And the HTTP path "/test-query"
         And the HTTP query parameters
             | param  | value |

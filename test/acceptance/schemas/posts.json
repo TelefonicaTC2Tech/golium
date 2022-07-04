@@ -1,0 +1,70 @@
+[
+  {
+    "code": "example1",
+    "body": {
+      "empty": "",
+      "boolean": false,
+      "list": [
+        {
+          "attribute": "attribute0",
+          "value": "value0"
+        },
+        {
+          "attribute": "attribute1",
+          "value": "value1"
+        },
+        {
+          "attribute": "attribute2",
+          "value": "value2"
+        }
+      ]
+    },
+    "response": {
+      "boolean": false,
+      "empty": "",
+      "list": [
+        {
+          "attribute": "attribute0",
+          "value": "value0"
+        },
+        {
+          "attribute": "attribute1",
+          "value": "value1"
+        },
+        {
+          "attribute": "attribute2",
+          "value": "value2"
+        }
+      ],
+      "id": 101
+    }
+  },
+  {
+    "code": "empty",
+    "response": {}
+  },
+  {
+    "code": "external path",
+    "body": {
+      "title": "foo"
+    },
+    "response": {
+      "id": 1,
+      "title": "foo",
+      "body": "quia et suscipit\nsuscipit recusandae consequuntur expedita et cum\nreprehenderit molestiae ut ut quas totam\nnostrum rerum est autem sunt rem eveniet architecto",
+      "userId": 1
+    }
+  },
+  {
+    "code": "error example",
+    "body": {
+      "message": "Validation error.",
+      "details": {
+        "field_name": {
+          "message": "Field 'field_name' has invalid type, expected field_type",
+          "code": "incorrect_type"
+        }
+      }
+    }
+  }
+]

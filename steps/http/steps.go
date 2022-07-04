@@ -156,5 +156,73 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 	scenCtx.Step(`^I store the header "([^"]*)" from the HTTP response in context "([^"]*)"$`, func(key string, ctxtKey string) error {
 		return session.StoreResponseHeaderInContext(ctx, golium.ValueAsString(ctx, key), golium.ValueAsString(ctx, ctxtKey))
 	})
+	scenCtx.Step(
+		`^I send a "(HEAD|GET|POST|PUT|PATCH|DELETE)" request to "([^"]*)" endpoint$`,
+		func(method, endpoint string) error {
+			return session.SendRequestTo(ctx, method, endpoint)
+		})
+	scenCtx.Step(
+		`^I send a "(HEAD|GET|POST|PUT|PATCH|DELETE)" request to "([^"]*)" endpoint with path "([^"]*)"$`,
+		func(method, endpoint, path string) error {
+			return session.SendRequestToWithPath(ctx, method, endpoint, path)
+		})
+	scenCtx.Step(`^I send a "(HEAD|GET|POST|PUT|PATCH|DELETE)" request to "([^"]*)" endpoint without last backslash$`,
+		func(method, endpoint string) error {
+			return session.SendRequestToWithoutBackslash(ctx, method, endpoint)
+		})
+	scenCtx.Step(`^I send a "(HEAD|GET|POST|PUT|PATCH|DELETE)" request to "([^"]*)" endpoint with "(valid|invalid)" API-KEY$`,
+		func(method, endpoint, apiKeyFlag string) error {
+			return session.SendRequestToWithAPIKEY(ctx, method, endpoint, apiKeyFlag)
+		})
+	scenCtx.Step(`^I send a "(HEAD|GET|POST|PUT|PATCH|DELETE)" request to "([^"]*)" endpoint without credentials$`,
+		func(method, endpoint string) error {
+			endpoint = session.NormalizeEndpoint(ctx, endpoint, true)
+			return session.SendRequest(ctx, method, endpoint, "", "")
+		})
+	scenCtx.Step(`^I send a "(HEAD|GET|POST|PUT|PATCH|DELETE)" request to "([^"]*)" endpoint with query params$`,
+		func(method, endpoint string, t *godog.Table) error {
+			return session.SendRequestToWithQueryParamsTable(ctx, method, endpoint, t)
+		})
+	scenCtx.Step(`^I send a "(HEAD|GET|POST|PUT|PATCH|DELETE)" request to "([^"]*)" endpoint with "([^"]*)" filters$`,
+		func(method, endpoint, filters string) error {
+			return session.SendRequestToWithFilters(ctx, method, endpoint, filters)
+		})
+	scenCtx.Step(`^I send a "(HEAD|GET|POST|PUT|PATCH|DELETE)" request to "([^"]*)" with a JSON body that includes "([^"]*)"$`,
+		func(method, request, code string) error {
+			return session.SendRequestUsingJSON(ctx, method, request, code)
+		})
+	scenCtx.Step(`^I send a "(HEAD|GET|POST|PUT|PATCH|DELETE)" request to "([^"]*)" with path "([^"]*)" with a JSON body that includes "([^"]*)"$`,
+		func(method, request, path, code string) error {
+			return session.SendRequestWithPathUsingJSON(ctx, method, request, path, code)
+		})
+	scenCtx.Step(`^I send a "(HEAD|GET|POST|PUT|PATCH|DELETE)" request to "([^"]*)" with a JSON body that includes "([^"]*)" without$`,
+		func(method, request, code string, t *godog.Table) error {
+			return session.SendRequestUsingJSONWithout(ctx, method, request, code, t)
+		})
+	scenCtx.Step(`^I send a "(HEAD|GET|POST|PUT|PATCH|DELETE)" request to "([^"]*)" with a JSON body that includes "([^"]*)" modifying$`,
+		func(method, request, code string, t *godog.Table) error {
+			return session.SendRequestUsingJSONModifying(ctx, method, request, code, t)
+		})
+	scenCtx.Step(`^the "([^"]*)" response message should match with "([^"]*)" JSON message$`,
+		func(request, code string) error {
+			return session.ValidateResponseBodyJSONFile(ctx, code, request, "")
+		})
+	scenCtx.Step(`^the "([^"]*)" response message should match with "([^"]*)" JSON message without$`,
+		func(request, code string, t *godog.Table) error {
+			var err error
+			params, err := golium.ConvertTableColumnToArray(ctx, t)
+			if err != nil {
+				return err
+			}
+			return session.ValidateResponseBodyJSONFileWithout(ctx, code, request, "", params)
+		})
+	scenCtx.Step(`^the "([^"]*)" response message should match with "([^"]*)" JSON message modifying$`,
+		func(request, code string, t *godog.Table) error {
+			return session.ValidateResponseBodyJSONFileModifying(ctx, code, request, t)
+		})
+	scenCtx.Step(`^the error response message should match with "([^"]*)" JSON message replacing fields$`,
+		func(code string, t *godog.Table) error {
+			return session.ValidateErrorBodyJSONFileReplace(ctx, code, "error", t)
+		})
 	return ctx
 }

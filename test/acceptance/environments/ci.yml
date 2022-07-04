@@ -1,7 +1,19 @@
 # HTTP settings
-url: https://httpbin.org
+http_bin_url: https://httpbin.org
 urlSelfSigned: https://self-signed.badssl.com
 host: httpbin.org
+url: https://jsonplaceholder.typicode.com/
+
+#API KEYS
+invalid-key: "invalid_apiKey"
+
+endpoints:
+  posts:
+    api-endpoint: posts/
+    api-key: "valid_apiKey"
+  users:
+    api-endpoint: users/
+    api-key: "valid_apiKey" 
 
 # DNS settings
 dns: dns.google:53

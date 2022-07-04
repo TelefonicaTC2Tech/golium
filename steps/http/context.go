@@ -26,7 +26,9 @@ const contextKey ContextKey = "httpSession"
 // InitializeContext adds the HTTP session to the context.
 // The new context is returned because context is immutable.
 func InitializeContext(ctx context.Context) context.Context {
-	return context.WithValue(ctx, contextKey, &Session{})
+	return context.WithValue(ctx, contextKey, &Session{
+		GoliumInterface: *NewGoliumInterface(),
+	})
 }
 
 // GetSession returns the HTTP session stored in context.

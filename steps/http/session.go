@@ -36,7 +36,12 @@ import (
 	"encoding/json"
 )
 
-const parameterError = "error getting parameter from json: %w"
+const (
+	parameterError = "error getting parameter from json: %w"
+	InvalidPath    = "[CONF:apiKey.invalid_apiKey]"
+	NilString      = "%nil%"
+	Slash          = "/"
+)
 
 // Request information of the Session.
 type Request struct {
@@ -74,6 +79,7 @@ type Session struct {
 	InsecureSkipVerify bool
 	Timeout            time.Duration
 	Timedout           bool
+	GoliumInterface    ServiceFunctions
 }
 
 // URL composes the endpoint, the resource, and query parameters to build a URL.
