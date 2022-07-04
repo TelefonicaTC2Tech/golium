@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/TelefonicaTC2Tech/golium"
-	"github.com/TelefonicaTC2Tech/golium/validator"
 	"github.com/cucumber/godog"
 )
 
@@ -84,7 +83,7 @@ func (s *Session) ValidateErrorBodyJSONFileReplace(
 	}
 	switch bC := bodyContent.(type) {
 	case string:
-		if err := validator.JSON.ReplaceStringResponse(
+		if err := JSON.ReplaceStringResponse(
 			respBody,
 			fmt.Sprint(bodyContent),
 			replaceValues,
@@ -93,7 +92,7 @@ func (s *Session) ValidateErrorBodyJSONFileReplace(
 		}
 
 	case map[string]interface{}:
-		if err := validator.JSON.ReplaceMapStringResponse(
+		if err := JSON.ReplaceMapStringResponse(
 			respBody,
 			bodyContent,
 			replaceValues,

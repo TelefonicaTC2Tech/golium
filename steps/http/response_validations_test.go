@@ -12,7 +12,6 @@ import (
 	"testing"
 
 	"github.com/TelefonicaTC2Tech/golium"
-	"github.com/TelefonicaTC2Tech/golium/validator"
 	"github.com/cucumber/godog"
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/require"
@@ -108,7 +107,7 @@ type replaceTestTable struct {
 	request            string
 	file               string
 	expectedErr        error
-	jsonValidator      validator.JSONFunctions
+	jsonValidator      JSONFunctions
 	jsonValidatorError string
 	table              *godog.Table
 }
@@ -168,7 +167,7 @@ func TestValidateErrorBodyJSONFileReplaceString(t *testing.T) {
 			code:               "example1",
 			request:            "map_test",
 			file:               "test",
-			jsonValidator:      validator.JSONService{},
+			jsonValidator:      JSONService{},
 			jsonValidatorError: "",
 			table:              generateReplaceTable(),
 			expectedErr:        nil,
@@ -178,7 +177,7 @@ func TestValidateErrorBodyJSONFileReplaceString(t *testing.T) {
 			code:               "example5",
 			request:            "string_test",
 			file:               "test",
-			jsonValidator:      validator.JSONService{},
+			jsonValidator:      JSONService{},
 			jsonValidatorError: "",
 			table:              generateReplaceTable(),
 			expectedErr:        nil,
@@ -188,7 +187,7 @@ func TestValidateErrorBodyJSONFileReplaceString(t *testing.T) {
 			code:               "example2",
 			request:            "map_test",
 			file:               "file_error",
-			jsonValidator:      validator.JSONService{},
+			jsonValidator:      JSONService{},
 			jsonValidatorError: "",
 			table:              generateReplaceTable(),
 			expectedErr: fmt.Errorf("error getting parameter from json: %w",
@@ -199,7 +198,7 @@ func TestValidateErrorBodyJSONFileReplaceString(t *testing.T) {
 			name:               "default case error",
 			code:               "example4",
 			request:            "map_test",
-			jsonValidator:      validator.JSONService{},
+			jsonValidator:      JSONService{},
 			jsonValidatorError: "",
 			file:               "test",
 			table:              generateReplaceTable(),
@@ -210,7 +209,7 @@ func TestValidateErrorBodyJSONFileReplaceString(t *testing.T) {
 			code:               "example1",
 			request:            "map_test",
 			file:               "test",
-			jsonValidator:      validator.JSONServiceMock{},
+			jsonValidator:      JSONServiceMock{},
 			jsonValidatorError: "error in replace map string function",
 			table:              generateReplaceTable(),
 			expectedErr:        fmt.Errorf("error in replace map string function"),
@@ -220,7 +219,7 @@ func TestValidateErrorBodyJSONFileReplaceString(t *testing.T) {
 			code:               "example6",
 			request:            "string_test",
 			file:               "test",
-			jsonValidator:      validator.JSONServiceMock{},
+			jsonValidator:      JSONServiceMock{},
 			jsonValidatorError: "error in replace string function",
 			table:              generateReplaceTable(),
 			expectedErr:        fmt.Errorf("error in replace string function"),
@@ -230,7 +229,7 @@ func TestValidateErrorBodyJSONFileReplaceString(t *testing.T) {
 			code:               "example1",
 			request:            "map_test",
 			file:               "test",
-			jsonValidator:      validator.JSONService{},
+			jsonValidator:      JSONService{},
 			jsonValidatorError: "",
 			table:              generateWrongReplaceTable(),
 			expectedErr: fmt.Errorf("cannot remove header: %v",
@@ -345,7 +344,7 @@ func validateModifyingTestCases() []validateModifyingTestTable {
 }
 
 func setRequestToTestLocalhostContext(endpoint string,
-	jsonValidator validator.JSONFunctions,
+	jsonValidator JSONFunctions,
 	jsonValidatorError string,
 ) (context.Context, *Session) {
 	ValuesAsString = map[string]string{
@@ -354,9 +353,9 @@ func setRequestToTestLocalhostContext(endpoint string,
 		"[CONF:endpoints.map_test.api-endpoint]":    endpoint,
 		"[CONF:endpoints.string_test.api-endpoint]": endpoint,
 	}
-	validator.JSON = jsonValidator
+	JSON = jsonValidator
 	if jsonValidatorError != "" {
-		validator.ErrorResponse = jsonValidatorError
+		ErrorResponse = jsonValidatorError
 	}
 	ctx, s := setGoliumContextAndService()
 	return ctx, s
