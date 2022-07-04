@@ -27,7 +27,7 @@ import (
 const (
 	configRequestBodyError = "error configuring request body: "
 	sendingRequestError    = "error sending request: "
-	confEndpointAPIKey     = "[CONF:endpoints.%s.api-key]"
+	confEndpoint           = "[CONF:endpoints.%s.api-key]"
 )
 
 // SendRequest send request using credential parameters if needed.
@@ -51,7 +51,7 @@ func (s *Session) SendRequest(
 
 // SendRequestTo send request using credential parameters if they are defined in Configuration.
 func (s *Session) SendRequestTo(ctx context.Context, method, request string) error {
-	apiKey := s.GoliumInterface.ValueAsString(ctx, fmt.Sprintf(confEndpointAPIKey, request))
+	apiKey := s.GoliumInterface.ValueAsString(ctx, fmt.Sprintf(confEndpoint, request))
 	endpoint := s.NormalizeEndpoint(ctx, request, true)
 	return s.SendRequest(ctx, method, endpoint, apiKey, "")
 }
@@ -59,7 +59,7 @@ func (s *Session) SendRequestTo(ctx context.Context, method, request string) err
 // SendRequestToWithID
 // send request using credential parameters if they are defined in Configuration.
 func (s *Session) SendRequestToWithPath(ctx context.Context, method, request, path string) error {
-	apiKey := s.GoliumInterface.ValueAsString(ctx, fmt.Sprintf(confEndpointAPIKey, request))
+	apiKey := s.GoliumInterface.ValueAsString(ctx, fmt.Sprintf(confEndpoint, request))
 	endpoint := s.NormalizeEndpoint(ctx, request, true)
 	s.ConfigurePath(ctx, path)
 	return s.SendRequest(ctx, method, endpoint, apiKey, "")
@@ -68,7 +68,7 @@ func (s *Session) SendRequestToWithPath(ctx context.Context, method, request, pa
 // SendRequestToWithoutBackslash send request without last backslash
 // using credential parameters if they are defined in Configuration.
 func (s *Session) SendRequestToWithoutBackslash(ctx context.Context, method, request string) error {
-	apiKey := s.GoliumInterface.ValueAsString(ctx, fmt.Sprintf(confEndpointAPIKey, request))
+	apiKey := s.GoliumInterface.ValueAsString(ctx, fmt.Sprintf(confEndpoint, request))
 	endpoint := s.NormalizeEndpoint(ctx, request, false)
 	return s.SendRequest(ctx, method, endpoint, apiKey, "")
 }
@@ -80,7 +80,7 @@ func (s *Session) SendRequestToWithAPIKEY(
 ) error {
 	var apiKey string
 	if apiKeyFlag == "valid" {
-		apiKey = s.GoliumInterface.ValueAsString(ctx, fmt.Sprintf(confEndpointAPIKey, request))
+		apiKey = s.GoliumInterface.ValueAsString(ctx, fmt.Sprintf(confEndpoint, request))
 	} else {
 		apiKey = InvalidPath
 	}
