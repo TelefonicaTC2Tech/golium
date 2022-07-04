@@ -24,6 +24,12 @@ import (
 	"github.com/cucumber/godog"
 )
 
+const (
+	configRequestBodyError = "error configuring request body: "
+	sendingRequestError    = "error sending request: "
+	confEndpointAPIKey     = "[CONF:endpoints.%s.api-key]"
+)
+
 // SendRequest send request using credential parameters if needed.
 func (s *Session) SendRequest(
 	ctx context.Context,
@@ -45,7 +51,7 @@ func (s *Session) SendRequest(
 
 // SendRequestTo send request using credential parameters if they are defined in Configuration.
 func (s *Session) SendRequestTo(ctx context.Context, method, request string) error {
-	apiKey := s.GoliumInterface.ValueAsString(ctx, fmt.Sprintf("[CONF:endpoints.%s.api-key]", request))
+	apiKey := s.GoliumInterface.ValueAsString(ctx, fmt.Sprintf(confEndpointAPIKey, request))
 	endpoint := s.NormalizeEndpoint(ctx, request, true)
 	return s.SendRequest(ctx, method, endpoint, apiKey, "")
 }
@@ -53,7 +59,7 @@ func (s *Session) SendRequestTo(ctx context.Context, method, request string) err
 // SendRequestToWithID
 // send request using credential parameters if they are defined in Configuration.
 func (s *Session) SendRequestToWithPath(ctx context.Context, method, request, path string) error {
-	apiKey := s.GoliumInterface.ValueAsString(ctx, fmt.Sprintf("[CONF:endpoints.%s.api-key]", request))
+	apiKey := s.GoliumInterface.ValueAsString(ctx, fmt.Sprintf(confEndpointAPIKey, request))
 	endpoint := s.NormalizeEndpoint(ctx, request, true)
 	s.ConfigurePath(ctx, path)
 	return s.SendRequest(ctx, method, endpoint, apiKey, "")
@@ -62,7 +68,7 @@ func (s *Session) SendRequestToWithPath(ctx context.Context, method, request, pa
 // SendRequestToWithoutBackslash send request without last backslash
 // using credential parameters if they are defined in Configuration.
 func (s *Session) SendRequestToWithoutBackslash(ctx context.Context, method, request string) error {
-	apiKey := s.GoliumInterface.ValueAsString(ctx, fmt.Sprintf("[CONF:endpoints.%s.api-key]", request))
+	apiKey := s.GoliumInterface.ValueAsString(ctx, fmt.Sprintf(confEndpointAPIKey, request))
 	endpoint := s.NormalizeEndpoint(ctx, request, false)
 	return s.SendRequest(ctx, method, endpoint, apiKey, "")
 }
@@ -74,7 +80,7 @@ func (s *Session) SendRequestToWithAPIKEY(
 ) error {
 	var apiKey string
 	if apiKeyFlag == "valid" {
-		apiKey = s.GoliumInterface.ValueAsString(ctx, fmt.Sprintf("[CONF:endpoints.%s.api-key]", request))
+		apiKey = s.GoliumInterface.ValueAsString(ctx, fmt.Sprintf(confEndpointAPIKey, request))
 	} else {
 		apiKey = InvalidPath
 	}
@@ -111,10 +117,10 @@ func (s *Session) SendRequestToWithFilters(ctx context.Context,
 // SendRequestUsingJSON send request using body from JSON file located in schemas.
 func (s *Session) SendRequestUsingJSON(ctx context.Context, method, request, code string) error {
 	if err := s.ConfigureRequestBodyJSONFile(ctx, code, request); err != nil {
-		return fmt.Errorf("error configuring request body: %v", err)
+		return fmt.Errorf("%s", fmt.Sprintf("%s%v", configRequestBodyError, err))
 	}
 	if err := s.SendRequestTo(ctx, method, request); err != nil {
-		return fmt.Errorf("error sending request: %v", err)
+		return fmt.Errorf("%s", fmt.Sprintf("%s%v", sendingRequestError, err))
 	}
 	return nil
 }
@@ -125,7 +131,7 @@ func (s *Session) SendRequestWithPathUsingJSON(
 	method, request, path, code string,
 ) error {
 	if err := s.ConfigureRequestBodyJSONFile(ctx, code, request); err != nil {
-		return fmt.Errorf("error configuring request body: %v", err)
+		return fmt.Errorf("%s", fmt.Sprintf("%s%v", configRequestBodyError, err))
 	}
 	if err := s.SendRequestToWithPath(ctx, method, request, path); err != nil {
 		return fmt.Errorf("error sending request with path: %v", err)
@@ -147,10 +153,10 @@ func (s *Session) SendRequestUsingJSONWithout(ctx context.Context,
 	if err = s.ConfigureRequestBodyJSONFileWithout(
 		ctx, code, request, params,
 	); err != nil {
-		return fmt.Errorf("error configuring request body: %v", err)
+		return fmt.Errorf("%s", fmt.Sprintf("%s%v", configRequestBodyError, err))
 	}
 	if err = s.SendRequestTo(ctx, method, request); err != nil {
-		return fmt.Errorf("error sending request: %v", err)
+		return fmt.Errorf("%s", fmt.Sprintf("%s%v", sendingRequestError, err))
 	}
 	return nil
 }
@@ -182,7 +188,7 @@ func (s *Session) SendRequestUsingJSONModifying(
 	}
 	s.AddToRequestMessageFromJSONFile(message)
 	if err := s.SendRequestTo(ctx, method, request); err != nil {
-		return fmt.Errorf("error sending request: %v", err)
+		return fmt.Errorf("%s", fmt.Sprintf("%s%v", sendingRequestError, err))
 	}
 	return nil
 }
