@@ -79,7 +79,6 @@ const (
 	}
 `
 	replaceStringResponseBody       = `field_name and field_type has been replaced`
-	jsonPlaceURL                    = "https://jsonplaceholder.typicode.com/"
 	validateModifyingWrongCodeError = "param value: 'response' not found in" +
 		" '[map[body:map[body:bar1 " +
 		"title:foo1 userId:1] code:example1 response:map[body:bar1 id:101 title" +
