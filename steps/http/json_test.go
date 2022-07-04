@@ -62,7 +62,7 @@ const (
 	}
 	}`
 
-	JSON = `{
+	JSONFile = `{
 		"boolean": false, 
 		"empty": "", 
 		"list": [
@@ -82,7 +82,7 @@ const (
 
 func TestGetParamFromJSON(t *testing.T) {
 	var expectedParam interface{}
-	if err := json.Unmarshal([]byte(JSON), &expectedParam); err != nil {
+	if err := json.Unmarshal([]byte(JSONFile), &expectedParam); err != nil {
 		t.Error("error Unmarshaling expected response body: %w", err)
 	}
 
@@ -158,7 +158,7 @@ func TestGetParamFromJSON(t *testing.T) {
 
 func TestFindValueByCode(t *testing.T) {
 	var expectedValue interface{}
-	if err := json.Unmarshal([]byte(JSON), &expectedValue); err != nil {
+	if err := json.Unmarshal([]byte(JSONFile), &expectedValue); err != nil {
 		t.Error("error Unmarshaling expected response body: %w", err)
 	}
 

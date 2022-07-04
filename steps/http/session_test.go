@@ -342,7 +342,7 @@ func TestValidateResponseFromJSONFile(t *testing.T) {
 	defer os.RemoveAll(logsPath)
 
 	var response interface{}
-	if err := json.Unmarshal([]byte(JSON), &response); err != nil {
+	if err := json.Unmarshal([]byte(JSONFile), &response); err != nil {
 		t.Error("error Unmarshaling expected response body: %w", err)
 	}
 
@@ -375,14 +375,14 @@ func TestValidateResponseFromJSONFile(t *testing.T) {
 	}{
 		{
 			name:             "testing validate response type string",
-			response:         JSON,
+			response:         JSONFile,
 			responseBody:     JSONhttpResponse,
 			respDataLocation: "response",
 			wantErr:          false,
 		},
 		{
 			name:             "testing unexpected response body ",
-			response:         JSON,
+			response:         JSONFile,
 			responseBody:     unexpectedResponse,
 			respDataLocation: "",
 			wantErr:          true,
@@ -558,13 +558,13 @@ func TestValidateResponseBodyJSONProperties(t *testing.T) {
 	}{
 		{
 			name:         "testing validate response body json with correct properties",
-			responseBody: JSON,
+			responseBody: JSONFile,
 			props:        props,
 			wantErr:      false,
 		},
 		{
 			name:         "testing validate response body json with incorrect properties",
-			responseBody: JSON,
+			responseBody: JSONFile,
 			props:        map[string]interface{}{"boolean": true},
 			wantErr:      true,
 		},
@@ -595,7 +595,7 @@ func TestValidateResponseBodyEmpty(t *testing.T) {
 		},
 		{
 			name:         "Should return error body is not empty",
-			responseBody: JSON,
+			responseBody: JSONFile,
 			wantErr:      true,
 		},
 	}

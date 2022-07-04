@@ -1,4 +1,4 @@
-package validator
+package http
 
 import (
 	"bytes"
@@ -8,7 +8,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/TelefonicaTC2Tech/golium/steps/http"
 	"github.com/stretchr/testify/require"
 )
 
@@ -108,8 +107,6 @@ const (
 		`
 	stringError = "\nfield_name and field_type has been replaced with match error\n " +
 		"vs \nfield_name and field_type has been replaced"
-	schemasPath = "./schemas"
-	logsPath    = "./logs"
 )
 
 func TestReplaceMapStringResponse(t *testing.T) {
@@ -163,7 +160,7 @@ func TestReplaceMapStringResponse(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			ctx := http.InitializeContext(context.Background())
+			ctx := InitializeContext(context.Background())
 			j := JSONService{}
 
 			if tc.marshalMock {
@@ -174,7 +171,7 @@ func TestReplaceMapStringResponse(t *testing.T) {
 				}
 			}
 			respBody, _ := io.ReadAll(bytes.NewBufferString(tc.responseBody))
-			bodyContent, _ := http.GetParamFromJSON(ctx, tc.file, tc.code, "response")
+			bodyContent, _ := GetParamFromJSON(ctx, tc.file, tc.code, "response")
 
 			err := j.ReplaceMapStringResponse(respBody, bodyContent, tc.params)
 			require.Equal(t, tc.expectedErr, err)
@@ -225,11 +222,11 @@ func TestReplaceStringResponse(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			ctx := http.InitializeContext(context.Background())
+			ctx := InitializeContext(context.Background())
 			j := JSONService{}
 
 			respBody, _ := io.ReadAll(bytes.NewBufferString(tc.responseBody))
-			bodyContent, _ := http.GetParamFromJSON(ctx, tc.file, tc.code, "response")
+			bodyContent, _ := GetParamFromJSON(ctx, tc.file, tc.code, "response")
 
 			err := j.ReplaceStringResponse(respBody, fmt.Sprint(bodyContent), tc.params)
 			require.Equal(t, tc.expectedErr, err)
