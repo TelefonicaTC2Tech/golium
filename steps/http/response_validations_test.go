@@ -12,7 +12,7 @@ import (
 	"testing"
 
 	"github.com/TelefonicaTC2Tech/golium"
-	"github.com/TelefonicaTC2Tech/golium/steps/http/validator"
+	"github.com/TelefonicaTC2Tech/golium/validator"
 	"github.com/cucumber/godog"
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/require"
