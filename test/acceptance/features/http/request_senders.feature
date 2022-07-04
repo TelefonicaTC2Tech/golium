@@ -86,4 +86,4 @@ Feature: HTTP Request Senders
       | Parameter     | Value                  |
       | Authorization | Bearer 1234567890AEIOU |
     When I send a "POST" request to "posts" with a JSON body that includes "example1"
-    Then the HTTP status code must be "201"    
+    Then the HTTP status code must be "201"
