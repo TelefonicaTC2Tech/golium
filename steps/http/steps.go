@@ -220,9 +220,5 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 		func(request, code string, t *godog.Table) error {
 			return session.ValidateResponseBodyJSONFileModifying(ctx, code, request, t)
 		})
-	scenCtx.Step(`^the error response message should match with "([^"]*)" JSON message replacing fields$`,
-		func(code string, t *godog.Table) error {
-			return session.ValidateErrorBodyJSONFileReplace(ctx, code, "error", t)
-		})
 	return ctx
 }
