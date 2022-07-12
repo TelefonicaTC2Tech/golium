@@ -31,6 +31,7 @@ import (
 	"github.com/TelefonicaTC2Tech/golium"
 	"github.com/TelefonicaTC2Tech/golium/steps/http/body"
 	"github.com/TelefonicaTC2Tech/golium/steps/http/model"
+	"github.com/cucumber/godog"
 	"github.com/google/uuid"
 	"github.com/tidwall/sjson"
 	"github.com/xeipuuv/gojsonschema"
@@ -456,13 +457,195 @@ func (s *Session) SendRequestWithBody(
 	uRL, method, endpoint, code, apiKey string,
 ) error {
 	// Build request
-	s.Request = model.NewRequest(method, uRL, endpoint, "", true)
+	s.Request = model.NewRequest(method, uRL, endpoint, true)
 	// Configure request JSON Body
 	message, err := body.GetParamFromJSON(endpoint, code, "body")
 	if err != nil {
 		return fmt.Errorf("error getting parameter from json: %w", err)
 	}
 	s.Request.AddBody(message)
+	// Configure authorization headers
+	s.Request.AddAuthorization(apiKey, "")
+	// Send HTTP Request
+	if err := s.SendHTTPRequest(ctx, method); err != nil {
+		return fmt.Errorf("error sending http request using json: %w", err)
+	}
+	return nil
+}
+
+// SendRequestWithBodyWithoutFields send request using body from JSON file located in schemas
+// without fields.
+func (s *Session) SendRequestWithBodyWithoutFields(
+	ctx context.Context,
+	uRL, method, endpoint, code, apiKey string, t *godog.Table,
+) error {
+	// Build request
+	s.Request = model.NewRequest(method, uRL, endpoint, true)
+	// Configure request JSON Body
+	params, err := golium.ConvertTableColumnToArray(ctx, t)
+	if err != nil {
+		return err
+	}
+	message, err := body.GetParamFromJSON(endpoint, code, "body")
+	messageMap, _ := message.(map[string]interface{})
+	for _, removeParams := range params {
+		delete(messageMap, removeParams)
+	}
+	if err != nil {
+		return fmt.Errorf("error getting parameter from json: %w", err)
+	}
+	s.Request.AddBody(message)
+	// Configure authorization headers
+	s.Request.AddAuthorization(apiKey, "")
+	// Send HTTP Request
+	if err := s.SendHTTPRequest(ctx, method); err != nil {
+		return fmt.Errorf("error sending http request using json: %w", err)
+	}
+	return nil
+}
+
+// SendRequestWithBodyModifyingFields send request using body from JSON file located in schemas
+// modifying fields.
+func (s *Session) SendRequestWithBodyModifyingFields(
+	ctx context.Context,
+	uRL, method, endpoint, code, apiKey string, t *godog.Table,
+) error {
+	// Build request
+	s.Request = model.NewRequest(method, uRL, endpoint, true)
+	// Configure request JSON Body
+	params, err := golium.ConvertTableToMap(ctx, t)
+	if err != nil {
+		return err
+	}
+	message, err := body.GetParamFromJSON(endpoint, code, "body")
+	if err != nil {
+		return fmt.Errorf("error getting parameter from json: %w", err)
+	}
+	messageMap, _ := message.(map[string]interface{})
+	for key, value := range params {
+		_, present := messageMap[key]
+		if !present {
+			return fmt.Errorf("error modifying param : param %v does not exists", key)
+		}
+		messageMap[key] = value
+	}
+
+	s.Request.AddBody(message)
+	// Configure authorization headers
+	s.Request.AddAuthorization(apiKey, "")
+	// Send HTTP Request
+	if err := s.SendHTTPRequest(ctx, method); err != nil {
+		return fmt.Errorf("error sending http request using json: %w", err)
+	}
+	return nil
+}
+
+// SendRequestWithQueryParams send request using with query params.
+func (s *Session) SendRequestWithQueryParams(
+	ctx context.Context,
+	uRL, method, endpoint, apiKey string,
+	t *godog.Table,
+) error {
+	// Build request
+	s.Request = model.NewRequest(method, uRL, endpoint, true)
+	// Configure authorization headers
+	s.Request.AddAuthorization(apiKey, "")
+	// Configure Query Params
+	params, err := golium.ConvertTableToMultiMap(ctx, t)
+	if err != nil {
+		return err
+	}
+	s.Request.AddQueryParams(params)
+	// Send HTTP Request
+	if err := s.SendHTTPRequest(ctx, method); err != nil {
+		return fmt.Errorf("error sending http request using json: %w", err)
+	}
+	return nil
+}
+
+// SendRequestWithFilters send request using filters with query params.
+func (s *Session) SendRequestWithFilters(
+	ctx context.Context,
+	uRL, method, endpoint, apiKey, filters string,
+) error {
+	// Build request
+	s.Request = model.NewRequest(method, uRL, endpoint, true)
+	// Configure authorization headers
+	s.Request.AddAuthorization(apiKey, "")
+	// Configure Query Params from filters
+	var params url.Values
+	params, _ = url.ParseQuery(filters)
+	s.Request.AddQueryParams(params)
+	// Send HTTP Request
+	if err := s.SendHTTPRequest(ctx, method); err != nil {
+		return fmt.Errorf("error sending http request using json: %w", err)
+	}
+	return nil
+}
+
+// SendRequestWithPath send request with path.
+func (s *Session) SendRequestWithPath(
+	ctx context.Context,
+	uRL, method, endpoint, requestPath, apiKey string,
+) error {
+	// Build request
+	s.Request = model.NewRequest(method, uRL, endpoint, true)
+	// Configure authorization headers
+	s.Request.AddAuthorization(apiKey, "")
+	s.Request.AddPath(requestPath)
+	// Send HTTP Request
+	if err := s.SendHTTPRequest(ctx, method); err != nil {
+		return fmt.Errorf("error sending http request using json: %w", err)
+	}
+	return nil
+}
+
+// SendRequestWithPathAndBody send request with path and JSON body.
+func (s *Session) SendRequestWithPathAndBody(
+	ctx context.Context,
+	uRL, method, endpoint, requestPath, code, apiKey string,
+) error {
+	// Build request
+	s.Request = model.NewRequest(method, uRL, endpoint, true)
+	// Configure request JSON Body
+	message, err := body.GetParamFromJSON(endpoint, code, "body")
+	if err != nil {
+		return fmt.Errorf("error getting parameter from json: %w", err)
+	}
+	s.Request.AddBody(message)
+	// Configure authorization headers
+	s.Request.AddAuthorization(apiKey, "")
+	s.Request.AddPath(requestPath)
+	// Send HTTP Request
+	if err := s.SendHTTPRequest(ctx, method); err != nil {
+		return fmt.Errorf("error sending http request using json: %w", err)
+	}
+	return nil
+}
+
+// SendRequestWithoutBackslash send request without backslash.
+func (s *Session) SendRequestWithoutBackslash(
+	ctx context.Context,
+	uRL, method, endpoint, apiKey string,
+) error {
+	// Build request
+	s.Request = model.NewRequest(method, uRL, endpoint, false)
+	// Configure authorization headers
+	s.Request.AddAuthorization(apiKey, "")
+	// Send HTTP Request
+	if err := s.SendHTTPRequest(ctx, method); err != nil {
+		return fmt.Errorf("error sending http request using json: %w", err)
+	}
+	return nil
+}
+
+// SendRequestWithoutBackslash send request without backslash.
+func (s *Session) SendRequest(
+	ctx context.Context,
+	uRL, method, endpoint, apiKey string,
+) error {
+	// Build request
+	s.Request = model.NewRequest(method, uRL, endpoint, true)
 	// Configure authorization headers
 	s.Request.AddAuthorization(apiKey, "")
 	// Send HTTP Request

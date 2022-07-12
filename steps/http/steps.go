@@ -30,9 +30,14 @@ type Steps struct {
 // It implements StepsInitializer interface.
 // It returns a new context (context is immutable) with the HTTP Context.
 func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioContext) context.Context {
+	logger := golium.GetLogger()
 	// Initialize the HTTP session in the context
 	ctx = InitializeContext(ctx)
 	session := GetSession(ctx)
+	uRL, err := session.GetURL(ctx)
+	if err != nil {
+		logger.Error(fmt.Errorf("error getting url: %w", err))
+	}
 	// Initialize the steps
 	scenCtx.Step(`^the HTTP endpoint "([^"]*)"$`, func(endpoint string) {
 		session.ConfigureEndpoint(ctx, golium.ValueAsString(ctx, endpoint))
@@ -159,54 +164,62 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 	scenCtx.Step(
 		`^I send a "(HEAD|GET|POST|PUT|PATCH|DELETE)" request to "([^"]*)" endpoint$`,
 		func(method, endpoint string) error {
-			return session.SendRequestTo(ctx, method, endpoint)
+			return session.SendRequest(ctx, uRL, method, endpoint, "")
 		})
 	scenCtx.Step(
 		`^I send a "(HEAD|GET|POST|PUT|PATCH|DELETE)" request to "([^"]*)" endpoint with path "([^"]*)"$`,
 		func(method, endpoint, path string) error {
-			return session.SendRequestToWithPath(ctx, method, endpoint, path)
+			apiKey := golium.ValueAsString(ctx, fmt.Sprintf(confEndpoint, endpoint))
+			return session.SendRequestWithPath(ctx, uRL, method, endpoint, path, apiKey)
 		})
 	scenCtx.Step(`^I send a "(HEAD|GET|POST|PUT|PATCH|DELETE)" request to "([^"]*)" endpoint without last backslash$`,
 		func(method, endpoint string) error {
-			return session.SendRequestToWithoutBackslash(ctx, method, endpoint)
+			apiKey := golium.ValueAsString(ctx, fmt.Sprintf(confEndpoint, endpoint))
+			return session.SendRequestWithoutBackslash(ctx, uRL, method, endpoint, apiKey)
 		})
 	scenCtx.Step(`^I send a "(HEAD|GET|POST|PUT|PATCH|DELETE)" request to "([^"]*)" endpoint with "(valid|invalid)" API-KEY$`,
 		func(method, endpoint, apiKeyFlag string) error {
-			return session.SendRequestToWithAPIKEY(ctx, method, endpoint, apiKeyFlag)
+			var apiKey string
+			if apiKeyFlag == "valid" {
+				apiKey = golium.ValueAsString(ctx, fmt.Sprintf(confEndpoint, endpoint))
+			} else {
+				apiKey = golium.ValueAsString(ctx, InvalidPath)
+			}
+			return session.SendRequest(ctx, uRL, method, endpoint, apiKey)
 		})
 	scenCtx.Step(`^I send a "(HEAD|GET|POST|PUT|PATCH|DELETE)" request to "([^"]*)" endpoint without credentials$`,
 		func(method, endpoint string) error {
-			endpoint = session.NormalizeEndpoint(ctx, endpoint, true)
-			return session.SendRequest(ctx, method, endpoint, "", "")
+			return session.SendRequest(ctx, uRL, method, endpoint, "")
 		})
 	scenCtx.Step(`^I send a "(HEAD|GET|POST|PUT|PATCH|DELETE)" request to "([^"]*)" endpoint with query params$`,
 		func(method, endpoint string, t *godog.Table) error {
-			return session.SendRequestToWithQueryParamsTable(ctx, method, endpoint, t)
+			apiKey := golium.ValueAsString(ctx, fmt.Sprintf(confEndpoint, endpoint))
+			return session.SendRequestWithQueryParams(ctx, uRL, method, endpoint, apiKey, t)
 		})
 	scenCtx.Step(`^I send a "(HEAD|GET|POST|PUT|PATCH|DELETE)" request to "([^"]*)" endpoint with "([^"]*)" filters$`,
 		func(method, endpoint, filters string) error {
-			return session.SendRequestToWithFilters(ctx, method, endpoint, filters)
+			apiKey := golium.ValueAsString(ctx, fmt.Sprintf(confEndpoint, endpoint))
+			return session.SendRequestWithFilters(ctx, uRL, method, endpoint, apiKey, filters)
 		})
 	scenCtx.Step(`^I send a "(HEAD|GET|POST|PUT|PATCH|DELETE)" request to "([^"]*)" with a JSON body that includes "([^"]*)"$`,
-		func(method, request, code string) error {
-			uRL, err := session.GetURL(ctx)
-			if err != nil {
-				return fmt.Errorf("error getting url: %w", err)
-			}
-			apiKey := golium.ValueAsString(ctx, fmt.Sprintf(confEndpoint, request))
-			return session.SendRequestWithBody(ctx, uRL, method, request, code, apiKey)
+		func(method, endpoint, code string) error {
+			apiKey := golium.ValueAsString(ctx, fmt.Sprintf(confEndpoint, endpoint))
+			return session.SendRequestWithBody(ctx, uRL, method, endpoint, code, apiKey)
 		})
 	scenCtx.Step(`^I send a "(HEAD|GET|POST|PUT|PATCH|DELETE)" request to "([^"]*)" with path "([^"]*)" with a JSON body that includes "([^"]*)"$`,
-		func(method, request, path, code string) error {
-			return session.SendRequestWithPathUsingJSON(ctx, method, request, path, code)
+		func(method, endpoint, path, code string) error {
+			apiKey := golium.ValueAsString(ctx, fmt.Sprintf(confEndpoint, endpoint))
+			return session.SendRequestWithPathAndBody(ctx, uRL, method, endpoint, path, code, apiKey)
 		})
 	scenCtx.Step(`^I send a "(HEAD|GET|POST|PUT|PATCH|DELETE)" request to "([^"]*)" with a JSON body that includes "([^"]*)" without$`,
-		func(method, request, code string, t *godog.Table) error {
-			return session.SendRequestUsingJSONWithout(ctx, method, request, code, t)
+		func(method, endpoint, code string, t *godog.Table) error {
+			apiKey := golium.ValueAsString(ctx, fmt.Sprintf(confEndpoint, endpoint))
+			return session.SendRequestWithBodyWithoutFields(ctx, uRL, method, endpoint, code, apiKey, t)
 		})
 	scenCtx.Step(`^I send a "(HEAD|GET|POST|PUT|PATCH|DELETE)" request to "([^"]*)" with a JSON body that includes "([^"]*)" modifying$`,
-		func(method, request, code string, t *godog.Table) error {
-			return session.SendRequestUsingJSONModifying(ctx, method, request, code, t)
+		func(method, endpoint, code string, t *godog.Table) error {
+			apiKey := golium.ValueAsString(ctx, fmt.Sprintf(confEndpoint, endpoint))
+			return session.SendRequestWithBodyModifyingFields(ctx, uRL, method, endpoint, code, apiKey, t)
 		})
 	scenCtx.Step(`^the "([^"]*)" response message should match with "([^"]*)" JSON message$`,
 		func(request, code string) error {

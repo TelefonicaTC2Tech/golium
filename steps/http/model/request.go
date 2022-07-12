@@ -31,7 +31,7 @@ type Request struct {
 }
 
 func NewRequest(
-	method, url, endpoint, path string,
+	method, url, endpoint string,
 	backslash bool,
 ) Request {
 	var request = Request{}
@@ -40,7 +40,8 @@ func NewRequest(
 	request.Method = method
 	request.Endpoint = url + normalizeEndpoint(endpoint, endpoint, backslash)
 	request.RequestBody = nil
-	request.Path = path
+	request.Path = ""
+	request.QueryParams = nil
 
 	return request
 }
@@ -60,6 +61,14 @@ func (r *Request) AddAuthorization(apiKey, jwtValue string) {
 	} else {
 		delete(r.Headers, "Authorization")
 	}
+}
+
+func (r *Request) AddQueryParams(params map[string][]string) {
+	r.QueryParams = params
+}
+
+func (r *Request) AddPath(path string) {
+	r.Path = path
 }
 
 // normalizeEndpoint Normalize Endpoint considering ending backslash need.
