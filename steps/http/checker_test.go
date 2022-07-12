@@ -2,12 +2,12 @@ package http
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"io"
 	"os"
 	"testing"
 
+	"github.com/TelefonicaTC2Tech/golium/steps/http/body"
 	"github.com/stretchr/testify/require"
 )
 
@@ -160,7 +160,6 @@ func TestReplaceMapStringResponse(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			ctx := InitializeContext(context.Background())
 			j := JSONService{}
 
 			if tc.marshalMock {
@@ -171,7 +170,7 @@ func TestReplaceMapStringResponse(t *testing.T) {
 				}
 			}
 			respBody, _ := io.ReadAll(bytes.NewBufferString(tc.responseBody))
-			bodyContent, _ := GetParamFromJSON(ctx, tc.file, tc.code, "response")
+			bodyContent, _ := body.GetParamFromJSON(tc.file, tc.code, "response")
 
 			err := j.ReplaceMapStringResponse(respBody, bodyContent, tc.params)
 			require.Equal(t, tc.expectedErr, err)
@@ -222,11 +221,10 @@ func TestReplaceStringResponse(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			ctx := InitializeContext(context.Background())
 			j := JSONService{}
 
 			respBody, _ := io.ReadAll(bytes.NewBufferString(tc.responseBody))
-			bodyContent, _ := GetParamFromJSON(ctx, tc.file, tc.code, "response")
+			bodyContent, _ := body.GetParamFromJSON(tc.file, tc.code, "response")
 
 			err := j.ReplaceStringResponse(respBody, fmt.Sprint(bodyContent), tc.params)
 			require.Equal(t, tc.expectedErr, err)

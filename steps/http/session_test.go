@@ -26,9 +26,76 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const httpbinURL = "https://httpbin.org"
-const httpSelfSignedURL = "https://self-signed.badssl.com"
-const logsPath = "./logs"
+const (
+	httpbinURL         = "https://httpbin.org"
+	httpSelfSignedURL  = "https://self-signed.badssl.com"
+	logsPath           = "./logs"
+	schemasDir         = "./schemas"
+	JSONhttpFileValues = `
+	[
+		{
+			"code": "example1",
+			"body": {
+				"empty": "",
+				"boolean": false,
+				"list": [
+				{ "attribute": "attribute0", "value": "value0"},
+				{ "attribute": "attribute1", "value": "value1"},
+				{ "attribute": "attribute2", "value": "value2"}
+				]
+			},
+			"response": {
+				"boolean": false, 
+				"empty": "", 
+				"list": [
+					{ "attribute": "attribute0", "value": "value0"},
+					{ "attribute": "attribute1", "value": "value1"},
+					{ "attribute": "attribute2", "value": "value2"}
+				]
+			}
+		}
+	]
+	`
+
+	JSONhttpResponse = `{
+	"code": "example1",
+	"body": {
+		"empty": "",
+		"boolean": false,
+		"list": [
+		{ "attribute": "attribute0", "value": "value0"},
+		{ "attribute": "attribute1", "value": "value1"},
+		{ "attribute": "attribute2", "value": "value2"}
+		]
+	},
+	"response": {
+		"boolean": false, 
+		"empty": "", 
+		"list": [
+			{ "attribute": "attribute0", "value": "value0"},
+			{ "attribute": "attribute1", "value": "value1"},
+			{ "attribute": "attribute2", "value": "value2"}
+		]
+	}
+	}`
+
+	JSONFile = `{
+		"boolean": false, 
+		"empty": "", 
+		"list": [
+			{ "attribute": "attribute0", "value": "value0"},
+			{ "attribute": "attribute1", "value": "value1"},
+			{ "attribute": "attribute2", "value": "value2"}
+		]
+	}`
+
+	JSONhttpFileBadFormat = `
+	[
+		{
+			"code": "example1",
+			"body": {
+	`
+)
 
 func TestURL(t *testing.T) {
 	tests := []struct {
@@ -608,6 +675,64 @@ func TestValidateResponseBodyEmpty(t *testing.T) {
 			s.Response.Response.ContentLength = 0
 			if err := s.ValidateResponseBodyEmpty(ctx); (err != nil) != tt.wantErr {
 				t.Errorf("Session.ValidateResponseBodyEmpty() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestSession_SendRequestWithBody(t *testing.T) {
+	os.MkdirAll(logsPath, os.ModePerm)
+	defer os.RemoveAll(logsPath)
+
+	os.MkdirAll(schemasPath, os.ModePerm)
+	os.WriteFile("./schemas/health.json", []byte(requestUsingJSONFile), os.ModePerm)
+	defer os.RemoveAll(schemasPath)
+	type args struct {
+		ctx      context.Context
+		uRL      string
+		endpoint string
+		code     string
+	}
+	testCases := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "Error getting body from file",
+			args: args{
+				code:     "not_valid_code",
+				uRL:      httpbinURLslash,
+				endpoint: healthRequest,
+			},
+			wantErr: true,
+		},
+		{
+			name: "Error sending HTTP Request",
+			args: args{
+				code:     "example1",
+				uRL:      "wrongURL",
+				endpoint: healthRequest,
+			},
+			wantErr: true,
+		},
+		{
+			name: "Happy path",
+			args: args{
+				code:     "example1",
+				uRL:      httpbinURLslash,
+				endpoint: healthRequest,
+			},
+			wantErr: false,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			s := &Session{}
+			if err := s.SendRequestWithBody(
+				tc.args.ctx, tc.args.uRL, http.MethodPost, tc.args.endpoint, tc.args.code, "validApiKey",
+			); (err != nil) != tc.wantErr {
+				t.Errorf("Session.SendRequestWithBody() error = %v, wantErr %v", err, tc.wantErr)
 			}
 		})
 	}

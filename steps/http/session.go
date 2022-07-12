@@ -29,6 +29,8 @@ import (
 	"time"
 
 	"github.com/TelefonicaTC2Tech/golium"
+	"github.com/TelefonicaTC2Tech/golium/steps/http/body"
+	"github.com/TelefonicaTC2Tech/golium/steps/http/model"
 	"github.com/google/uuid"
 	"github.com/tidwall/sjson"
 	"github.com/xeipuuv/gojsonschema"
@@ -43,26 +45,6 @@ const (
 	Slash          = "/"
 )
 
-// Request information of the Session.
-type Request struct {
-	// Endpoint of the HTTP server. It might include a base path.
-	Endpoint string
-	// Path of the API endpoint. This path is considered with the endpoint to invoke the HTTP server.
-	Path string
-	// Query parameters
-	QueryParams map[string][]string
-	// Request headers
-	Headers map[string][]string
-	// HTTP method
-	Method string
-	// Request body as slice of bytes
-	RequestBody []byte
-	// Username for basic authentication
-	Username string
-	// Password for basic authentication
-	Password string
-}
-
 // Response information of the session.
 type Response struct {
 	// HTTP response
@@ -73,7 +55,7 @@ type Response struct {
 
 // Session contains the information of a HTTP session (request and response).
 type Session struct {
-	Request            Request
+	Request            model.Request
 	Response           Response
 	NoRedirect         bool
 	InsecureSkipVerify bool
@@ -154,17 +136,17 @@ func (s *Session) ConfigureRequestBodyJSONProperties(
 // HTTP request as a JSON from text.
 func (s *Session) ConfigureRequestBodyJSONText(ctx context.Context, message string) {
 	s.Request.RequestBody = []byte(message)
-	s.Request.AddJSONHeaders()
+	AddJSONHeaders(&s.Request)
 }
 
 // AddToRequestMessageFromJSONFile adds to Request Body the message from JSON file
 func (s *Session) AddToRequestMessageFromJSONFile(message interface{}) {
 	s.Request.RequestBody, _ = json.Marshal(message)
-	s.Request.AddJSONHeaders()
+	AddJSONHeaders(&s.Request)
 }
 
 // AddJSONHeaders adds json headers to Request if they are null
-func (r *Request) AddJSONHeaders() {
+func AddJSONHeaders(r *model.Request) {
 	if r.Headers == nil {
 		r.Headers = make(map[string][]string)
 	}
@@ -173,7 +155,7 @@ func (r *Request) AddJSONHeaders() {
 
 // ConfigureRequestBodyJSONFile writes the body in the HTTP request as a JSON from file.
 func (s *Session) ConfigureRequestBodyJSONFile(ctx context.Context, code, file string) error {
-	message, err := GetParamFromJSON(ctx, file, code, "body")
+	message, err := body.GetParamFromJSON(file, code, "body")
 	if err != nil {
 		return fmt.Errorf(parameterError, err)
 	}
@@ -188,7 +170,7 @@ func (s *Session) ConfigureRequestBodyJSONFileWithout(
 	code,
 	file string,
 	params []string) error {
-	message, err := GetParamFromJSON(ctx, file, code, "body")
+	message, err := body.GetParamFromJSON(file, code, "body")
 	if err != nil {
 		return fmt.Errorf(parameterError, err)
 	}
@@ -390,7 +372,7 @@ func (s *Session) ValidateResponseBodyJSONFile(
 	code,
 	file,
 	respDataLocation string) error {
-	jsonResponseBody, err := GetParamFromJSON(ctx, file, code, "response")
+	jsonResponseBody, err := body.GetParamFromJSON(file, code, "response")
 	if err != nil {
 		return fmt.Errorf(parameterError, err)
 	}
@@ -404,7 +386,7 @@ func (s *Session) ValidateResponseBodyJSONFileWithout(
 	code,
 	file,
 	respDataLocation string, params []string) error {
-	jsonResponseBody, err := GetParamFromJSON(ctx, file, code, "response")
+	jsonResponseBody, err := body.GetParamFromJSON(file, code, "response")
 	if err != nil {
 		return fmt.Errorf(parameterError, err)
 	}
@@ -465,5 +447,27 @@ func (s *Session) StoreResponseBodyJSONPropertyInContext(
 func (s *Session) StoreResponseHeaderInContext(ctx context.Context, header, ctxtKey string) error {
 	h := s.Response.Response.Header.Get(header)
 	golium.GetContext(ctx).Put(ctxtKey, h)
+	return nil
+}
+
+// SendRequestWithBody send request using body from JSON file located in schemas.
+func (s *Session) SendRequestWithBody(
+	ctx context.Context,
+	uRL, method, endpoint, code, apiKey string,
+) error {
+	// Build request
+	s.Request = model.NewRequest(method, uRL, endpoint, "", true)
+	// Configure request JSON Body
+	message, err := body.GetParamFromJSON(endpoint, code, "body")
+	if err != nil {
+		return fmt.Errorf("error getting parameter from json: %w", err)
+	}
+	s.Request.AddBody(message)
+	// Configure authorization headers
+	s.Request.AddAuthorization(apiKey, "")
+	// Send HTTP Request
+	if err := s.SendHTTPRequest(ctx, method); err != nil {
+		return fmt.Errorf("error sending http request using json: %w", err)
+	}
 	return nil
 }

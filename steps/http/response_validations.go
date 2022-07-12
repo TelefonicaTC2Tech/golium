@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/TelefonicaTC2Tech/golium"
+	"github.com/TelefonicaTC2Tech/golium/steps/http/body"
 	"github.com/cucumber/godog"
 )
 
@@ -16,7 +17,7 @@ func (s *Session) ValidateResponseBodyJSONFileModifying(
 	code, file string,
 	t *godog.Table,
 ) error {
-	jsonResponseBody, err := GetParamFromJSON(ctx, file, code, "response")
+	jsonResponseBody, err := body.GetParamFromJSON(file, code, "response")
 	if err != nil {
 		return fmt.Errorf("error getting parameter from json: %w", err)
 	}
@@ -77,7 +78,7 @@ func (s *Session) ValidateErrorBodyJSONFileReplace(
 		return err
 	}
 	respBody := s.Response.ResponseBody
-	bodyContent, err := GetParamFromJSON(ctx, file, code, "response")
+	bodyContent, err := body.GetParamFromJSON(file, code, "response")
 	if err != nil {
 		return fmt.Errorf("error getting parameter from json: %w", err)
 	}

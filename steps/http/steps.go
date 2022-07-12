@@ -189,7 +189,12 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 		})
 	scenCtx.Step(`^I send a "(HEAD|GET|POST|PUT|PATCH|DELETE)" request to "([^"]*)" with a JSON body that includes "([^"]*)"$`,
 		func(method, request, code string) error {
-			return session.SendRequestUsingJSON(ctx, method, request, code)
+			uRL, err := session.GetURL(ctx)
+			if err != nil {
+				return fmt.Errorf("error getting url: %w", err)
+			}
+			apiKey := golium.ValueAsString(ctx, fmt.Sprintf(confEndpoint, request))
+			return session.SendRequestWithBody(ctx, uRL, method, request, code, apiKey)
 		})
 	scenCtx.Step(`^I send a "(HEAD|GET|POST|PUT|PATCH|DELETE)" request to "([^"]*)" with path "([^"]*)" with a JSON body that includes "([^"]*)"$`,
 		func(method, request, path, code string) error {

@@ -1,7 +1,6 @@
-package http
+package body
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -143,8 +142,7 @@ func TestGetParamFromJSON(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			var ctx = context.Background()
-			resultParam, err := GetParamFromJSON(ctx, tc.fileName, tc.code, tc.param)
+			resultParam, err := GetParamFromJSON(tc.fileName, tc.code, tc.param)
 			if err != nil {
 				assert.Containsf(t, err.Error(), tc.expectedErr, "error message %s", "formatted")
 			}

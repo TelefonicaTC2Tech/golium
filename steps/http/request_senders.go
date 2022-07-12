@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/TelefonicaTC2Tech/golium"
+	"github.com/TelefonicaTC2Tech/golium/steps/http/body"
 	"github.com/cucumber/godog"
 )
 
@@ -114,17 +115,6 @@ func (s *Session) SendRequestToWithFilters(ctx context.Context,
 	return s.sendRequestToWithQueryParams(ctx, method, request, queryParams)
 }
 
-// SendRequestUsingJSON send request using body from JSON file located in schemas.
-func (s *Session) SendRequestUsingJSON(ctx context.Context, method, request, code string) error {
-	if err := s.ConfigureRequestBodyJSONFile(ctx, code, request); err != nil {
-		return fmt.Errorf("%s", fmt.Sprintf("%s%v", configRequestBodyError, err))
-	}
-	if err := s.SendRequestTo(ctx, method, request); err != nil {
-		return fmt.Errorf("%s", fmt.Sprintf("%s%v", sendingRequestError, err))
-	}
-	return nil
-}
-
 // SendRequestWithIDUsingJSON send request using body from JSON file located in schemas.
 func (s *Session) SendRequestWithPathUsingJSON(
 	ctx context.Context,
@@ -168,7 +158,7 @@ func (s *Session) SendRequestUsingJSONModifying(
 	method, request, code string,
 	t *godog.Table,
 ) error {
-	message, err := GetParamFromJSON(ctx, request, code, "body")
+	message, err := body.GetParamFromJSON(request, code, "body")
 	if err != nil {
 		return fmt.Errorf("error getting parameter from json: %w", err)
 	}

@@ -394,55 +394,6 @@ func TestSendRequestToWithFilters(t *testing.T) {
 	}
 }
 
-func TestSendRequestUsingJSON(t *testing.T) {
-	os.MkdirAll(logsPath, os.ModePerm)
-	defer os.RemoveAll(logsPath)
-
-	os.MkdirAll(schemasPath, os.ModePerm)
-	os.WriteFile("./schemas/health.json", []byte(requestUsingJSONFile), os.ModePerm)
-	defer os.RemoveAll(schemasPath)
-
-	tcs := []struct {
-		name        string
-		code        string
-		fakeRequest string
-		expectedErr error
-	}{
-		{
-			name:        "valid json code",
-			code:        "example1",
-			expectedErr: nil,
-		},
-		{
-			name: "not valid json code",
-			code: "not_valid_code",
-			expectedErr: fmt.Errorf(
-				"error configuring request body: error getting parameter from json: param value:" +
-					" 'body' not found in '[map[body:map[boolean:false empty: list:[map[attribute:" +
-					"attribute0 value:value0] map[attribute:attribute1 value:value1] map[attribute:" +
-					"attribute2 value:value2]]] code:example1 response:map[boolean:false empty: " +
-					"list:[map[attribute:attribute0 value:value0] map[attribute:attribute1 value:" +
-					"value1] map[attribute:attribute2 value:value2]]]]]' due to error: value for " +
-					"param: 'body' with code: 'not_valid_code' not found"),
-		},
-		{
-			name:        "request error",
-			code:        "example1",
-			fakeRequest: "error",
-			expectedErr: fmt.Errorf("error sending request: error with the HTTP request. %v", "fake_error"),
-		},
-	}
-	for _, tc := range tcs {
-		t.Run(tc.name, func(t *testing.T) {
-			ctx, s := setRequestToTestHTTPBinContext(tc.fakeRequest)
-
-			err := s.SendRequestUsingJSON(ctx, http.MethodPost, healthRequest, tc.code)
-
-			require.Equal(t, tc.expectedErr, err)
-		})
-	}
-}
-
 func TestSendRequestWithPathUsingJSON(t *testing.T) {
 	os.MkdirAll(logsPath, os.ModePerm)
 	defer os.RemoveAll(logsPath)

@@ -12,10 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package http
+package body
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -27,7 +26,7 @@ import (
 
 // GetParamFromJSON
 // Retrieve values from JSON structure file assets
-func GetParamFromJSON(ctx context.Context, file, code, param string) (interface{}, error) {
+func GetParamFromJSON(file, code, param string) (interface{}, error) {
 	data, err := LoadJSONData(file)
 	if err != nil {
 		return nil, fmt.Errorf("error loading file at %s due to error: %w", file, err)
