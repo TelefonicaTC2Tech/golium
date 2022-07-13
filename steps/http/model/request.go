@@ -39,7 +39,7 @@ func NewRequest(
 	request.Headers = make(map[string][]string)
 	request.Headers["Content-Type"] = []string{"application/json"}
 	request.Method = method
-	request.Endpoint = url + normalizeEndpoint(endpoint, endpoint, backslash)
+	request.Endpoint = url + NormalizeEndpoint(endpoint, backslash)
 	return request
 }
 
@@ -82,7 +82,7 @@ func (r *Request) AddJSONHeaders() {
 }
 
 // normalizeEndpoint Normalize Endpoint considering ending backslash need.
-func normalizeEndpoint(endpoint, request string, backslash bool) string {
+func NormalizeEndpoint(endpoint string, backslash bool) string {
 	if !backslash {
 		return strings.TrimSuffix(endpoint, Slash)
 	}
