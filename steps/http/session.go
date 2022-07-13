@@ -41,6 +41,7 @@ import (
 
 const (
 	parameterError = "error getting parameter from json: %w"
+	withJSONError  = "error sending http request using json: %w"
 	InvalidPath    = "[CONF:apiKey.invalid_apiKey]"
 	NilString      = "%nil%"
 	Slash          = "/"
@@ -446,14 +447,14 @@ func (s *Session) SendRequestWithBody(
 	// Configure request JSON Body
 	message, err := body.GetParamFromJSON(endpoint, code, "body")
 	if err != nil {
-		return fmt.Errorf("error getting parameter from json: %w", err)
+		return fmt.Errorf(parameterError, err)
 	}
 	s.Request.AddBody(message)
 	// Configure authorization headers
 	s.Request.AddAuthorization(apiKey, "")
 	// Send HTTP Request
 	if err := s.SendHTTPRequest(ctx, method); err != nil {
-		return fmt.Errorf("error sending http request using json: %w", err)
+		return fmt.Errorf(withJSONError, err)
 	}
 	return nil
 }
@@ -477,14 +478,14 @@ func (s *Session) SendRequestWithBodyWithoutFields(
 		delete(messageMap, removeParams)
 	}
 	if err != nil {
-		return fmt.Errorf("error getting parameter from json: %w", err)
+		return fmt.Errorf(parameterError, err)
 	}
 	s.Request.AddBody(message)
 	// Configure authorization headers
 	s.Request.AddAuthorization(apiKey, "")
 	// Send HTTP Request
 	if err := s.SendHTTPRequest(ctx, method); err != nil {
-		return fmt.Errorf("error sending http request using json: %w", err)
+		return fmt.Errorf(withJSONError, err)
 	}
 	return nil
 }
@@ -504,7 +505,7 @@ func (s *Session) SendRequestWithBodyModifyingFields(
 	}
 	message, err := body.GetParamFromJSON(endpoint, code, "body")
 	if err != nil {
-		return fmt.Errorf("error getting parameter from json: %w", err)
+		return fmt.Errorf(parameterError, err)
 	}
 	messageMap, _ := message.(map[string]interface{})
 	for key, value := range params {
@@ -520,7 +521,7 @@ func (s *Session) SendRequestWithBodyModifyingFields(
 	s.Request.AddAuthorization(apiKey, "")
 	// Send HTTP Request
 	if err := s.SendHTTPRequest(ctx, method); err != nil {
-		return fmt.Errorf("error sending http request using json: %w", err)
+		return fmt.Errorf(withJSONError, err)
 	}
 	return nil
 }
@@ -543,7 +544,7 @@ func (s *Session) SendRequestWithQueryParams(
 	s.Request.AddQueryParams(params)
 	// Send HTTP Request
 	if err := s.SendHTTPRequest(ctx, method); err != nil {
-		return fmt.Errorf("error sending http request using json: %w", err)
+		return fmt.Errorf(withJSONError, err)
 	}
 	return nil
 }
@@ -563,7 +564,7 @@ func (s *Session) SendRequestWithFilters(
 	s.Request.AddQueryParams(params)
 	// Send HTTP Request
 	if err := s.SendHTTPRequest(ctx, method); err != nil {
-		return fmt.Errorf("error sending http request using json: %w", err)
+		return fmt.Errorf(withJSONError, err)
 	}
 	return nil
 }
@@ -580,7 +581,7 @@ func (s *Session) SendRequestWithPath(
 	s.Request.AddPath(requestPath)
 	// Send HTTP Request
 	if err := s.SendHTTPRequest(ctx, method); err != nil {
-		return fmt.Errorf("error sending http request using json: %w", err)
+		return fmt.Errorf(withJSONError, err)
 	}
 	return nil
 }
@@ -595,7 +596,7 @@ func (s *Session) SendRequestWithPathAndBody(
 	// Configure request JSON Body
 	message, err := body.GetParamFromJSON(endpoint, code, "body")
 	if err != nil {
-		return fmt.Errorf("error getting parameter from json: %w", err)
+		return fmt.Errorf(parameterError, err)
 	}
 	s.Request.AddBody(message)
 	// Configure authorization headers
@@ -603,7 +604,7 @@ func (s *Session) SendRequestWithPathAndBody(
 	s.Request.AddPath(requestPath)
 	// Send HTTP Request
 	if err := s.SendHTTPRequest(ctx, method); err != nil {
-		return fmt.Errorf("error sending http request using json: %w", err)
+		return fmt.Errorf(withJSONError, err)
 	}
 	return nil
 }
@@ -619,7 +620,7 @@ func (s *Session) SendRequestWithoutBackslash(
 	s.Request.AddAuthorization(apiKey, "")
 	// Send HTTP Request
 	if err := s.SendHTTPRequest(ctx, method); err != nil {
-		return fmt.Errorf("error sending http request using json: %w", err)
+		return fmt.Errorf(withJSONError, err)
 	}
 	return nil
 }
@@ -635,7 +636,7 @@ func (s *Session) SendRequest(
 	s.Request.AddAuthorization(apiKey, "")
 	// Send HTTP Request
 	if err := s.SendHTTPRequest(ctx, method); err != nil {
-		return fmt.Errorf("error sending http request using json: %w", err)
+		return fmt.Errorf(withJSONError, err)
 	}
 	return nil
 }
