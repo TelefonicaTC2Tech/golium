@@ -3,6 +3,7 @@ package model
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"strings"
 )
 
@@ -47,6 +48,11 @@ func NewRequest(
 }
 
 func (r *Request) AddBody(message interface{}) {
+	stringMessage := reflect.TypeOf(message)
+	if stringMessage.Kind() == reflect.String {
+		r.RequestBody = []byte(message.(string))
+		return
+	}
 	r.RequestBody, _ = json.Marshal(message)
 }
 
@@ -69,6 +75,14 @@ func (r *Request) AddQueryParams(params map[string][]string) {
 
 func (r *Request) AddPath(path string) {
 	r.Path = path
+}
+
+// AddJSONHeaders adds json headers to Request if they are null
+func (r *Request) AddJSONHeaders() {
+	if r.Headers == nil {
+		r.Headers = make(map[string][]string)
+	}
+	r.Headers["Content-Type"] = []string{"application/json"}
 }
 
 // normalizeEndpoint Normalize Endpoint considering ending backslash need.

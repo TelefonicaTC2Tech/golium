@@ -83,7 +83,7 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 		return session.ConfigureRequestBodyJSONProperties(ctx, props)
 	})
 	scenCtx.Step(`^the HTTP request body with the JSON$`, func(message *godog.DocString) {
-		session.ConfigureRequestBodyJSONText(ctx, golium.ValueAsString(ctx, message.Content))
+		session.ConfigureRequestBody(ctx, golium.ValueAsString(ctx, message.Content))
 	})
 	scenCtx.Step(`^the HTTP request body with the JSON "([^"]*)" from "([^"]*)" file$`, func(code, file string) error {
 		return session.ConfigureRequestBodyJSONFile(ctx, code, file)

@@ -128,29 +128,15 @@ func (s *Session) ConfigureRequestBodyJSONProperties(
 				key, value, err)
 		}
 	}
-	s.ConfigureRequestBodyJSONText(ctx, jsonRequestBody)
+	s.ConfigureRequestBody(ctx, jsonRequestBody)
 	return nil
 }
 
 // ConfigureRequestBodyJSONText writes the body in the
 // HTTP request as a JSON from text.
-func (s *Session) ConfigureRequestBodyJSONText(ctx context.Context, message string) {
-	s.Request.RequestBody = []byte(message)
-	AddJSONHeaders(&s.Request)
-}
-
-// AddToRequestMessageFromJSONFile adds to Request Body the message from JSON file
-func (s *Session) AddToRequestMessageFromJSONFile(message interface{}) {
-	s.Request.RequestBody, _ = json.Marshal(message)
-	AddJSONHeaders(&s.Request)
-}
-
-// AddJSONHeaders adds json headers to Request if they are null
-func AddJSONHeaders(r *model.Request) {
-	if r.Headers == nil {
-		r.Headers = make(map[string][]string)
-	}
-	r.Headers["Content-Type"] = []string{"application/json"}
+func (s *Session) ConfigureRequestBody(ctx context.Context, message interface{}) {
+	s.Request.AddBody(message)
+	s.Request.AddJSONHeaders()
 }
 
 // ConfigureRequestBodyJSONFile writes the body in the HTTP request as a JSON from file.
@@ -159,7 +145,7 @@ func (s *Session) ConfigureRequestBodyJSONFile(ctx context.Context, code, file s
 	if err != nil {
 		return fmt.Errorf(parameterError, err)
 	}
-	s.AddToRequestMessageFromJSONFile(message)
+	s.ConfigureRequestBody(ctx, message)
 	return nil
 }
 
@@ -178,7 +164,7 @@ func (s *Session) ConfigureRequestBodyJSONFileWithout(
 	for _, removeParams := range params {
 		delete(messageMap, removeParams)
 	}
-	s.AddToRequestMessageFromJSONFile(message)
+	s.ConfigureRequestBody(ctx, message)
 	return nil
 }
 
