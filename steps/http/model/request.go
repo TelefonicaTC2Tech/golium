@@ -40,10 +40,6 @@ func NewRequest(
 	request.Headers["Content-Type"] = []string{"application/json"}
 	request.Method = method
 	request.Endpoint = url + normalizeEndpoint(endpoint, endpoint, backslash)
-	request.RequestBody = nil
-	request.Path = ""
-	request.QueryParams = nil
-
 	return request
 }
 

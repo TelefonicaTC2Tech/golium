@@ -1,7 +1,9 @@
 # HTTP settings
-http_bin_url: https://httpbin.org
+httpbin:
+  host: httpbin.org
+  url: https://httpbin.org
 urlSelfSigned: https://self-signed.badssl.com
-host: httpbin.org
+
 url: https://jsonplaceholder.typicode.com/
 
 #API KEYS
