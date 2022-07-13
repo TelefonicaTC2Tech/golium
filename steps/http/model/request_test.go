@@ -94,3 +94,44 @@ func TestAddJSONHeaders(t *testing.T) {
 		})
 	}
 }
+
+func TestNormalizeEndpoint(t *testing.T) {
+	tests := []struct {
+		name      string
+		endpoint  string
+		backslash bool
+		want      string
+	}{
+		{
+			name:      "Without backslash and endpoint with",
+			endpoint:  "test/",
+			backslash: false,
+			want:      "test",
+		},
+		{
+			name:      "Without backslash and endpoint without",
+			endpoint:  "test",
+			backslash: false,
+			want:      "test",
+		},
+		{
+			name:      "With backslash and endpoint with",
+			endpoint:  "test/",
+			backslash: true,
+			want:      "test/",
+		},
+		{
+			name:      "With backslash and endpoint without",
+			endpoint:  "test",
+			backslash: true,
+			want:      "test/",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := NormalizeEndpoint(tt.endpoint, tt.backslash); got != tt.want {
+				t.Errorf("normalizeEndpoint() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
