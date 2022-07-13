@@ -38,7 +38,7 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 	session := GetSession(ctx)
 	uRL, err := session.GetURL(ctx)
 	if err != nil {
-		logger.Error(fmt.Errorf("error getting url: %w", err))
+		logger.Warnf(fmt.Sprintf("error getting url: %v", err))
 	}
 	// Initialize the steps
 	scenCtx.Step(`^the HTTP endpoint "([^"]*)"$`, func(endpoint string) {
