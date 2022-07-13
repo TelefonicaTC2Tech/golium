@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	schemasDir         = "./schemas"
+	schemasPath        = "./schemas"
 	JSONhttpFileValues = `
 	[
 		{
@@ -90,7 +90,7 @@ func TestGetParamFromJSON(t *testing.T) {
 		t.Error("error Unmarshaling expected response body: %w", err)
 	}
 
-	golium.GetConfig().Dir.Schemas = schemasDir
+	golium.GetConfig().Dir.Schemas = schemasPath
 
 	os.MkdirAll("./schemas", os.ModePerm)
 	os.WriteFile("./schemas/httpBadFormat.json", []byte(JSONhttpFileBadFormat), os.ModePerm)
@@ -227,7 +227,7 @@ func TestLoadJSONData(t *testing.T) {
 		},
 	}
 
-	golium.GetConfig().Dir.Schemas = schemasDir
+	golium.GetConfig().Dir.Schemas = schemasPath
 	os.MkdirAll("./schemas", os.ModePerm)
 	os.WriteFile("./schemas/http.json", []byte(JSONhttpFileValues), os.ModePerm)
 	defer os.RemoveAll("./schemas/")

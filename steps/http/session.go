@@ -62,7 +62,6 @@ type Session struct {
 	InsecureSkipVerify bool
 	Timeout            time.Duration
 	Timedout           bool
-	GoliumInterface    ServiceFunctions
 }
 
 // URL composes the endpoint, the resource, and query parameters to build a URL.
@@ -97,13 +96,13 @@ func (s *Session) SetHTTPResponseTimeout(ctx context.Context, timeout int) {
 // ConfigurePath configures the path of the HTTP endpoint.
 // It configures a resource path in the application context.
 // The API endpoint and the resource path are composed when invoking the HTTP server.
-func (s *Session) ConfigurePath(ctx context.Context, httpPath string) {
-	s.Request.Path = httpPath
+func (s *Session) ConfigurePath(httpPath string) {
+	s.Request.AddPath(httpPath)
 }
 
 // ConfigureQueryParams stores a table of query parameters in the application context.
-func (s *Session) ConfigureQueryParams(ctx context.Context, params map[string][]string) {
-	s.Request.QueryParams = params
+func (s *Session) ConfigureQueryParams(params map[string][]string) {
+	s.Request.AddQueryParams(params)
 }
 
 // ConfigureHeaders stores a table of HTTP headers in the application context.
@@ -318,9 +317,9 @@ func (s *Session) ValidateNotResponseHeaders(ctx context.Context, expectedHeader
 
 // ValidateResponseBodyJSONSchema validates the response body against the JSON schema.
 func (s *Session) ValidateResponseBodyJSONSchema(ctx context.Context, schema string) error {
-	schemasDir := golium.GetConfig().Dir.Schemas
+	schemasPath := golium.GetConfig().Dir.Schemas
 	schemaLoader := gojsonschema.NewReferenceLoader(fmt.Sprintf("file://%s/%s.json",
-		schemasDir, schema))
+		schemasPath, schema))
 	documentLoader := gojsonschema.NewStringLoader(string(s.Response.ResponseBody))
 	result, err := gojsonschema.Validate(schemaLoader, documentLoader)
 	if err != nil {
@@ -653,4 +652,16 @@ func (s *Session) SendRequest(
 		return fmt.Errorf("error sending http request using json: %w", err)
 	}
 	return nil
+}
+
+// GetURL returns URL from Configuration or Context
+func (s *Session) GetURL(ctx context.Context) (string, error) {
+	URL := golium.ValueAsString(ctx, "[CONF:url]")
+	if URL == "<nil>" {
+		URL = golium.ValueAsString(ctx, "[CTXT:url]")
+	}
+	if URL == NilString {
+		return "", fmt.Errorf("url shall be initialized in Configuration or Context")
+	}
+	return URL, nil
 }

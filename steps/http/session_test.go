@@ -17,20 +17,27 @@ package http
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 	"os"
 	"testing"
 
+	"bou.ke/monkey"
+
 	"github.com/TelefonicaTC2Tech/golium"
+	"github.com/cucumber/godog"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
 	httpbinURL         = "https://httpbin.org"
+	httpbinURLslash    = "https://httpbin.org/"
 	httpSelfSignedURL  = "https://self-signed.badssl.com"
+	healthRequest      = "health"
 	logsPath           = "./logs"
-	schemasDir         = "./schemas"
+	schemasPath        = "./schemas"
 	JSONhttpFileValues = `
 	[
 		{
@@ -162,7 +169,7 @@ func TestConfigureRequestBodyJSONProperties(t *testing.T) {
 }
 
 func TestConfigureRequestBodyJSONFile(t *testing.T) {
-	golium.GetConfig().Dir.Schemas = schemasDir
+	golium.GetConfig().Dir.Schemas = schemasPath
 	os.MkdirAll("./schemas", os.ModePerm)
 	os.WriteFile("./schemas/http.json", []byte(JSONhttpFileValues), os.ModePerm)
 	defer os.RemoveAll("./schemas/")
@@ -201,7 +208,7 @@ func TestConfigureRequestBodyJSONFile(t *testing.T) {
 }
 
 func TestConfigureRequestBodyJSONFileWithout(t *testing.T) {
-	golium.GetConfig().Dir.Schemas = schemasDir
+	golium.GetConfig().Dir.Schemas = schemasPath
 	os.MkdirAll("./schemas", os.ModePerm)
 	os.WriteFile("./schemas/http.json", []byte(JSONhttpFileValues), os.ModePerm)
 	defer os.RemoveAll("./schemas/")
@@ -498,7 +505,7 @@ func TestValidateResponseFromJSONFile(t *testing.T) {
 }
 
 func TestValidateResponseBodyJSONFile(t *testing.T) {
-	golium.GetConfig().Dir.Schemas = schemasDir
+	golium.GetConfig().Dir.Schemas = schemasPath
 
 	os.MkdirAll("./schemas", os.ModePerm)
 	os.WriteFile("./schemas/httpBadFormat.json", []byte(JSONhttpFileBadFormat), os.ModePerm)
@@ -566,7 +573,7 @@ func TestValidateResponseBodyJSONFileWithout(t *testing.T) {
 		}
 		}`
 
-	golium.GetConfig().Dir.Schemas = schemasDir
+	golium.GetConfig().Dir.Schemas = schemasPath
 
 	os.MkdirAll("./schemas", os.ModePerm)
 	os.WriteFile("./schemas/http.json", []byte(JSONhttpFileValues), os.ModePerm)
@@ -680,12 +687,12 @@ func TestValidateResponseBodyEmpty(t *testing.T) {
 	}
 }
 
-func TestSession_SendRequestWithBody(t *testing.T) {
+func TestSendRequestWithBody(t *testing.T) {
 	os.MkdirAll(logsPath, os.ModePerm)
 	defer os.RemoveAll(logsPath)
 
 	os.MkdirAll(schemasPath, os.ModePerm)
-	os.WriteFile("./schemas/health.json", []byte(requestUsingJSONFile), os.ModePerm)
+	os.WriteFile("./schemas/health.json", []byte(JSONhttpFileValues), os.ModePerm)
 	defer os.RemoveAll(schemasPath)
 	type args struct {
 		ctx      context.Context
@@ -734,6 +741,472 @@ func TestSession_SendRequestWithBody(t *testing.T) {
 			); (err != nil) != tc.wantErr {
 				t.Errorf("Session.SendRequestWithBody() error = %v, wantErr %v", err, tc.wantErr)
 			}
+		})
+	}
+}
+
+func TestSendRequestWithBodyWithoutFields(t *testing.T) {
+	os.MkdirAll(logsPath, os.ModePerm)
+	defer os.RemoveAll(logsPath)
+
+	os.MkdirAll(schemasPath, os.ModePerm)
+	os.WriteFile("./schemas/health.json", []byte(JSONhttpFileValues), os.ModePerm)
+	defer os.RemoveAll(schemasPath)
+	type args struct {
+		ctx      context.Context
+		uRL      string
+		endpoint string
+		code     string
+		table    *godog.Table
+	}
+	testCases := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "Error converting table",
+			args: args{
+				code:     "example1",
+				uRL:      "wrongURL",
+				endpoint: healthRequest,
+				table: golium.NewTable([][]string{
+					{"parameter"},
+				}),
+			},
+			wantErr: true,
+		},
+		{
+			name: "Error getting body from file",
+			args: args{
+				code:     "not_valid_code",
+				uRL:      httpbinURLslash,
+				endpoint: healthRequest,
+				table: golium.NewTable([][]string{
+					{"parameter"},
+					{"boolean"},
+				}),
+			},
+			wantErr: true,
+		},
+		{
+			name: "Error sending HTTP Request",
+			args: args{
+				code:     "example1",
+				uRL:      "wrongURL",
+				endpoint: healthRequest,
+				table: golium.NewTable([][]string{
+					{"parameter"},
+					{"boolean"},
+				}),
+			},
+			wantErr: true,
+		},
+		{
+			name: "Happy path",
+			args: args{
+				code:     "example1",
+				uRL:      httpbinURLslash,
+				endpoint: healthRequest,
+				table: golium.NewTable([][]string{
+					{"parameter"},
+					{"boolean"},
+				}),
+			},
+			wantErr: false,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			s := &Session{}
+			if err := s.SendRequestWithBodyWithoutFields(
+				tc.args.ctx,
+				tc.args.uRL, http.MethodPost, tc.args.endpoint, tc.args.code, "validApiKey",
+				tc.args.table,
+			); (err != nil) != tc.wantErr {
+				t.Errorf(
+					"Session.SendRequestWithBodyWithoutFields() error = %v, wantErr %v",
+					err, tc.wantErr)
+			}
+		})
+	}
+}
+
+func TestSendRequestWithBodyModifyingFields(t *testing.T) {
+	os.MkdirAll(logsPath, os.ModePerm)
+	defer os.RemoveAll(logsPath)
+
+	os.MkdirAll(schemasPath, os.ModePerm)
+	os.WriteFile("./schemas/health.json", []byte(JSONhttpFileValues), os.ModePerm)
+	defer os.RemoveAll(schemasPath)
+	type args struct {
+		ctx      context.Context
+		uRL      string
+		endpoint string
+		code     string
+		table    *godog.Table
+	}
+	testCases := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "Error converting table",
+			args: args{
+				code:     "example1",
+				uRL:      "wrongURL",
+				endpoint: healthRequest,
+				table: golium.NewTable([][]string{
+					{"parameter", "value"},
+				}),
+			},
+			wantErr: true,
+		},
+		{
+			name: "Error getting body from file",
+			args: args{
+				code:     "not_valid_code",
+				uRL:      httpbinURLslash,
+				endpoint: healthRequest,
+				table: golium.NewTable([][]string{
+					{"parameter", "value"},
+					{"boolean", "true"},
+				}),
+			},
+			wantErr: true,
+		},
+		{
+			name: "Error with wrong body param",
+			args: args{
+				code:     "example1",
+				uRL:      httpbinURLslash,
+				endpoint: healthRequest,
+				table: golium.NewTable([][]string{
+					{"parameter", "value"},
+					{"wrong_key", "true"},
+				}),
+			},
+			wantErr: true,
+		},
+		{
+			name: "Error sending HTTP Request",
+			args: args{
+				code:     "example1",
+				uRL:      "wrongURL",
+				endpoint: healthRequest,
+				table: golium.NewTable([][]string{
+					{"parameter", "value"},
+					{"boolean", "true"},
+				}),
+			},
+			wantErr: true,
+		},
+		{
+			name: "Happy path",
+			args: args{
+				code:     "example1",
+				uRL:      httpbinURLslash,
+				endpoint: healthRequest,
+				table: golium.NewTable([][]string{
+					{"parameter", "value"},
+					{"boolean", "true"},
+				}),
+			},
+			wantErr: false,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			s := &Session{}
+			if err := s.SendRequestWithBodyModifyingFields(
+				tc.args.ctx,
+				tc.args.uRL, http.MethodPost, tc.args.endpoint, tc.args.code, "validApiKey",
+				tc.args.table,
+			); (err != nil) != tc.wantErr {
+				t.Errorf(
+					"Session.SendRequestWithBodyModifyingFields() error = %v, wantErr %v",
+					err, tc.wantErr)
+			}
+		})
+	}
+}
+
+func TestSendRequestWithQueryParams(t *testing.T) {
+	os.MkdirAll(logsPath, os.ModePerm)
+	defer os.RemoveAll(logsPath)
+
+	os.MkdirAll(schemasPath, os.ModePerm)
+	os.WriteFile("./schemas/health.json", []byte(JSONhttpFileValues), os.ModePerm)
+	defer os.RemoveAll(schemasPath)
+	type args struct {
+		ctx      context.Context
+		uRL      string
+		endpoint string
+		table    *godog.Table
+	}
+	testCases := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "Error converting table",
+			args: args{
+				uRL:      "wrongURL",
+				endpoint: healthRequest,
+				table: golium.NewTable([][]string{
+					{"parameter", "value"},
+				}),
+			},
+			wantErr: true,
+		},
+		{
+			name: "Error sending HTTP Request",
+			args: args{
+				uRL:      "wrongURL",
+				endpoint: healthRequest,
+				table: golium.NewTable([][]string{
+					{"parameter", "value"},
+					{"field", "test"},
+				}),
+			},
+			wantErr: true,
+		},
+		{
+			name: "Happy path",
+			args: args{
+				uRL:      httpbinURLslash,
+				endpoint: healthRequest,
+				table: golium.NewTable([][]string{
+					{"parameter", "value"},
+					{"field", "test"},
+				}),
+			},
+			wantErr: false,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			s := &Session{}
+			if err := s.SendRequestWithQueryParams(
+				tc.args.ctx,
+				tc.args.uRL, http.MethodPost, tc.args.endpoint, "validApiKey", tc.args.table,
+			); (err != nil) != tc.wantErr {
+				t.Errorf("Session.SendRequestWithQueryParams() error = %v, wantErr %v", err, tc.wantErr)
+			}
+		})
+	}
+}
+
+func TestSendRequestWithFilters(t *testing.T) {
+	s := &Session{}
+	testBasicRequestWithParam(t, "field=test&field2=test2", s.SendRequestWithFilters)
+}
+
+func TestSendRequestWithPath(t *testing.T) {
+	s := &Session{}
+	testBasicRequestWithParam(t, "1", s.SendRequestWithPath)
+}
+
+func TestSendRequestWithPathAndBody(t *testing.T) {
+	os.MkdirAll(logsPath, os.ModePerm)
+	defer os.RemoveAll(logsPath)
+
+	os.MkdirAll(schemasPath, os.ModePerm)
+	os.WriteFile("./schemas/health.json", []byte(JSONhttpFileValues), os.ModePerm)
+	defer os.RemoveAll(schemasPath)
+	type args struct {
+		ctx      context.Context
+		uRL      string
+		endpoint string
+		code     string
+		path     string
+	}
+	testCases := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "Error getting body from file",
+			args: args{
+				code:     "not_valid_code",
+				uRL:      httpbinURLslash,
+				endpoint: healthRequest,
+				path:     "1",
+			},
+			wantErr: true,
+		},
+		{
+			name: "Error sending HTTP Request",
+			args: args{
+				code:     "example1",
+				uRL:      "wrongURL",
+				endpoint: healthRequest,
+			},
+			wantErr: true,
+		},
+		{
+			name: "Happy path",
+			args: args{
+				code:     "example1",
+				uRL:      httpbinURLslash,
+				endpoint: healthRequest,
+			},
+			wantErr: false,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			s := &Session{}
+			if err := s.SendRequestWithPathAndBody(
+				tc.args.ctx,
+				tc.args.uRL, http.MethodPost, tc.args.endpoint, tc.args.path, tc.args.code, "validApiKey",
+			); (err != nil) != tc.wantErr {
+				t.Errorf("Session.SendRequestWithPathAndBody() error = %v, wantErr %v", err, tc.wantErr)
+			}
+		})
+	}
+}
+
+func TestSendRequestWithoutBackslash(t *testing.T) {
+	s := Session{}
+	testBasicRequest(t, s.SendRequestWithoutBackslash)
+}
+
+func TestSendRequest(t *testing.T) {
+	s := Session{}
+	testBasicRequest(t, s.SendRequest)
+}
+
+func testBasicRequest(t *testing.T, f func(ctx context.Context,
+	uRL, method, endpoint, apiKey string) error) {
+	os.MkdirAll(logsPath, os.ModePerm)
+	defer os.RemoveAll(logsPath)
+
+	os.MkdirAll(schemasPath, os.ModePerm)
+	os.WriteFile("./schemas/health.json", []byte(JSONhttpFileValues), os.ModePerm)
+	defer os.RemoveAll(schemasPath)
+	testCases := getBasicRequestTestCases("")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if err := f(
+				tc.args.ctx,
+				tc.args.uRL, http.MethodPost, tc.args.endpoint, "validApiKey",
+			); (err != nil) != tc.wantErr {
+				t.Errorf("Session.SendRequest() error = %v, wantErr %v", err, tc.wantErr)
+			}
+		})
+	}
+}
+
+func testBasicRequestWithParam(t *testing.T, param string, f func(ctx context.Context,
+	uRL, method, endpoint, apiKey, param string) error) {
+	os.MkdirAll(logsPath, os.ModePerm)
+	defer os.RemoveAll(logsPath)
+
+	os.MkdirAll(schemasPath, os.ModePerm)
+	os.WriteFile("./schemas/health.json", []byte(JSONhttpFileValues), os.ModePerm)
+	defer os.RemoveAll(schemasPath)
+	testCases := getBasicRequestTestCases(param)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if err := f(
+				tc.args.ctx,
+				tc.args.uRL, http.MethodPost, tc.args.endpoint, "validApiKey",
+				tc.args.param,
+			); (err != nil) != tc.wantErr {
+				t.Errorf("Session.SendRequestParam() error = %v, wantErr %v", err, tc.wantErr)
+			}
+		})
+	}
+}
+
+func getBasicRequestTestCases(param string) []requestTC {
+	testCases := []requestTC{
+		{
+			name: "Error sending HTTP Request",
+			args: requestArgs{
+				uRL:      "wrongURL",
+				endpoint: healthRequest,
+				param:    param,
+			},
+			wantErr: true,
+		},
+		{
+			name: "Happy path",
+			args: requestArgs{
+				uRL:      httpbinURLslash,
+				endpoint: healthRequest,
+				param:    param,
+			},
+			wantErr: false,
+		},
+	}
+	return testCases
+}
+
+type requestArgs struct {
+	ctx      context.Context
+	uRL      string
+	endpoint string
+	param    string
+}
+type requestTC struct {
+	name    string
+	args    requestArgs
+	wantErr bool
+}
+
+func TestGetURL(t *testing.T) {
+	tcs := []struct {
+		name        string
+		configURL   string
+		contextURL  string
+		expectedURL string
+		expectedErr error
+	}{
+		{
+			name:        "valid conf url",
+			configURL:   httpbinURL,
+			contextURL:  httpbinURL,
+			expectedURL: httpbinURL,
+			expectedErr: nil,
+		},
+		{
+			name:        "valid contextURL",
+			configURL:   "<nil>",
+			contextURL:  httpbinURL,
+			expectedURL: httpbinURL,
+			expectedErr: nil,
+		},
+		{
+			name:        "nil url",
+			configURL:   "<nil>",
+			contextURL:  NilString,
+			expectedURL: "",
+			expectedErr: fmt.Errorf("url shall be initialized in Configuration or Context"),
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			// Call the tested function
+			s := Session{}
+			monkey.Patch(golium.ValueAsString, func(ctx context.Context, s string) string {
+				if s == "[CONF:url]" {
+					return tc.configURL
+				} else if s == "[CTXT:url]" {
+					return tc.contextURL
+				}
+				return ""
+			})
+			resultURL, resulterr := s.GetURL(context.Background())
+
+			// Check expected behavior
+			require.Equal(t, tc.expectedURL, resultURL)
+			require.Equal(t, tc.expectedErr, resulterr)
 		})
 	}
 }

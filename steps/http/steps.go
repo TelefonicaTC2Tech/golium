@@ -22,6 +22,8 @@ import (
 	"github.com/cucumber/godog"
 )
 
+const confEndpoint = "[CONF:endpoints.%s.api-key]"
+
 // Steps type is responsible to initialize the HTTP client steps in godog framework.
 type Steps struct {
 }
@@ -51,7 +53,7 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 		return nil
 	})
 	scenCtx.Step(`^the HTTP path "([^"]*)"$`, func(path string) error {
-		session.ConfigurePath(ctx, golium.ValueAsString(ctx, path))
+		session.ConfigurePath(golium.ValueAsString(ctx, path))
 		return nil
 	})
 	scenCtx.Step(`^the HTTP query parameters$`, func(t *godog.Table) error {
@@ -59,7 +61,7 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 		if err != nil {
 			return fmt.Errorf("failed processing query parameters from table: %w", err)
 		}
-		session.ConfigureQueryParams(ctx, params)
+		session.ConfigureQueryParams(params)
 		return nil
 	})
 	scenCtx.Step(`^the HTTP request headers$`, func(t *godog.Table) error {

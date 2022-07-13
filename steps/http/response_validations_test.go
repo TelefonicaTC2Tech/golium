@@ -12,12 +12,63 @@ import (
 	"testing"
 
 	"github.com/TelefonicaTC2Tech/golium"
+	"github.com/TelefonicaTC2Tech/golium/steps/http/model"
 	"github.com/cucumber/godog"
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/require"
 )
 
 const (
+	jsonURL       = "https://jsonplaceholder.typicode.com/"
+	JSONpostsfile = `
+[
+	{
+		"code": "example1",
+		"body": {
+			"title": "title_to_replace",
+			"body": "bar1",
+			"userId": 1
+		},
+		"response": {
+			"message": "Validation error.",
+			"details": {
+			  "field_to_replace": {
+				"message": "Field 'field_to_replace' has invalid type, expected type_to_replace",
+				"code": "incorrect_type"
+			  }
+			},
+			"status_code": 400
+		}
+	},
+	{
+		"code": "example4",
+		"body": {
+			"title": "title_to_replace",
+			"body": "bar1",
+			"userId": 1
+		},
+		"response": 1
+	},
+	{
+		"code": "example5",
+		"body": {
+			"title": "title_to_replace",
+			"body": "bar1",
+			"userId": 1
+		},
+		"response": "field_to_replace and type_to_replace has been replaced"
+	},
+	{
+		"code": "example6",
+		"body": {
+			"title": "title_to_replace",
+			"body": "bar1",
+			"userId": 1
+		},
+		"response": "field_to_replace and type_to_replace has been replaced with match error"
+	}								
+]
+`
 	validateModifyingResponseFile = `
 	[
 		{
@@ -141,9 +192,15 @@ func TestValidateResponseBodyJSONFileModifying(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			ctx, s := setRequestToTestJSONPlaceHolderContext(tc.request)
-			request := tc.request
-			s.SendRequestWithPathUsingJSON(ctx, tc.method, request, tc.path, tc.code)
-			err := s.ValidateResponseBodyJSONFileModifying(ctx, tc.code, request, tc.table)
+			s.Request = model.NewRequest(
+				tc.method, jsonURL,
+				tc.request,
+				true,
+			)
+			s.SendRequestWithPathAndBody(
+				ctx,
+				jsonURL, tc.method, tc.request, tc.path, tc.code, "")
+			err := s.ValidateResponseBodyJSONFileModifying(ctx, tc.code, tc.request, tc.table)
 			require.Equal(t, tc.expectedErr, err)
 		})
 	}
@@ -239,7 +296,8 @@ func TestValidateErrorBodyJSONFileReplaceString(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ctx, s := setRequestToTestLocalhostContext(tc.request, tc.jsonValidator, tc.jsonValidatorError)
 
-			s.SendRequestTo(ctx, http.MethodGet, tc.request)
+			s.Request = model.NewRequest(http.MethodGet, "http://localhost/", tc.request, true)
+			s.SendRequest(ctx, "http://localhost/", http.MethodGet, tc.request, "")
 
 			err := s.ValidateErrorBodyJSONFileReplace(ctx, tc.code, tc.file, tc.table)
 			if tc.expectedErr != nil && err == nil {
@@ -346,12 +404,6 @@ func setRequestToTestLocalhostContext(endpoint string,
 	jsonValidator JSONFunctions,
 	jsonValidatorError string,
 ) (context.Context, *Session) {
-	ValuesAsString = map[string]string{
-		"[CONF:url]":                                "http://localhost/",
-		"[CTXT:url]":                                NilString,
-		"[CONF:endpoints.map_test.api-endpoint]":    endpoint,
-		"[CONF:endpoints.string_test.api-endpoint]": endpoint,
-	}
 	JSON = jsonValidator
 	if jsonValidatorError != "" {
 		ErrorResponse = jsonValidatorError
@@ -361,14 +413,6 @@ func setRequestToTestLocalhostContext(endpoint string,
 }
 
 func setRequestToTestJSONPlaceHolderContext(request string) (context.Context, *Session) {
-	ValuesAsString = map[string]string{
-		"[CONF:url]":                          "https://jsonplaceholder.typicode.com/",
-		"[CTXT:url]":                          NilString,
-		"[CONF:endpoints.posts.api-endpoint]": request,
-		"[CONF:endpoints.users.api-endpoint]": request,
-	}
-	FakeResponse = ""
-
 	ctx, s := setGoliumContextAndService()
 	return ctx, s
 }
@@ -406,4 +450,11 @@ func generateWrongReplaceTable() *godog.Table {
 	return golium.NewTable([][]string{
 		{"field", "field_name"},
 	})
+}
+
+func setGoliumContextAndService() (context.Context, *Session) {
+	ctxGolium := InitializeContext(context.Background())
+	ctx := InitializeContext(ctxGolium)
+	s := GetSession(ctx)
+	return ctx, s
 }

@@ -3,6 +3,7 @@ module github.com/TelefonicaTC2Tech/golium
 go 1.18
 
 require (
+	bou.ke/monkey v1.0.2
 	github.com/AdguardTeam/dnsproxy v0.41.2
 	github.com/aws/aws-sdk-go-v2 v1.16.6
 	github.com/aws/aws-sdk-go-v2/config v1.15.12
