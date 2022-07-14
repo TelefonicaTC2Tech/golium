@@ -1,4 +1,4 @@
-package http
+package schema
 
 import (
 	"context"
@@ -9,11 +9,62 @@ import (
 	"testing"
 
 	"github.com/TelefonicaTC2Tech/golium"
+	"github.com/cucumber/godog"
 	"github.com/stretchr/testify/assert"
 )
 
 const (
-	schemasDir         = "./schemas"
+	schemasPath                   = "./schemas"
+	fileName                      = "health"
+	validateModifyingResponseFile = `
+		[
+			{
+				"code": "example1",
+				"body": {
+					"title": "foo1",
+					"body": "bar1",
+					"userId": 1
+				},
+				"response": {
+					"id": 101,
+					"title": "foo2",
+					"body": "bar1",
+					"userId": 1
+				}
+			},
+			{
+				"code": "example2",
+				"body": {
+					"title": "foo",
+					"body": "bar1",
+					"userId": 1
+				},
+				"response": {
+					"id": 1,
+					"name": "Leanne Graham",
+					"username": "Bret",
+					"email": "Sincere@april.biz",
+					"address": {
+					  "street": "Kulas Light",
+					  "suite": "Apt. 556",
+					  "city": "Gwenborough",
+					  "zipcode": "92998-3874",
+					  "geo": {
+						"lat": "-37.3159",
+						"lng": "81.1496"
+					  }
+					},
+					"phone": "1-770-736-8031 x56442",
+					"website": "hildegard.org",
+					"company": {
+					  "name": "to replace",
+					  "catchPhrase": "Multi-layered client-server neural-net",
+					  "bs": "harness real-time e-markets"
+					}
+				}
+			}
+		]
+		`
 	JSONhttpFileValues = `
 	[
 		{
@@ -28,8 +79,8 @@ const (
 				]
 			},
 			"response": {
-				"boolean": false, 
-				"empty": "", 
+				"boolean": false,
+				"empty": "",
 				"list": [
 					{ "attribute": "attribute0", "value": "value0"},
 					{ "attribute": "attribute1", "value": "value1"},
@@ -52,8 +103,8 @@ const (
 		]
 	},
 	"response": {
-		"boolean": false, 
-		"empty": "", 
+		"boolean": false,
+		"empty": "",
 		"list": [
 			{ "attribute": "attribute0", "value": "value0"},
 			{ "attribute": "attribute1", "value": "value1"},
@@ -62,9 +113,9 @@ const (
 	}
 	}`
 
-	JSON = `{
-		"boolean": false, 
-		"empty": "", 
+	JSONFile = `{
+		"boolean": false,
+		"empty": "",
 		"list": [
 			{ "attribute": "attribute0", "value": "value0"},
 			{ "attribute": "attribute1", "value": "value1"},
@@ -80,9 +131,107 @@ const (
 	`
 )
 
-func TestGetParamFromJSON(t *testing.T) {
+func TestModifyResponse(t *testing.T) {
+	os.MkdirAll(schemasPath, os.ModePerm)
+	os.WriteFile("./schemas/posts.json", []byte(validateModifyingResponseFile), os.ModePerm)
+	os.WriteFile("./schemas/users.json", []byte(validateModifyingResponseFile), os.ModePerm)
+	defer os.RemoveAll(schemasPath)
+	type args struct {
+		code string
+		file string
+		t    *godog.Table
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "Error getting response from file",
+			args: args{
+				code: "example3",
+				file: "posts",
+				t: golium.NewTable([][]string{
+					{"parameter", "value"},
+					{"title", "foo1"},
+				}),
+			},
+			wantErr: true,
+		},
+		{
+			name: "Error converting table",
+			args: args{
+				code: "example1",
+				file: "posts",
+				t: golium.NewTable([][]string{
+					{"title", "foo1"},
+				}),
+			},
+			wantErr: true,
+		},
+		{
+			name: "Error not present nested key",
+			args: args{
+				code: "example2",
+				file: "posts",
+				t: golium.NewTable([][]string{
+					{"parameter", "value"},
+					{"not-present.name", "Romaguera-Crona"},
+				}),
+			},
+			wantErr: true,
+		},
+		{
+			name: "Error not present simple key",
+			args: args{
+				code: "example1",
+				file: "posts",
+				t: golium.NewTable([][]string{
+					{"parameter", "value"},
+					{"wrong_key", "true"},
+				}),
+			},
+			wantErr: true,
+		},
+		{
+			name: "Valid nested key",
+			args: args{
+				code: "example2",
+				file: "users",
+				t: golium.NewTable([][]string{
+					{"parameter", "value"},
+					{"company.name", "Romaguera-Crona"},
+				}),
+			},
+			wantErr: false,
+		},
+		{
+			name: "Valid simple key",
+			args: args{
+				code: "example1",
+				file: "posts",
+				t: golium.NewTable([][]string{
+					{"parameter", "value"},
+					{"title", "foo1"},
+				}),
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := ModifyResponse(context.Background(), tt.args.code, tt.args.file, tt.args.t)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ModifyResponse() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
+	}
+}
+
+func TestGetParam(t *testing.T) {
 	var expectedParam interface{}
-	if err := json.Unmarshal([]byte(JSON), &expectedParam); err != nil {
+	if err := json.Unmarshal([]byte(JSONFile), &expectedParam); err != nil {
 		t.Error("error Unmarshaling expected response body: %w", err)
 	}
 
@@ -91,7 +240,7 @@ func TestGetParamFromJSON(t *testing.T) {
 		t.Error("error Unmarshaling expected response body: %w", err)
 	}
 
-	golium.GetConfig().Dir.Schemas = schemasDir
+	golium.GetConfig().Dir.Schemas = schemasPath
 
 	os.MkdirAll("./schemas", os.ModePerm)
 	os.WriteFile("./schemas/httpBadFormat.json", []byte(JSONhttpFileBadFormat), os.ModePerm)
@@ -143,8 +292,7 @@ func TestGetParamFromJSON(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			var ctx = context.Background()
-			resultParam, err := GetParamFromJSON(ctx, tc.fileName, tc.code, tc.param)
+			resultParam, err := GetParam(tc.fileName, tc.code, tc.param)
 			if err != nil {
 				assert.Containsf(t, err.Error(), tc.expectedErr, "error message %s", "formatted")
 			}
@@ -158,7 +306,7 @@ func TestGetParamFromJSON(t *testing.T) {
 
 func TestFindValueByCode(t *testing.T) {
 	var expectedValue interface{}
-	if err := json.Unmarshal([]byte(JSON), &expectedValue); err != nil {
+	if err := json.Unmarshal([]byte(JSONFile), &expectedValue); err != nil {
 		t.Error("error Unmarshaling expected response body: %w", err)
 	}
 
@@ -211,7 +359,7 @@ func TestFindValueByCode(t *testing.T) {
 	}
 }
 
-func TestLoadJSONData(t *testing.T) {
+func TestLoadData(t *testing.T) {
 	tcs := []struct {
 		name        string
 		fileName    string
@@ -229,14 +377,14 @@ func TestLoadJSONData(t *testing.T) {
 		},
 	}
 
-	golium.GetConfig().Dir.Schemas = schemasDir
+	golium.GetConfig().Dir.Schemas = schemasPath
 	os.MkdirAll("./schemas", os.ModePerm)
 	os.WriteFile("./schemas/http.json", []byte(JSONhttpFileValues), os.ModePerm)
 	defer os.RemoveAll("./schemas/")
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := LoadJSONData(tc.fileName)
+			_, err := LoadData(tc.fileName)
 			if err != nil {
 				assert.Containsf(t, err.Error(), tc.expectedErr, "error message %s", "formatted")
 				fmt.Printf(err.Error(), tc.expectedErr)
@@ -245,11 +393,11 @@ func TestLoadJSONData(t *testing.T) {
 	}
 }
 
-func TestUnmarshalJSONData(t *testing.T) {
+func TestUnmarshalData(t *testing.T) {
 	var expectedString = `[
 		{
-			"boolean": false, 
-			"empty": "", 
+			"boolean": false,
+			"empty": "",
 			"list": [
 				{ "attribute": "attribute0", "value": "value0"},
 				{ "attribute": "attribute1", "value": "value1"},
@@ -260,8 +408,8 @@ func TestUnmarshalJSONData(t *testing.T) {
 
 	var current = `[
 		{
-			"boolean": false, 
-			"empty": "", 
+			"boolean": false,
+			"empty": "",
 			"list": [
 				{ "attribute": "attribute0", "value": "value0"},
 				{ "attribute": "attribute1", "value": "value1"},
@@ -272,7 +420,7 @@ func TestUnmarshalJSONData(t *testing.T) {
 
 	var incorrect = `
 		{
-			"boolean": false, 
+			"boolean": false,
 			"empty": ""
 		}`
 
@@ -305,7 +453,7 @@ func TestUnmarshalJSONData(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			unmarshalled, err := UnmarshalJSONData([]byte(tc.current))
+			unmarshalled, err := UnmarshalData([]byte(tc.current))
 			if err != nil {
 				if err.Error() != tc.err.Error() {
 					t.Errorf("unexpected error unmarshalling data:\n%v\nexpected:\n%v", err, tc.err)
@@ -320,8 +468,8 @@ func TestUnmarshalJSONData(t *testing.T) {
 
 func TestJSONEquals(t *testing.T) {
 	var expectedString = `{
-		"boolean": false, 
-		"empty": "", 
+		"boolean": false,
+		"empty": "",
 		"list": [
 			{ "attribute": "attribute0", "value": "value0"},
 			{ "attribute": "attribute1", "value": "value1"},
@@ -330,8 +478,8 @@ func TestJSONEquals(t *testing.T) {
 	}`
 
 	var differentString = `{
-		"boolean": true, 
-		"empty": "", 
+		"boolean": true,
+		"empty": "",
 		"list": [
 			{ "attribute": "attribute0", "value": "value0"},
 			{ "attribute": "attribute1", "value": "value1"},
@@ -340,8 +488,8 @@ func TestJSONEquals(t *testing.T) {
 	}`
 
 	var currentString = `{
-		"boolean": false, 
-		"empty": "", 
+		"boolean": false,
+		"empty": "",
 		"list": [
 			{ "attribute": "attribute0", "value": "value0"},
 			{ "attribute": "attribute1", "value": "value1"},
@@ -387,6 +535,243 @@ func TestJSONEquals(t *testing.T) {
 			if tc.equals != JSONEquals(tc.expected, tc.current) {
 				t.Errorf("expected JSON comparison should be %t \n%v\n vs \n%v", tc.equals, tc.expected,
 					tc.current)
+			}
+		})
+	}
+}
+
+func TestGetBody(t *testing.T) {
+	os.MkdirAll(schemasPath, os.ModePerm)
+	os.WriteFile("./schemas/health.json", []byte(JSONhttpFileValues), os.ModePerm)
+	defer os.RemoveAll(schemasPath)
+	type args struct {
+		code string
+		file string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "Error getting from file",
+			args: args{
+				code: "not_valid_code",
+				file: fileName,
+			},
+			wantErr: true,
+		},
+		{
+			name: "Happy Path",
+			args: args{
+				code: "example1",
+				file: fileName,
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := GetBody(context.Background(), tt.args.code, tt.args.file)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetBody() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
+	}
+}
+
+func TestModifyBody(t *testing.T) {
+	os.MkdirAll(schemasPath, os.ModePerm)
+	os.WriteFile("./schemas/health.json", []byte(JSONhttpFileValues), os.ModePerm)
+	defer os.RemoveAll(schemasPath)
+	type args struct {
+		code string
+		file string
+		t    *godog.Table
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "Error converting table",
+			args: args{
+				code: "not_valid_code",
+				file: fileName,
+				t: golium.NewTable([][]string{
+					{"parameter"},
+				}),
+			},
+			wantErr: true,
+		},
+		{
+			name: "Error getting from file",
+			args: args{
+				code: "not_valid_code",
+				file: fileName,
+				t: golium.NewTable([][]string{
+					{"parameter", "value"},
+					{"boolean", "true"},
+				}),
+			},
+			wantErr: true,
+		},
+		{
+			name: "Error with wrong body param",
+			args: args{
+				code: "example1",
+				file: fileName,
+				t: golium.NewTable([][]string{
+					{"parameter", "value"},
+					{"wrong_key", "true"},
+				}),
+			},
+			wantErr: true,
+		},
+		{
+			name: "Happy Path",
+			args: args{
+				code: "example1",
+				file: fileName,
+				t: golium.NewTable([][]string{
+					{"parameter", "value"},
+					{"boolean", "true"},
+				}),
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := ModifyBody(context.Background(), tt.args.code, tt.args.file, tt.args.t)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ModifyBody() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
+	}
+}
+
+func TestDeleteBodyFields(t *testing.T) {
+	os.MkdirAll(schemasPath, os.ModePerm)
+	os.WriteFile("./schemas/health.json", []byte(JSONhttpFileValues), os.ModePerm)
+	defer os.RemoveAll(schemasPath)
+	type args struct {
+		code string
+		file string
+		t    *godog.Table
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "Error converting table",
+			args: args{
+				code: "not_valid_code",
+				file: fileName,
+				t: golium.NewTable([][]string{
+					{"parameter"},
+				}),
+			},
+			wantErr: true,
+		},
+		{
+			name: "Error getting from file",
+			args: args{
+				code: "not_valid_code",
+				file: fileName,
+				t: golium.NewTable([][]string{
+					{"parameter"},
+					{"boolean"},
+				}),
+			},
+			wantErr: true,
+		},
+		{
+			name: "Happy Path",
+			args: args{
+				code: "example1",
+				file: fileName,
+				t: golium.NewTable([][]string{
+					{"parameter"},
+					{"boolean"},
+				}),
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := DeleteBodyFields(context.Background(), tt.args.code, tt.args.file, tt.args.t)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DeleteBodyFields() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
+	}
+}
+
+func TestDeleteResponseFields(t *testing.T) {
+	os.MkdirAll("./schemas", os.ModePerm)
+	os.WriteFile("./schemas/health.json", []byte(JSONhttpFileValues), os.ModePerm)
+	defer os.RemoveAll("./schemas/")
+
+	type args struct {
+		code string
+		file string
+		t    *godog.Table
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "Error getting response",
+			args: args{
+				code: "wrong_code",
+				file: fileName,
+				t: golium.NewTable([][]string{
+					{"parameter"},
+					{"boolean"},
+				}),
+			},
+			wantErr: true,
+		},
+		{
+			name: "Error converting table",
+			args: args{
+				code: "example1",
+				file: fileName,
+				t: golium.NewTable([][]string{
+					{"boolean"},
+				}),
+			},
+			wantErr: true,
+		},
+		{
+			name: "Happy Path",
+			args: args{
+				code: "example1",
+				file: fileName,
+				t: golium.NewTable([][]string{
+					{"parameter"},
+					{"boolean"},
+				}),
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := DeleteResponseFields(context.Background(), tt.args.code, tt.args.file, tt.args.t)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DeleteResponseFields() error = %v, wantErr %v", err, tt.wantErr)
+				return
 			}
 		})
 	}

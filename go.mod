@@ -3,6 +3,7 @@ module github.com/TelefonicaTC2Tech/golium
 go 1.18
 
 require (
+	bou.ke/monkey v1.0.2
 	github.com/AdguardTeam/dnsproxy v0.41.2
 	github.com/aws/aws-sdk-go-v2 v1.16.6
 	github.com/aws/aws-sdk-go-v2/config v1.15.12
@@ -14,6 +15,7 @@ require (
 	github.com/elastic/go-elasticsearch/v7 v7.12.0
 	github.com/go-redis/redis/v8 v8.8.0
 	github.com/google/uuid v1.2.0
+	github.com/jarcoal/httpmock v1.2.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/lestrrat-go/jwx v1.1.4
 	github.com/miekg/dns v1.1.44
