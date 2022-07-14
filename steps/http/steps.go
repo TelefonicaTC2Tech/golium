@@ -220,16 +220,16 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 			return session.SendRequestWithBodyModifyingFields(ctx, uRL, method, endpoint, code, apiKey, t)
 		})
 	scenCtx.Step(`^the "([^"]*)" response message should match with "([^"]*)" JSON message$`,
-		func(request, code string) error {
-			return session.ValidateResponseBodyJSONFile(ctx, code, request, "")
+		func(response, code string) error {
+			return session.ValidateResponseBodyJSONFile(ctx, response, code, "")
 		})
 	scenCtx.Step(`^the "([^"]*)" response message should match with "([^"]*)" JSON message without$`,
-		func(request, code string, t *godog.Table) error {
-			return session.ValidateResponseBodyJSONFileWithout(ctx, code, request, "", t)
+		func(response, code string, t *godog.Table) error {
+			return session.ValidateResponseBodyJSONFileWithout(ctx, response, code, "", t)
 		})
 	scenCtx.Step(`^the "([^"]*)" response message should match with "([^"]*)" JSON message modifying$`,
-		func(request, code string, t *godog.Table) error {
-			return session.ValidateResponseBodyJSONFileModifying(ctx, request, code, t)
+		func(response, code string, t *godog.Table) error {
+			return session.ValidateResponseBodyJSONFileModifying(ctx, response, code, t)
 		})
 	return ctx
 }

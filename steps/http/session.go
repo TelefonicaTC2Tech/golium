@@ -349,8 +349,8 @@ func (s *Session) ValidateResponseFromJSONFile(
 // ValidateResponseBodyJSONFile validates the response body against the JSON in File.
 func (s *Session) ValidateResponseBodyJSONFile(
 	ctx context.Context,
-	code,
 	file,
+	code,
 	respDataLocation string) error {
 	jsonResponseBody, err := schema.GetParam(file, code, "response")
 	if err != nil {
@@ -363,8 +363,8 @@ func (s *Session) ValidateResponseBodyJSONFile(
 // the response body against the JSON in File without params.
 func (s *Session) ValidateResponseBodyJSONFileWithout(
 	ctx context.Context,
-	code,
 	file,
+	code,
 	respDataLocation string, t *godog.Table) error {
 	jsonResponseBody, err := schema.DeleteResponseFields(ctx, code, file, t)
 	if err != nil {
@@ -376,12 +376,12 @@ func (s *Session) ValidateResponseBodyJSONFileWithout(
 // ValidateResponseBodyJSONFileModifying validates the response body
 // against the JSON in File modifying params.
 func (s *Session) ValidateResponseBodyJSONFileModifying(
-	ctx context.Context, request, code string,
+	ctx context.Context, file, code string,
 	t *godog.Table,
 ) error {
-	jsonResponseBody, err := schema.ModifyResponse(ctx, code, request, t)
+	jsonResponseBody, err := schema.ModifyResponse(ctx, code, file, t)
 	if err != nil {
-		return fmt.Errorf("error modifying response %s from %s schema: %w", code, request, err)
+		return fmt.Errorf("error modifying response %s from %s schema: %w", code, file, err)
 	}
 	return s.ValidateResponseFromJSONFile(jsonResponseBody, "")
 }
