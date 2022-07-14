@@ -569,7 +569,7 @@ func TestValidateResponseBodyJSONFile(t *testing.T) {
 			s := &Session{}
 			s.Response.ResponseBody = []byte(tt.responseBody)
 			if err := s.ValidateResponseBodyJSONFile(
-				ctx, tt.code, tt.file, tt.respDataLocation); (err != nil) != tt.wantErr {
+				ctx, tt.file, tt.code, tt.respDataLocation); (err != nil) != tt.wantErr {
 				t.Errorf("Session.ValidateResponseBodyJSONFile() error = %v, wantErr %v",
 					err, tt.wantErr)
 			}
@@ -645,7 +645,7 @@ func TestValidateResponseBodyJSONFileWithout(t *testing.T) {
 			s := &Session{}
 			s.Response.ResponseBody = []byte(tt.responseBody)
 			if err := s.ValidateResponseBodyJSONFileWithout(
-				ctx, tt.code, tt.file, tt.respDataLocation, tt.t); (err != nil) != tt.wantErr {
+				ctx, tt.file, tt.code, tt.respDataLocation, tt.t); (err != nil) != tt.wantErr {
 				t.Errorf("Session.ValidateResponseBodyJSONFileWithout() error = %v, wantErr %v",
 					err, tt.wantErr)
 			}
