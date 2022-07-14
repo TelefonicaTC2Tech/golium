@@ -467,8 +467,17 @@ func (s *Session) SendRequestWithBodyWithoutFields(
 	ctx context.Context,
 	uRL, method, endpoint, code, apiKey string, t *godog.Table,
 ) error {
-	return s.sendRequestWithAdaptedBody(
-		ctx, uRL, method, endpoint, code, apiKey, t, schema.DeleteBodyFields)
+	// Configure request JSON Body
+	message, err := schema.DeleteBodyFields(ctx, code, endpoint, t)
+	if err != nil {
+		return fmt.Errorf("error deleting body fields: %w", err)
+	}
+	// Build request
+	s.Request = setRequestWithBodyMessage(method, uRL, endpoint, apiKey, message)
+	if err := s.SendHTTPRequest(ctx, method); err != nil {
+		return fmt.Errorf(withJSONError, err)
+	}
+	return nil
 }
 
 // SendRequestWithBodyModifyingFields send request using body from JSON file located in schemas
@@ -477,34 +486,29 @@ func (s *Session) SendRequestWithBodyModifyingFields(
 	ctx context.Context,
 	uRL, method, endpoint, code, apiKey string, t *godog.Table,
 ) error {
-	return s.sendRequestWithAdaptedBody(
-		ctx, uRL, method, endpoint, code, apiKey, t, schema.ModifyBody)
-}
-
-func (s *Session) sendRequestWithAdaptedBody(
-	ctx context.Context,
-	uRL, method, endpoint, code, apiKey string,
-	t *godog.Table,
-	f func(ctx context.Context,
-		code, file string,
-		t *godog.Table,
-	) (interface{}, error),
-) error {
-	// Build request
-	s.Request = model.NewRequest(method, uRL, endpoint, true)
 	// Configure request JSON Body
-	message, err := f(ctx, code, endpoint, t)
+	message, err := schema.ModifyBody(ctx, code, endpoint, t)
 	if err != nil {
 		return fmt.Errorf("error modifying body fields: %w", err)
 	}
-	s.Request.AddBody(message)
-	// Configure authorization headers
-	s.Request.AddAuthorization(apiKey, "")
+	// Build request
+	s.Request = setRequestWithBodyMessage(method, uRL, endpoint, apiKey, message)
 	// Send HTTP Request
 	if err := s.SendHTTPRequest(ctx, method); err != nil {
 		return fmt.Errorf(withJSONError, err)
 	}
 	return nil
+}
+
+func setRequestWithBodyMessage(
+	method, uRL, endpoint, apiKey string,
+	message interface{},
+) model.Request {
+	request := model.NewRequest(method, uRL, endpoint, true)
+	request.AddBody(message)
+	// Configure authorization headers
+	request.AddAuthorization(apiKey, "")
+	return request
 }
 
 // SendRequestWithQueryParams send request using with query params.
