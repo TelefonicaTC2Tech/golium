@@ -24,8 +24,8 @@ import (
 	"testing"
 
 	"bou.ke/monkey"
-
 	"github.com/TelefonicaTC2Tech/golium"
+	"github.com/TelefonicaTC2Tech/golium/steps/http/model"
 	"github.com/cucumber/godog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -101,6 +101,32 @@ const (
 		{
 			"code": "example1",
 			"body": {
+	`
+	validateModifyingResponseFile = `
+	[
+		{
+			"code": "example1",
+			"body": {
+				"title": "foo1",
+				"body": "bar1",
+				"userId": 1
+			},
+			"response": {
+				"id": 101,
+				"title": "foo2",
+				"body": "bar1",
+				"userId": 1
+			}
+		}
+	]
+	`
+	validateModifyingResponse = `
+	{
+		"id": 101,
+		"title": "foo1",
+		"body": "bar1",
+		"userId": 1
+	}
 	`
 )
 
@@ -399,7 +425,7 @@ func TestValidateResponseHeaders(t *testing.T) {
 
 			header := http.Header{}
 			header.Add("Content-Type", tt.responseContentType)
-			s.Response.Response = &http.Response{Header: header}
+			s.Response.HTTPResponse = &http.Response{Header: header}
 
 			err := s.ValidateResponseHeaders(ctx, s.Request.Headers)
 			if (err != nil) != tt.wantErr {
@@ -585,7 +611,7 @@ func TestValidateResponseBodyJSONFileWithout(t *testing.T) {
 		file             string
 		responseBody     string
 		respDataLocation string
-		params           []string
+		t                *godog.Table
 		wantErr          bool
 	}{
 		{
@@ -594,8 +620,23 @@ func TestValidateResponseBodyJSONFileWithout(t *testing.T) {
 			code:             "example1",
 			responseBody:     JSONhttpResponseWithout,
 			respDataLocation: "response",
-			params:           []string{"boolean"},
-			wantErr:          false,
+			t: golium.NewTable([][]string{
+				{"parameter"},
+				{"boolean"},
+			}),
+			wantErr: false,
+		},
+		{
+			name:             "Error deleting response",
+			file:             "http",
+			code:             "wrong_code",
+			responseBody:     JSONhttpResponseWithout,
+			respDataLocation: "response",
+			t: golium.NewTable([][]string{
+				{"parameter"},
+				{"boolean"},
+			}),
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
@@ -604,7 +645,7 @@ func TestValidateResponseBodyJSONFileWithout(t *testing.T) {
 			s := &Session{}
 			s.Response.ResponseBody = []byte(tt.responseBody)
 			if err := s.ValidateResponseBodyJSONFileWithout(
-				ctx, tt.code, tt.file, tt.respDataLocation, tt.params); (err != nil) != tt.wantErr {
+				ctx, tt.code, tt.file, tt.respDataLocation, tt.t); (err != nil) != tt.wantErr {
 				t.Errorf("Session.ValidateResponseBodyJSONFileWithout() error = %v, wantErr %v",
 					err, tt.wantErr)
 			}
@@ -678,8 +719,8 @@ func TestValidateResponseBodyEmpty(t *testing.T) {
 			var ctx = context.Background()
 			s := &Session{}
 			s.Response.ResponseBody = []byte(tt.responseBody)
-			s.Response.Response = &http.Response{}
-			s.Response.Response.ContentLength = 0
+			s.Response.HTTPResponse = &http.Response{}
+			s.Response.HTTPResponse.ContentLength = 0
 			if err := s.ValidateResponseBodyEmpty(ctx); (err != nil) != tt.wantErr {
 				t.Errorf("Session.ValidateResponseBodyEmpty() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -777,19 +818,6 @@ func TestSendRequestWithBodyWithoutFields(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "Error getting body from file",
-			args: args{
-				code:     "not_valid_code",
-				uRL:      httpbinURLslash,
-				endpoint: healthRequest,
-				table: golium.NewTable([][]string{
-					{"parameter"},
-					{"boolean"},
-				}),
-			},
-			wantErr: true,
-		},
-		{
 			name: "Error sending HTTP Request",
 			args: args{
 				code:     "example1",
@@ -852,39 +880,13 @@ func TestSendRequestWithBodyModifyingFields(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "Error converting table",
+			name: "Error modifying body",
 			args: args{
 				code:     "example1",
 				uRL:      "wrongURL",
 				endpoint: healthRequest,
 				table: golium.NewTable([][]string{
 					{"parameter", "value"},
-				}),
-			},
-			wantErr: true,
-		},
-		{
-			name: "Error getting body from file",
-			args: args{
-				code:     "not_valid_code",
-				uRL:      httpbinURLslash,
-				endpoint: healthRequest,
-				table: golium.NewTable([][]string{
-					{"parameter", "value"},
-					{"boolean", "true"},
-				}),
-			},
-			wantErr: true,
-		},
-		{
-			name: "Error with wrong body param",
-			args: args{
-				code:     "example1",
-				uRL:      httpbinURLslash,
-				endpoint: healthRequest,
-				table: golium.NewTable([][]string{
-					{"parameter", "value"},
-					{"wrong_key", "true"},
 				}),
 			},
 			wantErr: true,
@@ -1207,6 +1209,61 @@ func TestGetURL(t *testing.T) {
 			// Check expected behavior
 			require.Equal(t, tc.expectedURL, resultURL)
 			require.Equal(t, tc.expectedErr, resulterr)
+		})
+	}
+}
+
+func TestValidateResponseBodyJSONFileModifying(t *testing.T) {
+	os.MkdirAll(schemasPath, os.ModePerm)
+	os.WriteFile("./schemas/posts.json", []byte(validateModifyingResponseFile), os.ModePerm)
+	defer os.RemoveAll(schemasPath)
+	type args struct {
+		request string
+		code    string
+		t       *godog.Table
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "Error modifying schema response",
+			args: args{
+				code:    "not_valid_code",
+				request: "posts",
+				t: golium.NewTable([][]string{
+					{"parameter"},
+				}),
+			},
+			wantErr: true,
+		},
+		{
+			name: "Happy Path",
+			args: args{
+				code:    "example1",
+				request: "posts",
+				t: golium.NewTable([][]string{
+					{"parameter", "value"},
+					{"title", "foo1"},
+				}),
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &Session{
+				Response: model.Response{
+					ResponseBody: []byte(validateModifyingResponse),
+				},
+			}
+			if err := s.ValidateResponseBodyJSONFileModifying(
+				context.Background(), tt.args.request, tt.args.code, tt.args.t,
+			); (err != nil) != tt.wantErr {
+				t.Errorf(
+					"Session.ValidateResponseBodyJSONFileModifying() error = %v, wantErr %v", err, tt.wantErr)
+			}
 		})
 	}
 }

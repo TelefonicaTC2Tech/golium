@@ -29,8 +29,8 @@ import (
 	"time"
 
 	"github.com/TelefonicaTC2Tech/golium"
-	"github.com/TelefonicaTC2Tech/golium/steps/http/body"
 	"github.com/TelefonicaTC2Tech/golium/steps/http/model"
+	"github.com/TelefonicaTC2Tech/golium/steps/http/schema"
 	"github.com/cucumber/godog"
 	"github.com/google/uuid"
 	"github.com/tidwall/sjson"
@@ -47,18 +47,10 @@ const (
 	Slash          = "/"
 )
 
-// Response information of the session.
-type Response struct {
-	// HTTP response
-	Response *http.Response
-	// Response body as slice of bytes
-	ResponseBody []byte
-}
-
 // Session contains the information of a HTTP session (request and response).
 type Session struct {
 	Request            model.Request
-	Response           Response
+	Response           model.Response
 	NoRedirect         bool
 	InsecureSkipVerify bool
 	Timeout            time.Duration
@@ -142,7 +134,7 @@ func (s *Session) ConfigureRequestBody(ctx context.Context, message interface{})
 
 // ConfigureRequestBodyJSONFile writes the body in the HTTP request as a JSON from file.
 func (s *Session) ConfigureRequestBodyJSONFile(ctx context.Context, code, file string) error {
-	message, err := body.GetParamFromJSON(file, code, "body")
+	message, err := schema.GetParam(file, code, "body")
 	if err != nil {
 		return fmt.Errorf(parameterError, err)
 	}
@@ -157,7 +149,7 @@ func (s *Session) ConfigureRequestBodyJSONFileWithout(
 	code,
 	file string,
 	params []string) error {
-	message, err := body.GetParamFromJSON(file, code, "body")
+	message, err := schema.GetParam(file, code, "body")
 	if err != nil {
 		return fmt.Errorf(parameterError, err)
 	}
@@ -251,7 +243,7 @@ func (s *Session) SendHTTPRequest(ctx context.Context, method string) error {
 	if err != nil {
 		return fmt.Errorf("failed reading the response body: %w", err)
 	}
-	s.Response.Response = resp
+	s.Response.HTTPResponse = resp
 	s.Response.ResponseBody = respBodyBytes
 	logger.LogResponse(resp, respBodyBytes, corr)
 	return nil
@@ -268,9 +260,9 @@ func (s *Session) ValidateResponseTimedout(ctx context.Context) error {
 
 // ValidateStatusCode validates the status code from the HTTP response.
 func (s *Session) ValidateStatusCode(ctx context.Context, expectedCode int) error {
-	if expectedCode != s.Response.Response.StatusCode {
+	if expectedCode != s.Response.HTTPResponse.StatusCode {
 		return fmt.Errorf("status code mismatch: expected '%d', actual '%d'",
-			expectedCode, s.Response.Response.StatusCode)
+			expectedCode, s.Response.HTTPResponse.StatusCode)
 	}
 	return nil
 }
@@ -282,7 +274,7 @@ func (s *Session) ValidateResponseHeaders(
 	for expectedHeader, expectedHeaderValues := range expectedHeaders {
 		for _, expectedHeaderValue := range expectedHeaderValues {
 			if !golium.ContainsString(
-				expectedHeaderValue, s.Response.Response.Header.Values(expectedHeader)) {
+				expectedHeaderValue, s.Response.HTTPResponse.Header.Values(expectedHeader)) {
 				return fmt.Errorf("HTTP response does not have the header '%s' with value '%s'",
 					expectedHeader, expectedHeaderValue)
 			}
@@ -295,7 +287,7 @@ func (s *Session) ValidateResponseHeaders(
 // response headers are not included in HTTP response.
 func (s *Session) ValidateNotResponseHeaders(ctx context.Context, expectedHeaders []string) error {
 	for _, expectedHeader := range expectedHeaders {
-		if len(s.Response.Response.Header.Values(expectedHeader)) > 0 {
+		if len(s.Response.HTTPResponse.Header.Values(expectedHeader)) > 0 {
 			return fmt.Errorf("HTTP response includes the header '%s'", expectedHeader)
 		}
 	}
@@ -303,19 +295,20 @@ func (s *Session) ValidateNotResponseHeaders(ctx context.Context, expectedHeader
 }
 
 // ValidateResponseBodyJSONSchema validates the response body against the JSON schema.
-func (s *Session) ValidateResponseBodyJSONSchema(ctx context.Context, schema string) error {
+func (s *Session) ValidateResponseBodyJSONSchema(ctx context.Context, schemaName string) error {
 	schemasPath := golium.GetConfig().Dir.Schemas
 	schemaLoader := gojsonschema.NewReferenceLoader(fmt.Sprintf("file://%s/%s.json",
-		schemasPath, schema))
+		schemasPath, schemaName))
 	documentLoader := gojsonschema.NewStringLoader(string(s.Response.ResponseBody))
 	result, err := gojsonschema.Validate(schemaLoader, documentLoader)
 	if err != nil {
-		return fmt.Errorf("failed validating response body against schema '%s': %w", schema, err)
+		return fmt.Errorf("failed validating response body against schema '%s': %w", schemaName, err)
 	}
 	if result.Valid() {
 		return nil
 	}
-	return fmt.Errorf("invalid response body according to schema '%s': %+v", schema, result.Errors())
+	return fmt.Errorf(
+		"invalid response body according to schema '%s': %+v", schemaName, result.Errors())
 }
 
 // ValidateResponseFromJSONFile validates the response body against the response from JSON File.
@@ -359,7 +352,7 @@ func (s *Session) ValidateResponseBodyJSONFile(
 	code,
 	file,
 	respDataLocation string) error {
-	jsonResponseBody, err := body.GetParamFromJSON(file, code, "response")
+	jsonResponseBody, err := schema.GetParam(file, code, "response")
 	if err != nil {
 		return fmt.Errorf(parameterError, err)
 	}
@@ -372,16 +365,25 @@ func (s *Session) ValidateResponseBodyJSONFileWithout(
 	ctx context.Context,
 	code,
 	file,
-	respDataLocation string, params []string) error {
-	jsonResponseBody, err := body.GetParamFromJSON(file, code, "response")
+	respDataLocation string, t *godog.Table) error {
+	jsonResponseBody, err := schema.DeleteResponseFields(ctx, code, file, t)
 	if err != nil {
-		return fmt.Errorf(parameterError, err)
-	}
-	jsonResponseBodyMap, _ := jsonResponseBody.(map[string]interface{})
-	for _, removeParams := range params {
-		delete(jsonResponseBodyMap, removeParams)
+		return fmt.Errorf("error deleting response %s fields from %s schema: %w", code, file, err)
 	}
 	return s.ValidateResponseFromJSONFile(jsonResponseBody, respDataLocation)
+}
+
+// ValidateResponseBodyJSONFileModifying validates the response body
+// against the JSON in File modifying params.
+func (s *Session) ValidateResponseBodyJSONFileModifying(
+	ctx context.Context, request, code string,
+	t *godog.Table,
+) error {
+	jsonResponseBody, err := schema.ModifyResponse(ctx, code, request, t)
+	if err != nil {
+		return fmt.Errorf("error modifying response %s from %s schema: %w", code, request, err)
+	}
+	return s.ValidateResponseFromJSONFile(jsonResponseBody, "")
 }
 
 // ValidateResponseBodyJSONProperties validates a list
@@ -403,7 +405,7 @@ func (s *Session) ValidateResponseBodyJSONProperties(
 // ValidateResponseBodyEmpty validates that the response body is empty.
 // It checks the Content-Length header and the response body buffer.
 func (s *Session) ValidateResponseBodyEmpty(ctx context.Context) error {
-	if s.Response.Response.ContentLength <= 0 && len(s.Response.ResponseBody) == 0 {
+	if s.Response.HTTPResponse.ContentLength <= 0 && len(s.Response.ResponseBody) == 0 {
 		return nil
 	}
 	return errors.New("response body is not empty")
@@ -432,7 +434,7 @@ func (s *Session) StoreResponseBodyJSONPropertyInContext(
 // If the header does not exist, the context value is empty.
 // This method does not support multiple headers with the same name. It just stores one of them.
 func (s *Session) StoreResponseHeaderInContext(ctx context.Context, header, ctxtKey string) error {
-	h := s.Response.Response.Header.Get(header)
+	h := s.Response.HTTPResponse.Header.Get(header)
 	golium.GetContext(ctx).Put(ctxtKey, h)
 	return nil
 }
@@ -445,9 +447,9 @@ func (s *Session) SendRequestWithBody(
 	// Build request
 	s.Request = model.NewRequest(method, uRL, endpoint, true)
 	// Configure request JSON Body
-	message, err := body.GetParamFromJSON(endpoint, code, "body")
+	message, err := schema.GetBody(ctx, code, endpoint)
 	if err != nil {
-		return fmt.Errorf(parameterError, err)
+		return fmt.Errorf("error getting body: %w", err)
 	}
 	s.Request.AddBody(message)
 	// Configure authorization headers
@@ -465,29 +467,8 @@ func (s *Session) SendRequestWithBodyWithoutFields(
 	ctx context.Context,
 	uRL, method, endpoint, code, apiKey string, t *godog.Table,
 ) error {
-	// Build request
-	s.Request = model.NewRequest(method, uRL, endpoint, true)
-	// Configure request JSON Body
-	params, err := golium.ConvertTableColumnToArray(ctx, t)
-	if err != nil {
-		return err
-	}
-	message, err := body.GetParamFromJSON(endpoint, code, "body")
-	messageMap, _ := message.(map[string]interface{})
-	for _, removeParams := range params {
-		delete(messageMap, removeParams)
-	}
-	if err != nil {
-		return fmt.Errorf(parameterError, err)
-	}
-	s.Request.AddBody(message)
-	// Configure authorization headers
-	s.Request.AddAuthorization(apiKey, "")
-	// Send HTTP Request
-	if err := s.SendHTTPRequest(ctx, method); err != nil {
-		return fmt.Errorf(withJSONError, err)
-	}
-	return nil
+	return s.sendRequestWithAdaptedBody(
+		ctx, uRL, method, endpoint, code, apiKey, t, schema.DeleteBodyFields)
 }
 
 // SendRequestWithBodyModifyingFields send request using body from JSON file located in schemas
@@ -496,26 +477,26 @@ func (s *Session) SendRequestWithBodyModifyingFields(
 	ctx context.Context,
 	uRL, method, endpoint, code, apiKey string, t *godog.Table,
 ) error {
+	return s.sendRequestWithAdaptedBody(
+		ctx, uRL, method, endpoint, code, apiKey, t, schema.ModifyBody)
+}
+
+func (s *Session) sendRequestWithAdaptedBody(
+	ctx context.Context,
+	uRL, method, endpoint, code, apiKey string,
+	t *godog.Table,
+	f func(ctx context.Context,
+		code, file string,
+		t *godog.Table,
+	) (interface{}, error),
+) error {
 	// Build request
 	s.Request = model.NewRequest(method, uRL, endpoint, true)
 	// Configure request JSON Body
-	params, err := golium.ConvertTableToMap(ctx, t)
+	message, err := f(ctx, code, endpoint, t)
 	if err != nil {
-		return err
+		return fmt.Errorf("error modifying body fields: %w", err)
 	}
-	message, err := body.GetParamFromJSON(endpoint, code, "body")
-	if err != nil {
-		return fmt.Errorf(parameterError, err)
-	}
-	messageMap, _ := message.(map[string]interface{})
-	for key, value := range params {
-		_, present := messageMap[key]
-		if !present {
-			return fmt.Errorf("error modifying param : param %v does not exists", key)
-		}
-		messageMap[key] = value
-	}
-
 	s.Request.AddBody(message)
 	// Configure authorization headers
 	s.Request.AddAuthorization(apiKey, "")
@@ -594,7 +575,7 @@ func (s *Session) SendRequestWithPathAndBody(
 	// Build request
 	s.Request = model.NewRequest(method, uRL, endpoint, true)
 	// Configure request JSON Body
-	message, err := body.GetParamFromJSON(endpoint, code, "body")
+	message, err := schema.GetParam(endpoint, code, "body")
 	if err != nil {
 		return fmt.Errorf(parameterError, err)
 	}
