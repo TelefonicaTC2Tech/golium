@@ -229,7 +229,7 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 		})
 	scenCtx.Step(`^the "([^"]*)" response message should match with "([^"]*)" JSON message modifying$`,
 		func(request, code string, t *godog.Table) error {
-			return session.ValidateResponseBodyJSONFileModifying(ctx, code, request, t)
+			return session.ValidateResponseBodyJSONFileModifying(ctx, request, code, t)
 		})
 	return ctx
 }
