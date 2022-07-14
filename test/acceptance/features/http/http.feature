@@ -193,7 +193,7 @@ Feature: HTTP client
       And I store the header "Location" from the HTTP response in context "header.location"
 
   @http
-  Scenario: Set HTTP request httpbin.host
+  Scenario: Set HTTP request host
     Given the HTTP endpoint "[CONF:httpbin.url]/headers"
       And the HTTP request headers
           | param | value       |
