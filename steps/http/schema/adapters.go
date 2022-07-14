@@ -71,6 +71,7 @@ func ModifyResponse(
 	return jsonResponseBody, nil
 }
 
+// GetBody Returns body from schema file with code.
 func GetBody(
 	ctx context.Context,
 	code, file string,
@@ -82,6 +83,7 @@ func GetBody(
 	return message, nil
 }
 
+// ModifyBody Returns body from schema file with code modifying values.
 func ModifyBody(
 	ctx context.Context,
 	code, file string,
@@ -106,6 +108,7 @@ func ModifyBody(
 	return message, nil
 }
 
+// DeleteBodyFields Returns body from schema file with code deleting fields.
 func DeleteBodyFields(
 	ctx context.Context,
 	code, file string,
