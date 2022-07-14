@@ -135,10 +135,10 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 		return session.ValidateResponseBodyJSONSchema(ctx, golium.ValueAsString(ctx, schema))
 	})
 	scenCtx.Step(`^the HTTP response "([^"]*)" must match with the JSON "([^"]*)" from "([^"]*)" file$`, func(respDataLocation, code, file string) error {
-		return session.ValidateResponseBodyJSONFile(ctx, code, file, respDataLocation)
+		return session.ValidateResponseBodyJSONFile(ctx, file, code, respDataLocation)
 	})
 	scenCtx.Step(`^the HTTP response "([^"]*)" must match with the JSON "([^"]*)" from "([^"]*)" file without$`, func(respDataLocation, code, file string, t *godog.Table) error {
-		return session.ValidateResponseBodyJSONFileWithout(ctx, code, file, respDataLocation, t)
+		return session.ValidateResponseBodyJSONFileWithout(ctx, file, code, respDataLocation, t)
 	})
 	scenCtx.Step(`^the HTTP response body must have the JSON properties$`, func(t *godog.Table) error {
 		props, err := golium.ConvertTableToMap(ctx, t)
