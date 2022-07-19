@@ -24,19 +24,14 @@ import (
 type ContextKey string
 
 const (
-	contextKey      ContextKey = "httpSession"
-	encodeHeaderKey string     = "[CONF:headers.encode]"
+	contextKey ContextKey = "httpSession"
 )
 
 // InitializeContext adds the HTTP session to the context.
 // The new context is returned because context is immutable.
 func InitializeContext(ctx context.Context) context.Context {
-	encodeHeader := golium.Value(ctx, encodeHeaderKey)
-	encodeHeaderBool := false
-	if encodeHeader != nil {
-		encodeHeaderBool = encodeHeader.(bool)
-	}
-	return context.WithValue(ctx, contextKey, &Session{EncodeHeaders: encodeHeaderBool})
+	encodeHeader, _ := golium.ValueAsBool(ctx, encodeHeaderKey)
+	return context.WithValue(ctx, contextKey, &Session{EncodeHeaders: encodeHeader})
 }
 
 // GetSession returns the HTTP session stored in context.

@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 )
@@ -29,6 +30,7 @@ const (
 // Logger logs in a configurable file.
 type Logger struct {
 	*logrus.Logger
+	Encode bool
 }
 
 // LoggerFactory returns a Logger instance.
@@ -78,5 +80,13 @@ func builder(file os.File) *Logger {
 			Hooks:     make(logrus.LevelHooks),
 			Level:     level,
 		},
+		GetConfig().Log.Encode,
 	}
+}
+
+func (l Logger) Obfuscate(plain string) string {
+	if !l.Encode {
+		return plain
+	}
+	return strings.Repeat("*", len(plain))
 }

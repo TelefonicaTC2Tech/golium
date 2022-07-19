@@ -76,12 +76,12 @@ func getResponseFirstLine(resp *http.Response) string {
 	return fmt.Sprintf("%s %s", resp.Proto, resp.Status)
 }
 
-func getHeaders(headers map[string][]string) string {
+func (l Logger) getHeaders(headers map[string][]string) string {
 	var fmtHeaders []string
 	for key, values := range headers {
 		for _, value := range values {
 			if _, ok := AuthHeaders[key]; ok {
-				value = encode(value)
+				value = l.Log.Obfuscate(value)
 			}
 			fmtHeaders = append(fmtHeaders, fmt.Sprintf("%s: %s", key, value))
 		}
@@ -94,11 +94,4 @@ func getBody(body []byte) string {
 		return ""
 	}
 	return fmt.Sprintf("\n%s", body)
-}
-
-func encode(plain string) string {
-	if !httpLog.EncodeHeaders {
-		return plain
-	}
-	return strings.Repeat("*", len(plain))
 }
