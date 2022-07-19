@@ -24,9 +24,15 @@ import (
 
 var httpLog *Logger
 
+var AuthHeaders = map[string]string{
+	"X-API-KEY":     "apikey",
+	"Authorization": "jwt",
+}
+
 // Logger logs in a configurable file.
 type Logger struct {
-	Log *golium.Logger
+	Log           *golium.Logger
+	EncodeHeaders bool
 }
 
 // GetLogger returns the logger for HTTP requests and responses.
@@ -74,6 +80,9 @@ func getHeaders(headers map[string][]string) string {
 	var fmtHeaders []string
 	for key, values := range headers {
 		for _, value := range values {
+			if _, ok := AuthHeaders[key]; ok {
+				value = encode(value)
+			}
 			fmtHeaders = append(fmtHeaders, fmt.Sprintf("%s: %s", key, value))
 		}
 	}
@@ -85,4 +94,11 @@ func getBody(body []byte) string {
 		return ""
 	}
 	return fmt.Sprintf("\n%s", body)
+}
+
+func encode(plain string) string {
+	if !httpLog.EncodeHeaders {
+		return plain
+	}
+	return strings.Repeat("*", len(plain))
 }

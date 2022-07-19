@@ -55,6 +55,7 @@ type Session struct {
 	InsecureSkipVerify bool
 	Timeout            time.Duration
 	Timedout           bool
+	EncodeHeaders      bool
 }
 
 // URL composes the endpoint, the resource, and query parameters to build a URL.
@@ -193,6 +194,7 @@ func (s *Session) ConfigureInsecureSkipVerify(ctx context.Context) {
 // SendHTTPRequest sends a HTTP request using the configuration in the application context.
 func (s *Session) SendHTTPRequest(ctx context.Context, method string) error {
 	logger := GetLogger()
+	logger.EncodeHeaders = s.EncodeHeaders
 	s.Request.Method = method
 	corr := uuid.New().String()
 	u, err := s.URL()
