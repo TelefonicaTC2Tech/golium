@@ -16,8 +16,6 @@ package http
 
 import (
 	"context"
-
-	"github.com/TelefonicaTC2Tech/golium"
 )
 
 // ContextKey defines a type to store the HTTP session in context.Context.
@@ -30,8 +28,7 @@ const (
 // InitializeContext adds the HTTP session to the context.
 // The new context is returned because context is immutable.
 func InitializeContext(ctx context.Context) context.Context {
-	encodeHeader, _ := golium.ValueAsBool(ctx, encodeHeaderKey)
-	return context.WithValue(ctx, contextKey, &Session{EncodeHeaders: encodeHeader})
+	return context.WithValue(ctx, contextKey, &Session{})
 }
 
 // GetSession returns the HTTP session stored in context.
