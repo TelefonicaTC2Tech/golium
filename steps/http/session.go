@@ -442,12 +442,12 @@ func (s *Session) StoreResponseHeaderInContext(ctx context.Context, header, ctxt
 // SendRequestWithBody send request using body from JSON file located in schemas.
 func (s *Session) SendRequestWithBody(
 	ctx context.Context,
-	uRL, method, endpoint, code, apiKey string,
+	uRL, method, endpoint, file, code, apiKey string,
 ) error {
 	// Build request
 	s.Request = model.NewRequest(method, uRL, endpoint, true)
 	// Configure request JSON Body
-	message, err := schema.GetBody(ctx, code, endpoint)
+	message, err := schema.GetBody(ctx, code, file)
 	if err != nil {
 		return fmt.Errorf("error getting body: %w", err)
 	}
@@ -465,10 +465,10 @@ func (s *Session) SendRequestWithBody(
 // without fields.
 func (s *Session) SendRequestWithBodyWithoutFields(
 	ctx context.Context,
-	uRL, method, endpoint, code, apiKey string, t *godog.Table,
+	uRL, method, endpoint, file, code, apiKey string, t *godog.Table,
 ) error {
 	// Configure request JSON Body
-	message, err := schema.DeleteBodyFields(ctx, code, endpoint, t)
+	message, err := schema.DeleteBodyFields(ctx, code, file, t)
 	if err != nil {
 		return fmt.Errorf("error deleting body fields: %w", err)
 	}
@@ -484,10 +484,10 @@ func (s *Session) SendRequestWithBodyWithoutFields(
 // modifying fields.
 func (s *Session) SendRequestWithBodyModifyingFields(
 	ctx context.Context,
-	uRL, method, endpoint, code, apiKey string, t *godog.Table,
+	uRL, method, endpoint, file, code, apiKey string, t *godog.Table,
 ) error {
 	// Configure request JSON Body
-	message, err := schema.ModifyBody(ctx, code, endpoint, t)
+	message, err := schema.ModifyBody(ctx, code, file, t)
 	if err != nil {
 		return fmt.Errorf("error modifying body fields: %w", err)
 	}
@@ -574,12 +574,12 @@ func (s *Session) SendRequestWithPath(
 // SendRequestWithPathAndBody send request with path and JSON body.
 func (s *Session) SendRequestWithPathAndBody(
 	ctx context.Context,
-	uRL, method, endpoint, requestPath, code, apiKey string,
+	uRL, method, endpoint, requestPath, file, code, apiKey string,
 ) error {
 	// Build request
 	s.Request = model.NewRequest(method, uRL, endpoint, true)
 	// Configure request JSON Body
-	message, err := schema.GetParam(endpoint, code, "body")
+	message, err := schema.GetParam(file, code, "body")
 	if err != nil {
 		return fmt.Errorf(parameterError, err)
 	}

@@ -778,7 +778,7 @@ func TestSendRequestWithBody(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			s := &Session{}
 			if err := s.SendRequestWithBody(
-				tc.args.ctx, tc.args.uRL, http.MethodPost, tc.args.endpoint, tc.args.code, "validApiKey",
+				tc.args.ctx, tc.args.uRL, http.MethodPost, tc.args.endpoint, tc.args.endpoint, tc.args.code, "validApiKey",
 			); (err != nil) != tc.wantErr {
 				t.Errorf("Session.SendRequestWithBody() error = %v, wantErr %v", err, tc.wantErr)
 			}
@@ -849,7 +849,7 @@ func TestSendRequestWithBodyWithoutFields(t *testing.T) {
 			s := &Session{}
 			if err := s.SendRequestWithBodyWithoutFields(
 				tc.args.ctx,
-				tc.args.uRL, http.MethodPost, tc.args.endpoint, tc.args.code, "validApiKey",
+				tc.args.uRL, http.MethodPost, tc.args.endpoint, tc.args.endpoint, tc.args.code, "validApiKey",
 				tc.args.table,
 			); (err != nil) != tc.wantErr {
 				t.Errorf(
@@ -923,7 +923,7 @@ func TestSendRequestWithBodyModifyingFields(t *testing.T) {
 			s := &Session{}
 			if err := s.SendRequestWithBodyModifyingFields(
 				tc.args.ctx,
-				tc.args.uRL, http.MethodPost, tc.args.endpoint, tc.args.code, "validApiKey",
+				tc.args.uRL, http.MethodPost, tc.args.endpoint, tc.args.endpoint, tc.args.code, "validApiKey",
 				tc.args.table,
 			); (err != nil) != tc.wantErr {
 				t.Errorf(
@@ -1064,7 +1064,7 @@ func TestSendRequestWithPathAndBody(t *testing.T) {
 			s := &Session{}
 			if err := s.SendRequestWithPathAndBody(
 				tc.args.ctx,
-				tc.args.uRL, http.MethodPost, tc.args.endpoint, tc.args.path, tc.args.code, "validApiKey",
+				tc.args.uRL, http.MethodPost, tc.args.endpoint, tc.args.path, tc.args.endpoint, tc.args.code, "validApiKey",
 			); (err != nil) != tc.wantErr {
 				t.Errorf("Session.SendRequestWithPathAndBody() error = %v, wantErr %v", err, tc.wantErr)
 			}
