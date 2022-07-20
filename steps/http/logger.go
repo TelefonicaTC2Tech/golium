@@ -31,8 +31,7 @@ var AuthHeaders = map[string]string{
 
 // Logger logs in a configurable file.
 type Logger struct {
-	Log           *golium.Logger
-	EncodeHeaders bool
+	Log *golium.Logger
 }
 
 // GetLogger returns the logger for HTTP requests and responses.

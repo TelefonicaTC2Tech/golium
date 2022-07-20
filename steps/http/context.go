@@ -21,9 +21,7 @@ import (
 // ContextKey defines a type to store the HTTP session in context.Context.
 type ContextKey string
 
-const (
-	contextKey ContextKey = "httpSession"
-)
+const contextKey ContextKey = "httpSession"
 
 // InitializeContext adds the HTTP session to the context.
 // The new context is returned because context is immutable.
