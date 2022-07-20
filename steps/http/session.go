@@ -133,7 +133,10 @@ func (s *Session) ConfigureRequestBody(ctx context.Context, message interface{})
 }
 
 // ConfigureRequestBodyJSONFile writes the body in the HTTP request as a JSON from file.
-func (s *Session) ConfigureRequestBodyJSONFile(ctx context.Context, bodyParams schema.Params) error {
+func (s *Session) ConfigureRequestBodyJSONFile(
+	ctx context.Context,
+	bodyParams schema.Params,
+) error {
 	message, err := schema.GetParam(bodyParams, "body")
 	if err != nil {
 		return fmt.Errorf(parameterError, err)
