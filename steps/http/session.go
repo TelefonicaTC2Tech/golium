@@ -133,8 +133,8 @@ func (s *Session) ConfigureRequestBody(ctx context.Context, message interface{})
 }
 
 // ConfigureRequestBodyJSONFile writes the body in the HTTP request as a JSON from file.
-func (s *Session) ConfigureRequestBodyJSONFile(ctx context.Context, code, file string) error {
-	message, err := schema.GetParam(file, code, "body")
+func (s *Session) ConfigureRequestBodyJSONFile(ctx context.Context, bodyParams schema.Params) error {
+	message, err := schema.GetParam(bodyParams, "body")
 	if err != nil {
 		return fmt.Errorf(parameterError, err)
 	}
@@ -146,10 +146,9 @@ func (s *Session) ConfigureRequestBodyJSONFile(ctx context.Context, code, file s
 // HTTP request as a JSON from file without given values.
 func (s *Session) ConfigureRequestBodyJSONFileWithout(
 	ctx context.Context,
-	code,
-	file string,
+	bodyParams schema.Params,
 	params []string) error {
-	message, err := schema.GetParam(file, code, "body")
+	message, err := schema.GetParam(bodyParams, "body")
 	if err != nil {
 		return fmt.Errorf(parameterError, err)
 	}
@@ -349,10 +348,9 @@ func (s *Session) ValidateResponseFromJSONFile(
 // ValidateResponseBodyJSONFile validates the response body against the JSON in File.
 func (s *Session) ValidateResponseBodyJSONFile(
 	ctx context.Context,
-	file,
-	code,
+	responseParams schema.Params,
 	respDataLocation string) error {
-	jsonResponseBody, err := schema.GetParam(file, code, "response")
+	jsonResponseBody, err := schema.GetParam(responseParams, "response")
 	if err != nil {
 		return fmt.Errorf(parameterError, err)
 	}
@@ -363,12 +361,13 @@ func (s *Session) ValidateResponseBodyJSONFile(
 // the response body against the JSON in File without params.
 func (s *Session) ValidateResponseBodyJSONFileWithout(
 	ctx context.Context,
-	file,
-	code,
+	responseParams schema.Params,
 	respDataLocation string, t *godog.Table) error {
-	jsonResponseBody, err := schema.DeleteResponseFields(ctx, code, file, t)
+	jsonResponseBody, err := schema.DeleteResponseFields(ctx, responseParams, t)
 	if err != nil {
-		return fmt.Errorf("error deleting response %s fields from %s schema: %w", code, file, err)
+		return fmt.Errorf(
+			"error deleting response %s fields from %s schema: %w",
+			responseParams.Code, responseParams.File, err)
 	}
 	return s.ValidateResponseFromJSONFile(jsonResponseBody, respDataLocation)
 }
@@ -376,12 +375,14 @@ func (s *Session) ValidateResponseBodyJSONFileWithout(
 // ValidateResponseBodyJSONFileModifying validates the response body
 // against the JSON in File modifying params.
 func (s *Session) ValidateResponseBodyJSONFileModifying(
-	ctx context.Context, file, code string,
+	ctx context.Context, responseParams schema.Params,
 	t *godog.Table,
 ) error {
-	jsonResponseBody, err := schema.ModifyResponse(ctx, code, file, t)
+	jsonResponseBody, err := schema.ModifyResponse(ctx, responseParams, t)
 	if err != nil {
-		return fmt.Errorf("error modifying response %s from %s schema: %w", code, file, err)
+		return fmt.Errorf(
+			"error modifying response %s from %s schema: %w",
+			responseParams.Code, responseParams.File, err)
 	}
 	return s.ValidateResponseFromJSONFile(jsonResponseBody, "")
 }
@@ -442,12 +443,12 @@ func (s *Session) StoreResponseHeaderInContext(ctx context.Context, header, ctxt
 // SendRequestWithBody send request using body from JSON file located in schemas.
 func (s *Session) SendRequestWithBody(
 	ctx context.Context,
-	uRL, method, endpoint, file, code, apiKey string,
+	uRL, method, endpoint string, bodyParams schema.Params, apiKey string,
 ) error {
 	// Build request
 	s.Request = model.NewRequest(method, uRL, endpoint, true)
 	// Configure request JSON Body
-	message, err := schema.GetBody(ctx, code, file)
+	message, err := schema.GetBody(bodyParams)
 	if err != nil {
 		return fmt.Errorf("error getting body: %w", err)
 	}
@@ -465,10 +466,10 @@ func (s *Session) SendRequestWithBody(
 // without fields.
 func (s *Session) SendRequestWithBodyWithoutFields(
 	ctx context.Context,
-	uRL, method, endpoint, file, code, apiKey string, t *godog.Table,
+	uRL, method, endpoint string, bodyParams schema.Params, apiKey string, t *godog.Table,
 ) error {
 	// Configure request JSON Body
-	message, err := schema.DeleteBodyFields(ctx, code, file, t)
+	message, err := schema.DeleteBodyFields(ctx, bodyParams, t)
 	if err != nil {
 		return fmt.Errorf("error deleting body fields: %w", err)
 	}
@@ -484,10 +485,10 @@ func (s *Session) SendRequestWithBodyWithoutFields(
 // modifying fields.
 func (s *Session) SendRequestWithBodyModifyingFields(
 	ctx context.Context,
-	uRL, method, endpoint, file, code, apiKey string, t *godog.Table,
+	uRL, method, endpoint string, bodyParams schema.Params, apiKey string, t *godog.Table,
 ) error {
 	// Configure request JSON Body
-	message, err := schema.ModifyBody(ctx, code, file, t)
+	message, err := schema.ModifyBody(ctx, bodyParams, t)
 	if err != nil {
 		return fmt.Errorf("error modifying body fields: %w", err)
 	}
@@ -574,12 +575,12 @@ func (s *Session) SendRequestWithPath(
 // SendRequestWithPathAndBody send request with path and JSON body.
 func (s *Session) SendRequestWithPathAndBody(
 	ctx context.Context,
-	uRL, method, endpoint, requestPath, file, code, apiKey string,
+	uRL, method, endpoint, requestPath string, bodyParams schema.Params, apiKey string,
 ) error {
 	// Build request
 	s.Request = model.NewRequest(method, uRL, endpoint, true)
 	// Configure request JSON Body
-	message, err := schema.GetParam(file, code, "body")
+	message, err := schema.GetParam(bodyParams, "body")
 	if err != nil {
 		return fmt.Errorf(parameterError, err)
 	}

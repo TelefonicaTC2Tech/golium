@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/TelefonicaTC2Tech/golium"
+	"github.com/TelefonicaTC2Tech/golium/steps/http/schema"
 	"github.com/cucumber/godog"
 )
 
@@ -90,14 +91,14 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 		session.ConfigureRequestBody(ctx, golium.ValueAsString(ctx, message.Content))
 	})
 	scenCtx.Step(`^the HTTP request body with the JSON "([^"]*)" from "([^"]*)" file$`, func(code, file string) error {
-		return session.ConfigureRequestBodyJSONFile(ctx, code, file)
+		return session.ConfigureRequestBodyJSONFile(ctx, schema.Params{File: file, Code: code})
 	})
 	scenCtx.Step(`^the HTTP request body with the JSON "([^"]*)" from "([^"]*)" file without$`, func(code, file string, t *godog.Table) error {
 		params, err := golium.ConvertTableColumnToArray(ctx, t)
 		if err != nil {
 			return fmt.Errorf("failed processing table to a map for the request body: %w", err)
 		}
-		return session.ConfigureRequestBodyJSONFileWithout(ctx, code, file, params)
+		return session.ConfigureRequestBodyJSONFileWithout(ctx, schema.Params{File: file, Code: code}, params)
 	})
 	scenCtx.Step(`^the HTTP request body with the URL encoded properties$`, func(t *godog.Table) error {
 		props, err := golium.ConvertTableToMultiMap(ctx, t)
@@ -139,10 +140,10 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 		return session.ValidateResponseBodyJSONSchema(ctx, golium.ValueAsString(ctx, schema))
 	})
 	scenCtx.Step(`^the HTTP response "([^"]*)" must match with the JSON "([^"]*)" from "([^"]*)" file$`, func(respDataLocation, code, file string) error {
-		return session.ValidateResponseBodyJSONFile(ctx, file, code, respDataLocation)
+		return session.ValidateResponseBodyJSONFile(ctx, schema.Params{File: file, Code: code}, respDataLocation)
 	})
 	scenCtx.Step(`^the HTTP response "([^"]*)" must match with the JSON "([^"]*)" from "([^"]*)" file without$`, func(respDataLocation, code, file string, t *godog.Table) error {
-		return session.ValidateResponseBodyJSONFileWithout(ctx, file, code, respDataLocation, t)
+		return session.ValidateResponseBodyJSONFileWithout(ctx, schema.Params{File: file, Code: code}, respDataLocation, t)
 	})
 	scenCtx.Step(`^the HTTP response body must have the JSON properties$`, func(t *godog.Table) error {
 		props, err := golium.ConvertTableToMap(ctx, t)
@@ -206,34 +207,34 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 	scenCtx.Step(`^I send a "(HEAD|GET|POST|PUT|PATCH|DELETE)" request to "([^"]*)" with a JSON body that includes "([^"]*)"$`,
 		func(method, endpoint, code string) error {
 			apiKey := golium.ValueAsString(ctx, fmt.Sprintf(confAPIKeyEndpoint, endpoint))
-			return session.SendRequestWithBody(ctx, uRL, method, golium.ValueAsString(ctx, fmt.Sprintf(confAPIEndpoint, endpoint)), endpoint, code, apiKey)
+			return session.SendRequestWithBody(ctx, uRL, method, golium.ValueAsString(ctx, fmt.Sprintf(confAPIEndpoint, endpoint)), schema.Params{File: endpoint, Code: code}, apiKey)
 		})
 	scenCtx.Step(`^I send a "(HEAD|GET|POST|PUT|PATCH|DELETE)" request to "([^"]*)" with path "([^"]*)" with a JSON body that includes "([^"]*)"$`,
 		func(method, endpoint, path, code string) error {
 			apiKey := golium.ValueAsString(ctx, fmt.Sprintf(confAPIKeyEndpoint, endpoint))
-			return session.SendRequestWithPathAndBody(ctx, uRL, method, golium.ValueAsString(ctx, fmt.Sprintf(confAPIEndpoint, endpoint)), path, endpoint, code, apiKey)
+			return session.SendRequestWithPathAndBody(ctx, uRL, method, golium.ValueAsString(ctx, fmt.Sprintf(confAPIEndpoint, endpoint)), path, schema.Params{File: endpoint, Code: code}, apiKey)
 		})
 	scenCtx.Step(`^I send a "(HEAD|GET|POST|PUT|PATCH|DELETE)" request to "([^"]*)" with a JSON body that includes "([^"]*)" without$`,
 		func(method, endpoint, code string, t *godog.Table) error {
 			apiKey := golium.ValueAsString(ctx, fmt.Sprintf(confAPIKeyEndpoint, endpoint))
-			return session.SendRequestWithBodyWithoutFields(ctx, uRL, method, golium.ValueAsString(ctx, fmt.Sprintf(confAPIEndpoint, endpoint)), endpoint, code, apiKey, t)
+			return session.SendRequestWithBodyWithoutFields(ctx, uRL, method, golium.ValueAsString(ctx, fmt.Sprintf(confAPIEndpoint, endpoint)), schema.Params{File: endpoint, Code: code}, apiKey, t)
 		})
 	scenCtx.Step(`^I send a "(HEAD|GET|POST|PUT|PATCH|DELETE)" request to "([^"]*)" with a JSON body that includes "([^"]*)" modifying$`,
 		func(method, endpoint, code string, t *godog.Table) error {
 			apiKey := golium.ValueAsString(ctx, fmt.Sprintf(confAPIKeyEndpoint, endpoint))
-			return session.SendRequestWithBodyModifyingFields(ctx, uRL, method, golium.ValueAsString(ctx, fmt.Sprintf(confAPIEndpoint, endpoint)), endpoint, code, apiKey, t)
+			return session.SendRequestWithBodyModifyingFields(ctx, uRL, method, golium.ValueAsString(ctx, fmt.Sprintf(confAPIEndpoint, endpoint)), schema.Params{File: endpoint, Code: code}, apiKey, t)
 		})
 	scenCtx.Step(`^the "([^"]*)" response message should match with "([^"]*)" JSON message$`,
 		func(response, code string) error {
-			return session.ValidateResponseBodyJSONFile(ctx, response, code, "")
+			return session.ValidateResponseBodyJSONFile(ctx, schema.Params{File: response, Code: code}, "")
 		})
 	scenCtx.Step(`^the "([^"]*)" response message should match with "([^"]*)" JSON message without$`,
 		func(response, code string, t *godog.Table) error {
-			return session.ValidateResponseBodyJSONFileWithout(ctx, response, code, "", t)
+			return session.ValidateResponseBodyJSONFileWithout(ctx, schema.Params{File: response, Code: code}, "", t)
 		})
 	scenCtx.Step(`^the "([^"]*)" response message should match with "([^"]*)" JSON message modifying$`,
 		func(response, code string, t *godog.Table) error {
-			return session.ValidateResponseBodyJSONFileModifying(ctx, response, code, t)
+			return session.ValidateResponseBodyJSONFileModifying(ctx, schema.Params{File: response, Code: code}, t)
 		})
 	return ctx
 }
