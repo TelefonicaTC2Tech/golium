@@ -6,6 +6,10 @@ urlSelfSigned: https://self-signed.badssl.com
 
 url: https://jsonplaceholder.typicode.com/
 
+# Logger
+log:
+  encode: true
+
 #API KEYS
 invalid-key: "invalid_apiKey"
 
