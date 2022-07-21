@@ -136,91 +136,87 @@ func TestModifyResponse(t *testing.T) {
 	os.WriteFile("./schemas/posts.json", []byte(validateModifyingResponseFile), os.ModePerm)
 	os.WriteFile("./schemas/users.json", []byte(validateModifyingResponseFile), os.ModePerm)
 	defer os.RemoveAll(schemasPath)
-	type args struct {
-		code string
-		file string
-		t    *godog.Table
-	}
 	tests := []struct {
 		name    string
-		args    args
+		params  Params
+		t       *godog.Table
 		wantErr bool
 	}{
 		{
 			name: "Error getting response from file",
-			args: args{
-				code: "example3",
-				file: "posts",
-				t: golium.NewTable([][]string{
-					{"parameter", "value"},
-					{"title", "foo1"},
-				}),
+			params: Params{
+				Code: "example3",
+				File: "posts",
 			},
+			t: golium.NewTable([][]string{
+				{"parameter", "value"},
+				{"title", "foo1"},
+			}),
 			wantErr: true,
 		},
 		{
 			name: "Error converting table",
-			args: args{
-				code: "example1",
-				file: "posts",
-				t: golium.NewTable([][]string{
-					{"title", "foo1"},
-				}),
+			params: Params{
+				Code: "example1",
+				File: "posts",
 			},
+			t: golium.NewTable([][]string{
+				{"title", "foo1"},
+			}),
 			wantErr: true,
 		},
 		{
 			name: "Error not present nested key",
-			args: args{
-				code: "example2",
-				file: "posts",
-				t: golium.NewTable([][]string{
-					{"parameter", "value"},
-					{"not-present.name", "Romaguera-Crona"},
-				}),
+			params: Params{
+				Code: "example2",
+				File: "posts",
 			},
+			t: golium.NewTable([][]string{
+				{"parameter", "value"},
+				{"not-present.name", "Romaguera-Crona"},
+			}),
 			wantErr: true,
 		},
 		{
 			name: "Error not present simple key",
-			args: args{
-				code: "example1",
-				file: "posts",
-				t: golium.NewTable([][]string{
-					{"parameter", "value"},
-					{"wrong_key", "true"},
-				}),
+			params: Params{
+				Code: "example1",
+				File: "posts",
 			},
+			t: golium.NewTable([][]string{
+				{"parameter", "value"},
+				{"wrong_key", "true"},
+			}),
 			wantErr: true,
 		},
 		{
 			name: "Valid nested key",
-			args: args{
-				code: "example2",
-				file: "users",
-				t: golium.NewTable([][]string{
-					{"parameter", "value"},
-					{"company.name", "Romaguera-Crona"},
-				}),
+			params: Params{
+				Code: "example2",
+				File: "users",
 			},
+			t: golium.NewTable([][]string{
+				{"parameter", "value"},
+				{"company.name", "Romaguera-Crona"},
+			}),
 			wantErr: false,
 		},
 		{
 			name: "Valid simple key",
-			args: args{
-				code: "example1",
-				file: "posts",
-				t: golium.NewTable([][]string{
-					{"parameter", "value"},
-					{"title", "foo1"},
-				}),
+			params: Params{
+				Code: "example1",
+				File: "posts",
 			},
+			t: golium.NewTable([][]string{
+				{"parameter", "value"},
+				{"title", "foo1"},
+			}),
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := ModifyResponse(context.Background(), tt.args.code, tt.args.file, tt.args.t)
+			_, err := ModifyResponse(context.Background(), tt.params, tt.t)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ModifyResponse() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -249,41 +245,49 @@ func TestGetParam(t *testing.T) {
 
 	tcs := []struct {
 		name          string
-		fileName      string
-		code          string
-		param         string
+		params        Params
+		field         string
 		expectedErr   string
 		expectedValue interface{}
 	}{
 		{
-			name:          "Should return selected value from JSON file",
-			fileName:      "http",
-			code:          "example1",
-			param:         "response",
+			name: "Should return selected value from JSON file",
+			params: Params{
+				File: "http",
+				Code: "example1",
+			},
+
+			field:         "response",
 			expectedErr:   "",
 			expectedValue: expectedParam,
 		},
 		{
-			name:          "Should return a error loading file",
-			fileName:      "httpNotExist",
-			code:          "example1",
-			param:         "response",
+			name: "Should return a error loading file",
+			params: Params{
+				File: "httpNotExist",
+				Code: "example1",
+			},
+			field:         "response",
 			expectedErr:   "error loading file at httpNotExist due to error:",
 			expectedValue: nil,
 		},
 		{
-			name:          "Should return a error unmarsharlling JSON file",
-			fileName:      "httpBadFormat",
-			code:          "example1",
-			param:         "response",
+			name: "Should return a error unmarsharlling JSON file",
+			params: Params{
+				File: "httpBadFormat",
+				Code: "example1",
+			},
+			field:         "response",
 			expectedErr:   "error unmarsharlling JSON file at httpBadFormat due to error:",
 			expectedValue: nil,
 		},
 		{
-			name:     "Should return a error param value not found",
-			fileName: "http",
-			code:     "non-existing-code",
-			param:    "response",
+			name: "Should return a error param value not found",
+			params: Params{
+				File: "http",
+				Code: "non-existing-code",
+			},
+			field: "response",
 			expectedErr: fmt.Sprintf("param value: 'response' not found in '%v' due to error:",
 				dataStruct),
 			expectedValue: nil,
@@ -292,13 +296,13 @@ func TestGetParam(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			resultParam, err := GetParam(tc.fileName, tc.code, tc.param)
+			resultParam, err := GetParam(tc.params, tc.field)
 			if err != nil {
 				assert.Containsf(t, err.Error(), tc.expectedErr, "error message %s", "formatted")
 			}
 			if !JSONEquals(resultParam, tc.expectedValue) {
 				t.Errorf("value %v for param %s and code %s is not expected: %v",
-					resultParam, tc.param, tc.code, tc.expectedValue)
+					resultParam, tc.field, tc.params.Code, tc.expectedValue)
 			}
 		})
 	}
@@ -544,35 +548,31 @@ func TestGetBody(t *testing.T) {
 	os.MkdirAll(schemasPath, os.ModePerm)
 	os.WriteFile("./schemas/health.json", []byte(JSONhttpFileValues), os.ModePerm)
 	defer os.RemoveAll(schemasPath)
-	type args struct {
-		code string
-		file string
-	}
 	tests := []struct {
 		name    string
-		args    args
+		args    Params
 		wantErr bool
 	}{
 		{
 			name: "Error getting from file",
-			args: args{
-				code: "not_valid_code",
-				file: fileName,
+			args: Params{
+				Code: "not_valid_code",
+				File: fileName,
 			},
 			wantErr: true,
 		},
 		{
 			name: "Happy Path",
-			args: args{
-				code: "example1",
-				file: fileName,
+			args: Params{
+				Code: "example1",
+				File: fileName,
 			},
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := GetBody(context.Background(), tt.args.code, tt.args.file)
+			_, err := GetBody(tt.args)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetBody() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -586,9 +586,8 @@ func TestModifyBody(t *testing.T) {
 	os.WriteFile("./schemas/health.json", []byte(JSONhttpFileValues), os.ModePerm)
 	defer os.RemoveAll(schemasPath)
 	type args struct {
-		code string
-		file string
-		t    *godog.Table
+		params Params
+		t      *godog.Table
 	}
 	tests := []struct {
 		name    string
@@ -598,8 +597,10 @@ func TestModifyBody(t *testing.T) {
 		{
 			name: "Error converting table",
 			args: args{
-				code: "not_valid_code",
-				file: fileName,
+				params: Params{
+					Code: "not_valid_code",
+					File: fileName,
+				},
 				t: golium.NewTable([][]string{
 					{"parameter"},
 				}),
@@ -609,8 +610,10 @@ func TestModifyBody(t *testing.T) {
 		{
 			name: "Error getting from file",
 			args: args{
-				code: "not_valid_code",
-				file: fileName,
+				params: Params{
+					Code: "not_valid_code",
+					File: fileName,
+				},
 				t: golium.NewTable([][]string{
 					{"parameter", "value"},
 					{"boolean", "true"},
@@ -621,8 +624,10 @@ func TestModifyBody(t *testing.T) {
 		{
 			name: "Error with wrong body param",
 			args: args{
-				code: "example1",
-				file: fileName,
+				params: Params{
+					Code: "example1",
+					File: fileName,
+				},
 				t: golium.NewTable([][]string{
 					{"parameter", "value"},
 					{"wrong_key", "true"},
@@ -633,8 +638,10 @@ func TestModifyBody(t *testing.T) {
 		{
 			name: "Happy Path",
 			args: args{
-				code: "example1",
-				file: fileName,
+				params: Params{
+					Code: "example1",
+					File: fileName,
+				},
 				t: golium.NewTable([][]string{
 					{"parameter", "value"},
 					{"boolean", "true"},
@@ -645,7 +652,7 @@ func TestModifyBody(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := ModifyBody(context.Background(), tt.args.code, tt.args.file, tt.args.t)
+			_, err := ModifyBody(context.Background(), tt.args.params, tt.args.t)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ModifyBody() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -659,9 +666,8 @@ func TestDeleteBodyFields(t *testing.T) {
 	os.WriteFile("./schemas/health.json", []byte(JSONhttpFileValues), os.ModePerm)
 	defer os.RemoveAll(schemasPath)
 	type args struct {
-		code string
-		file string
-		t    *godog.Table
+		params Params
+		t      *godog.Table
 	}
 	tests := []struct {
 		name    string
@@ -671,8 +677,10 @@ func TestDeleteBodyFields(t *testing.T) {
 		{
 			name: "Error converting table",
 			args: args{
-				code: "not_valid_code",
-				file: fileName,
+				params: Params{
+					Code: "not_valid_code",
+					File: fileName,
+				},
 				t: golium.NewTable([][]string{
 					{"parameter"},
 				}),
@@ -682,8 +690,10 @@ func TestDeleteBodyFields(t *testing.T) {
 		{
 			name: "Error getting from file",
 			args: args{
-				code: "not_valid_code",
-				file: fileName,
+				params: Params{
+					Code: "not_valid_code",
+					File: fileName,
+				},
 				t: golium.NewTable([][]string{
 					{"parameter"},
 					{"boolean"},
@@ -694,8 +704,10 @@ func TestDeleteBodyFields(t *testing.T) {
 		{
 			name: "Happy Path",
 			args: args{
-				code: "example1",
-				file: fileName,
+				params: Params{
+					Code: "example1",
+					File: fileName,
+				},
 				t: golium.NewTable([][]string{
 					{"parameter"},
 					{"boolean"},
@@ -706,7 +718,7 @@ func TestDeleteBodyFields(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := DeleteBodyFields(context.Background(), tt.args.code, tt.args.file, tt.args.t)
+			_, err := DeleteBodyFields(context.Background(), tt.args.params, tt.args.t)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("DeleteBodyFields() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -721,9 +733,8 @@ func TestDeleteResponseFields(t *testing.T) {
 	defer os.RemoveAll("./schemas/")
 
 	type args struct {
-		code string
-		file string
-		t    *godog.Table
+		params Params
+		t      *godog.Table
 	}
 	tests := []struct {
 		name    string
@@ -733,8 +744,10 @@ func TestDeleteResponseFields(t *testing.T) {
 		{
 			name: "Error getting response",
 			args: args{
-				code: "wrong_code",
-				file: fileName,
+				params: Params{
+					Code: "wrong_code",
+					File: fileName,
+				},
 				t: golium.NewTable([][]string{
 					{"parameter"},
 					{"boolean"},
@@ -745,8 +758,10 @@ func TestDeleteResponseFields(t *testing.T) {
 		{
 			name: "Error converting table",
 			args: args{
-				code: "example1",
-				file: fileName,
+				params: Params{
+					Code: "example1",
+					File: fileName,
+				},
 				t: golium.NewTable([][]string{
 					{"boolean"},
 				}),
@@ -756,8 +771,10 @@ func TestDeleteResponseFields(t *testing.T) {
 		{
 			name: "Happy Path",
 			args: args{
-				code: "example1",
-				file: fileName,
+				params: Params{
+					Code: "example1",
+					File: fileName,
+				},
 				t: golium.NewTable([][]string{
 					{"parameter"},
 					{"boolean"},
@@ -768,7 +785,7 @@ func TestDeleteResponseFields(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := DeleteResponseFields(context.Background(), tt.args.code, tt.args.file, tt.args.t)
+			_, err := DeleteResponseFields(context.Background(), tt.args.params, tt.args.t)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("DeleteResponseFields() error = %v, wantErr %v", err, tt.wantErr)
 				return

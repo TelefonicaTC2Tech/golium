@@ -17,13 +17,18 @@ const (
 	parameterError = "error getting parameter from json: %w"
 )
 
-// DeleteResponseFields Returns response from schema file without some paramas.
+type Params struct {
+	File string
+	Code string
+}
+
+// DeleteResponseFields Returns response from schema file without some params.
 func DeleteResponseFields(
 	ctx context.Context,
-	code, file string,
+	bodyParams Params,
 	t *godog.Table,
 ) (interface{}, error) {
-	jsonResponseBody, err := GetParam(file, code, "response")
+	jsonResponseBody, err := GetParam(bodyParams, "response")
 	if err != nil {
 		return nil, fmt.Errorf(parameterError, err)
 	}
@@ -41,10 +46,10 @@ func DeleteResponseFields(
 // ModifyResponse Returns modified response from schema file
 func ModifyResponse(
 	ctx context.Context,
-	code, file string,
+	bodyParams Params,
 	t *godog.Table,
 ) (interface{}, error) {
-	jsonResponseBody, err := GetParam(file, code, "response")
+	jsonResponseBody, err := GetParam(bodyParams, "response")
 	if err != nil {
 		return nil, fmt.Errorf("error getting parameter from json: %w", err)
 	}
@@ -73,10 +78,9 @@ func ModifyResponse(
 
 // GetBody Returns body from schema file with code.
 func GetBody(
-	ctx context.Context,
-	code, file string,
+	bodyParams Params,
 ) (interface{}, error) {
-	message, err := GetParam(file, code, "body")
+	message, err := GetParam(bodyParams, "body")
 	if err != nil {
 		return nil, fmt.Errorf(parameterError, err)
 	}
@@ -86,14 +90,14 @@ func GetBody(
 // ModifyBody Returns body from schema file with code modifying values.
 func ModifyBody(
 	ctx context.Context,
-	code, file string,
+	bodyParams Params,
 	t *godog.Table,
 ) (interface{}, error) {
 	params, err := golium.ConvertTableToMap(ctx, t)
 	if err != nil {
 		return nil, err
 	}
-	message, err := GetParam(file, code, "body")
+	message, err := GetParam(bodyParams, "body")
 	if err != nil {
 		return nil, fmt.Errorf(parameterError, err)
 	}
@@ -111,14 +115,14 @@ func ModifyBody(
 // DeleteBodyFields Returns body from schema file with code deleting fields.
 func DeleteBodyFields(
 	ctx context.Context,
-	code, file string,
+	bodyParams Params,
 	t *godog.Table,
 ) (interface{}, error) {
 	params, err := golium.ConvertTableColumnToArray(ctx, t)
 	if err != nil {
 		return nil, err
 	}
-	message, err := GetParam(file, code, "body")
+	message, err := GetParam(bodyParams, "body")
 	messageMap, _ := message.(map[string]interface{})
 	for _, removeParams := range params {
 		delete(messageMap, removeParams)
@@ -153,18 +157,19 @@ func processNestedParams(
 
 // GetParam
 // Retrieve values from JSON structure file assets
-func GetParam(file, code, param string) (interface{}, error) {
-	data, err := LoadData(file)
+func GetParam(bodyParams Params, param string) (interface{}, error) {
+	data, err := LoadData(bodyParams.File)
 	if err != nil {
-		return nil, fmt.Errorf("error loading file at %s due to error: %w", file, err)
+		return nil, fmt.Errorf("error loading file at %s due to error: %w", bodyParams.File, err)
 	}
 
 	dataStruct, err := UnmarshalData(data)
 	if err != nil {
-		return nil, fmt.Errorf("error unmarsharlling JSON file at %s due to error: %w", file, err)
+		return nil, fmt.Errorf(
+			"error unmarsharlling JSON file at %s due to error: %w", bodyParams.File, err)
 	}
 
-	paramValue, err := FindValueByCode(dataStruct, code, param)
+	paramValue, err := FindValueByCode(dataStruct, bodyParams.Code, param)
 	if err != nil {
 		return nil, fmt.Errorf("param value: '%s' not found in '%v' due to error: %w",
 			param, dataStruct, err)
