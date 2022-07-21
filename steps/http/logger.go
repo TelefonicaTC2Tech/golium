@@ -24,6 +24,11 @@ import (
 
 var httpLog *Logger
 
+var AuthHeaders = map[string]string{
+	"X-API-KEY":     "apikey",
+	"Authorization": "jwt",
+}
+
 // Logger logs in a configurable file.
 type Logger struct {
 	Log *golium.Logger
@@ -74,6 +79,9 @@ func getHeaders(headers map[string][]string) string {
 	var fmtHeaders []string
 	for key, values := range headers {
 		for _, value := range values {
+			if _, ok := AuthHeaders[key]; ok {
+				value = httpLog.Log.Obfuscate(value)
+			}
 			fmtHeaders = append(fmtHeaders, fmt.Sprintf("%s: %s", key, value))
 		}
 	}

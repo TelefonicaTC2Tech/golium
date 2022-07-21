@@ -27,5 +27,6 @@ var DefaultConfig = Config{
 	Log: LogConfig{
 		Directory: "./logs",
 		Level:     "INFO",
+		Encode:    false,
 	},
 }

@@ -33,4 +33,5 @@ type DirConfig struct {
 type LogConfig struct {
 	Directory string `yaml:"directory" envconfig:"LOG_DIRECTORY"`
 	Level     string `yaml:"level" envconfig:"LOG_LEVEL"`
+	Encode    bool   `yaml:"encode" envconfig:"LOG_ENCODE"`
 }
