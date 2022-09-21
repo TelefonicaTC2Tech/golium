@@ -100,7 +100,7 @@ Feature: HTTP Mock server
         "permanent": false,
         "request": {
           "method": "DELETE",
-          "path": "/test-me-path/<*>"
+          "path": "/test/<*>"
         },
         "response": {
           "status": 204,
@@ -108,7 +108,7 @@ Feature: HTTP Mock server
         }
       }
       """
-    Given the HTTP endpoint "[CONF:httpMockUrl]/test-me-path/a0b1c2"
+    Given the HTTP endpoint "[CONF:httpMockUrl]/test/a0b1c2"
      When I send a HTTP "DELETE" request
      Then the HTTP status code must be "204"
       And the HTTP response body must be empty
