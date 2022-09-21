@@ -45,6 +45,53 @@ Feature: HTTP Mock server
       And the HTTP response body must be empty
 
   @mockhttp
+  Scenario: Mock permanent request with multiending path
+    Given I mock the HTTP request at "[CONF:httpMockUrl]" with the JSON
+      """
+      {
+        "permanent": true,
+        "request": {
+          "method": "DELETE",
+          "path": "/test/<*>"
+        },
+        "response": {
+          "status": 204,
+          "body": ""
+        }
+      }
+      """
+    Given the HTTP endpoint "[CONF:httpMockUrl]/test/a0b1c2"
+     When I send a HTTP "DELETE" request
+     Then the HTTP status code must be "204"
+      And the HTTP response body must be empty
+     When I send a HTTP "DELETE" request
+     Then the HTTP status code must be "204"
+      And the HTTP response body must be empty
+
+  @mockhttp
+  Scenario: Mock one-shot request with multiending path
+    Given I mock the HTTP request at "[CONF:httpMockUrl]" with the JSON
+      """
+      {
+        "permanent": false,
+        "request": {
+          "method": "DELETE",
+          "path": "/test/<*>"
+        },
+        "response": {
+          "status": 204,
+          "body": ""
+        }
+      }
+      """
+    Given the HTTP endpoint "[CONF:httpMockUrl]/test/a0b1c2"
+     When I send a HTTP "DELETE" request
+     Then the HTTP status code must be "204"
+      And the HTTP response body must be empty
+     When I send a HTTP "DELETE" request
+     Then the HTTP status code must be "404"
+
+  @mockhttp
   Scenario: Mock one-shot request
     Given I store "[UUID]" in context "id"
       And I mock the HTTP request at "[CONF:httpMockUrl]" with the JSON
