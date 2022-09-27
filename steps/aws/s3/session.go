@@ -71,6 +71,8 @@ func (s *Session) NewS3Session(ctx context.Context) error {
 				return fmt.Errorf("error setting aws config: %v", err)
 			}
 		}
+	} else {
+		s3Config, err = awsConfig.LoadDefaultConfig(ctx)
 	}
 
 	s.Client = s.S3ServiceClient.New(s3Config)
