@@ -61,7 +61,11 @@ func TestAddAuthorization(t *testing.T) {
 				require.Equal(t, ok, false)
 			}
 			if tt.jwtValue != "" {
-				require.Equal(t, r.Headers["Authorization"], []string{fmt.Sprintf("Bearer %s", tt.jwtValue)})
+				require.Equal(
+					t,
+					r.Headers["Authorization"],
+					[]string{fmt.Sprintf("Bearer %s", tt.jwtValue)},
+				)
 			} else {
 				_, ok := r.Headers["Authorization"]
 				require.Equal(t, ok, false)
@@ -91,7 +95,7 @@ func TestAddJSONHeaders(t *testing.T) {
 				Headers: tt.headers,
 			}
 			r.AddJSONHeaders()
-			require.Equal(t, r.Headers["Content-Type"], []string{"application/json"})
+			require.Equal(t, r.Headers[HeaderContentTypeKey], []string{JSONContentType})
 		})
 	}
 }
@@ -144,7 +148,7 @@ func TestRequest_SetContentType(t *testing.T) {
 	}{
 		{
 			name:        "Set content type",
-			contentType: "application/json",
+			contentType: JSONContentType,
 		},
 	}
 	for _, tt := range tests {
