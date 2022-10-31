@@ -4,8 +4,6 @@ httpbin:
   url: https://httpbin.org
 urlSelfSigned: https://self-signed.badssl.com
 
-url: https://jsonplaceholder.typicode.com/
-
 #API KEYS
 invalid-key: "invalid_apiKey"
 
@@ -13,9 +11,14 @@ endpoints:
   posts:
     api-endpoint: posts/
     api-key: "valid_apiKey"
+    files-path: "./test_data"    
   users:
     api-endpoint: users/
-    api-key: "valid_apiKey" 
+    api-key: "valid_apiKey"
+  bin-empty:
+    api-endpoint: ""
+    api-key: ""
+    files-path: "./test_data" 
 
 # DNS settings
 dns: dns.google:53

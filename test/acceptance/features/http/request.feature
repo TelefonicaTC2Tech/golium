@@ -87,3 +87,17 @@ Feature: HTTP Request Senders
       | Authorization | Bearer 1234567890AEIOU |
     When I send a "POST" request to "posts" with a JSON body that includes "example1"
     Then the HTTP status code must be "201"
+
+  @http @request @multipart
+  Scenario: Send POST multipart request
+    Given I store "[CONF:httpbin.url]" in context "url"
+    When I send a "POST" multipart request to "bin-empty" with path "post" including "test.txt" file on "fileField" field and params
+      | field  | value  |
+      | field1 | value1 |
+      | field2 | value2 |
+    Then the HTTP status code must be "200"
+    And the HTTP response body must have the JSON properties
+      | param           | value                |
+      | form.field1     | value1               |
+      | form.field2     | value2               |
+      | files.fileField | This is a test file. |

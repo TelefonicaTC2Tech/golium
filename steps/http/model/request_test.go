@@ -1,6 +1,7 @@
 package model
 
 import (
+	"bytes"
 	"fmt"
 	"testing"
 
@@ -132,6 +133,72 @@ func TestNormalizeEndpoint(t *testing.T) {
 			if got := NormalizeEndpoint(tt.endpoint, tt.backslash); got != tt.want {
 				t.Errorf("normalizeEndpoint() = %v, want %v", got, tt.want)
 			}
+		})
+	}
+}
+
+func TestRequest_SetContentType(t *testing.T) {
+	tests := []struct {
+		name        string
+		contentType string
+	}{
+		{
+			name:        "Set content type",
+			contentType: "application/json",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := &Request{
+				Headers: make(map[string][]string),
+			}
+			r.SetContentType(tt.contentType)
+		})
+	}
+}
+
+func TestRequest_AddMultipartBody(t *testing.T) {
+	tests := []struct {
+		name  string
+		mBody bytes.Buffer
+	}{
+		{
+			name:  "Set multipart body",
+			mBody: bytes.Buffer{},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := &Request{}
+			r.AddMultipartBody(tt.mBody)
+		})
+	}
+}
+
+func TestRequest_GetBody(t *testing.T) {
+	tests := []struct {
+		name          string
+		requestBody   []byte
+		multipartBody *bytes.Buffer
+	}{
+		{
+			name:          "Request body path",
+			requestBody:   []byte{},
+			multipartBody: nil,
+		},
+		{
+			name:          "Multipart body path",
+			requestBody:   nil,
+			multipartBody: &bytes.Buffer{},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := &Request{
+				RequestBody:   tt.requestBody,
+				MultipartBody: tt.multipartBody,
+			}
+			r.GetBody()
 		})
 	}
 }

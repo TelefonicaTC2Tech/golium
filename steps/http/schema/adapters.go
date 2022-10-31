@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"mime/multipart"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -219,4 +221,47 @@ func UnmarshalData(data []byte) ([]map[string]interface{}, error) {
 // Check if unmarshalled JSON maps are equal
 func JSONEquals(expected, current interface{}) bool {
 	return reflect.DeepEqual(expected, current)
+}
+
+// WriteMultipartBodyFile Writes file on multipart body.
+func WriteMultipartBodyFile(w *multipart.Writer, fieldName, file string) error {
+	if fieldName == "" || file == "" {
+		return nil
+	}
+	var err error
+	var fw io.Writer
+	f, err := os.Open(file)
+	if err != nil {
+		return fmt.Errorf("error opening file: %w", err)
+	}
+	if fw, err = w.CreateFormFile(fieldName, f.Name()); err != nil {
+		return fmt.Errorf("error creating writer: %w", err)
+	}
+	if _, err = io.Copy(fw, f); err != nil {
+		return fmt.Errorf("error with io.Copy: %w", err)
+	}
+	return nil
+}
+
+// WriteMultipartBodyFields Writes all multipart body fields.
+func WriteMultipartBodyFields(
+	ctx context.Context,
+	w *multipart.Writer,
+	t *godog.Table,
+) error {
+	params, err := golium.ConvertTableToMap(ctx, t)
+	if err != nil {
+		return err
+	}
+	for field, value := range params {
+		writer, err := w.CreateFormField(field)
+		if err != nil {
+			return err
+		}
+		_, err = writer.Write([]byte(value.(string)))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

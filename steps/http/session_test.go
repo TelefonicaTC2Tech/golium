@@ -1322,3 +1322,105 @@ func TestValidateResponseBodyJSONFileModifying(t *testing.T) {
 		})
 	}
 }
+
+func TestSendRequestWithMultipartBody(t *testing.T) {
+	os.MkdirAll(logsPath, os.ModePerm)
+	defer os.RemoveAll(logsPath)
+	os.WriteFile("./test.txt", []byte("test file content"), os.ModePerm)
+	defer os.Remove("./test.txt")
+	type args struct {
+		uRL       string
+		method    string
+		path      string
+		fileField string
+		file      string
+		t         *godog.Table
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "Happy path",
+			args: args{
+				uRL:       "https://httpbin.org/",
+				method:    "POST",
+				fileField: "testFieldField",
+				file:      "./test.txt",
+				path:      "post",
+				t: golium.NewTable(
+					[][]string{
+						{"field", "value"},
+						{"fieldA", "valueA"},
+						{"fieldB", "valueB"},
+					},
+				),
+			},
+			wantErr: false,
+		},
+		{
+			name: "Wrong Write Multipart Body File",
+			args: args{
+				uRL:       "https://httpbin.org/",
+				fileField: "testFieldField",
+				file:      "./fake.txt",
+			},
+			wantErr: true,
+		},
+		{
+			name: "Error with Multipart body fields",
+			args: args{
+				uRL:       "https://httpbin.org/",
+				method:    "POST",
+				fileField: "testFieldField",
+				file:      "./test.txt",
+				t: golium.NewTable(
+					[][]string{
+						{"field", "value"},
+					},
+				),
+			},
+			wantErr: true,
+		},
+		{
+			name: "Error sending request",
+			args: args{
+				uRL:       "https://httpbin.org/",
+				method:    "ÑÑÑ",
+				fileField: "testFieldField",
+				file:      "./test.txt",
+				path:      "post",
+				t: golium.NewTable(
+					[][]string{
+						{"field", "value"},
+						{"fieldA", "valueA"},
+						{"fieldB", "valueB"},
+					},
+				),
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &Session{}
+			if err := s.SendRequestWithMultipartBody(
+				context.Background(),
+				RequestParams{
+					URL:      tt.args.uRL,
+					Method:   tt.args.method,
+					Endpoint: "",
+					APIKey:   "",
+					Table:    tt.args.t,
+				},
+				tt.args.fileField,
+				tt.args.file,
+			); (err != nil) != tt.wantErr {
+				t.Errorf(
+					"Session.SendRequestWithMultipartBody() error = %v, wantErr %v",
+					err, tt.wantErr)
+			}
+		})
+	}
+}

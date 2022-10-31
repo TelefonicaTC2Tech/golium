@@ -68,4 +68,5 @@ func InitializeScenario(ctx context.Context, scenarioCtx *godog.ScenarioContext)
 	for _, stepsInitializer := range stepsInitializers {
 		ctx = stepsInitializer.InitializeSteps(ctx, scenarioCtx)
 	}
+	golium.GetContext(ctx).Put("url", http.DefaultTestURL)
 }

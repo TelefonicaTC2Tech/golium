@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net"
 	"net/http"
 	"net/url"
@@ -45,6 +46,7 @@ const (
 	InvalidPath    = "[CONF:apiKey.invalid_apiKey]"
 	NilString      = "%nil%"
 	Slash          = "/"
+	DefaultTestURL = "https://jsonplaceholder.typicode.com/"
 )
 
 // Session contains the information of a HTTP session (request and response).
@@ -55,6 +57,16 @@ type Session struct {
 	InsecureSkipVerify bool
 	Timeout            time.Duration
 	Timedout           bool
+}
+
+type RequestParams struct {
+	Method     string
+	URL        string
+	Endpoint   string
+	Path       string
+	APIKey     string
+	BodyParams schema.Params
+	Table      *godog.Table
 }
 
 // URL composes the endpoint, the resource, and query parameters to build a URL.
@@ -201,8 +213,9 @@ func (s *Session) SendHTTPRequest(ctx context.Context, method string) error {
 	if err != nil {
 		return err
 	}
-	reqBodyReader := bytes.NewReader(s.Request.RequestBody)
-	req, err := http.NewRequest(method, u.String(), reqBodyReader)
+	reqBody := s.Request.GetBody()
+
+	req, err := http.NewRequest(method, u.String(), reqBody)
 	if err != nil {
 		return fmt.Errorf("failed creating the HTTP request with method '%s' and url '%s'. %w",
 			method, u, err)
@@ -609,6 +622,39 @@ func (s *Session) SendRequestWithoutBackslash(
 	s.Request.AddAuthorization(apiKey, "")
 	// Send HTTP Request
 	if err := s.SendHTTPRequest(ctx, method); err != nil {
+		return fmt.Errorf(withJSONError, err)
+	}
+	return nil
+}
+
+// SendRequestWithMultipartBody send request using multipart body.
+func (s *Session) SendRequestWithMultipartBody(
+	ctx context.Context,
+	reqParams RequestParams, fileField, file string,
+) error {
+	// Build request
+	s.Request = model.NewRequest(reqParams.Method, reqParams.URL, reqParams.Endpoint, true)
+	s.Request.AddPath(reqParams.Path)
+	// Add form fields
+	var b bytes.Buffer
+	w := multipart.NewWriter(&b)
+	// Add file field if not empty names
+	if err := schema.WriteMultipartBodyFile(w, fileField, file); err != nil {
+		return fmt.Errorf("error writing multipart body file: %w", err)
+	}
+	// Add form fields if they are included
+	if err := schema.WriteMultipartBodyFields(ctx, w, reqParams.Table); err != nil {
+		return fmt.Errorf("error writing multipart body fields: %w", err)
+	}
+	// Close multipart writer
+	w.Close()
+	s.Request.AddMultipartBody(b)
+	// Set multipart content type
+	s.Request.SetContentType(w.FormDataContentType())
+	// Configure authorization headers
+	s.Request.AddAuthorization(reqParams.APIKey, "")
+	// Send HTTP Request
+	if err := s.SendHTTPRequest(ctx, reqParams.Method); err != nil {
 		return fmt.Errorf(withJSONError, err)
 	}
 	return nil

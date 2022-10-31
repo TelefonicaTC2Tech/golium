@@ -1,8 +1,10 @@
 package model
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"reflect"
 	"strings"
 )
@@ -25,6 +27,8 @@ type Request struct {
 	Method string
 	// Request body as slice of bytes
 	RequestBody []byte
+	// Multipart body
+	MultipartBody *bytes.Buffer
 	// Username for basic authentication
 	Username string
 	// Password for basic authentication
@@ -43,6 +47,10 @@ func NewRequest(
 	return request
 }
 
+func (r *Request) SetContentType(contentType string) {
+	r.Headers["Content-Type"] = []string{contentType}
+}
+
 func (r *Request) AddBody(message interface{}) {
 	stringMessage := reflect.TypeOf(message)
 	if stringMessage.Kind() == reflect.String {
@@ -50,6 +58,21 @@ func (r *Request) AddBody(message interface{}) {
 		return
 	}
 	r.RequestBody, _ = json.Marshal(message)
+}
+
+func (r *Request) AddMultipartBody(mBody bytes.Buffer) {
+	r.MultipartBody = &mBody
+}
+
+func (r *Request) GetBody() io.Reader {
+	var readBody io.Reader
+	if r.RequestBody != nil {
+		readBody = bytes.NewReader(r.RequestBody)
+	}
+	if r.MultipartBody != nil {
+		readBody = r.MultipartBody
+	}
+	return readBody
 }
 
 func (r *Request) AddAuthorization(apiKey, jwtValue string) {
