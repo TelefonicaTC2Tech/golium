@@ -17,6 +17,7 @@ package http
 import (
 	"context"
 	"fmt"
+	"path"
 
 	"github.com/TelefonicaTC2Tech/golium"
 	"github.com/TelefonicaTC2Tech/golium/steps/http/schema"
@@ -25,8 +26,9 @@ import (
 
 const (
 	//nolint:gosec //No hardcoded keys
-	confAPIKeyEndpoint = "[CONF:endpoints.%s.api-key]"
-	confAPIEndpoint    = "[CONF:endpoints.%s.api-endpoint]"
+	confAPIKeyEndpoint       = "[CONF:endpoints.%s.api-key]"
+	confAPIEndpoint          = "[CONF:endpoints.%s.api-endpoint]"
+	confAPIFilesPathEndpoint = "[CONF:endpoints.%s.files-path]"
 )
 
 // Steps type is responsible to initialize the HTTP client steps in godog framework.
@@ -230,6 +232,41 @@ func (s Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioConte
 			apiKey := golium.ValueAsString(ctx, fmt.Sprintf(confAPIKeyEndpoint, endpoint))
 			uRL, _ := session.GetURL(ctx)
 			return session.SendRequestWithBodyModifyingFields(ctx, uRL, method, golium.ValueAsString(ctx, fmt.Sprintf(confAPIEndpoint, endpoint)), schema.Params{File: endpoint, Code: code}, apiKey, t)
+		})
+	scenCtx.Step(`^I send a "(HEAD|GET|POST|PUT|PATCH|DELETE)" multipart request to "([^"]*)" including "([^"]*)" file on "([^"]*)" field and params$`,
+		func(method, endpoint, fileName, fileField string, t *godog.Table) error {
+			apiKey := golium.ValueAsString(ctx, fmt.Sprintf(confAPIKeyEndpoint, endpoint))
+			filesPath := golium.ValueAsString(ctx, fmt.Sprintf(confAPIFilesPathEndpoint, endpoint))
+			uRL, _ := session.GetURL(ctx)
+			return session.SendRequestWithMultipartBody(
+				ctx,
+				RequestParams{
+					URL:      uRL,
+					Method:   method,
+					Endpoint: golium.ValueAsString(ctx, fmt.Sprintf(confAPIEndpoint, endpoint)),
+					APIKey:   apiKey,
+					Table:    t,
+				},
+				fileField, path.Join(filesPath, fileName),
+			)
+		})
+	scenCtx.Step(`^I send a "(HEAD|GET|POST|PUT|PATCH|DELETE)" multipart request to "([^"]*)" with path "([^"]*)" including "([^"]*)" file on "([^"]*)" field and params$`,
+		func(method, endpoint, endpointPath, fileName, fileField string, t *godog.Table) error {
+			apiKey := golium.ValueAsString(ctx, fmt.Sprintf(confAPIKeyEndpoint, endpoint))
+			filesPath := golium.ValueAsString(ctx, fmt.Sprintf(confAPIFilesPathEndpoint, endpoint))
+			uRL, _ := session.GetURL(ctx)
+			return session.SendRequestWithMultipartBody(
+				ctx,
+				RequestParams{
+					URL:      uRL,
+					Method:   method,
+					Endpoint: golium.ValueAsString(ctx, fmt.Sprintf(confAPIEndpoint, endpoint)),
+					Path:     endpointPath,
+					APIKey:   apiKey,
+					Table:    t,
+				},
+				fileField, path.Join(filesPath, fileName),
+			)
 		})
 	scenCtx.Step(`^the "([^"]*)" response message should match with "([^"]*)" JSON message$`,
 		func(response, code string) error {

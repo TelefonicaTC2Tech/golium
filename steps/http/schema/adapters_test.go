@@ -1,10 +1,12 @@
 package schema
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"mime/multipart"
 	"os"
 	"testing"
 
@@ -789,6 +791,95 @@ func TestDeleteResponseFields(t *testing.T) {
 			if (err != nil) != tt.wantErr {
 				t.Errorf("DeleteResponseFields() error = %v, wantErr %v", err, tt.wantErr)
 				return
+			}
+		})
+	}
+}
+
+func TestWriteMultipartBodyFile(t *testing.T) {
+	os.WriteFile("./test.txt", []byte("test file content"), os.ModePerm)
+	defer os.Remove("./test.txt")
+	tests := []struct {
+		name      string
+		w         *multipart.Writer
+		fieldName string
+		file      string
+		wantErr   bool
+	}{
+		{
+			name:      "Error opening file",
+			w:         nil,
+			fieldName: "field",
+			file:      "fakeFile",
+			wantErr:   true,
+		},
+		{
+			name:      "Empty fieldName",
+			w:         nil,
+			fieldName: "",
+			file:      "fakeFile",
+			wantErr:   false,
+		},
+		{
+			name:      "Empty file",
+			w:         nil,
+			fieldName: "fakeField",
+			file:      "",
+			wantErr:   false,
+		},
+		{
+			name:      "Happy path",
+			w:         multipart.NewWriter(&bytes.Buffer{}),
+			fieldName: "field",
+			file:      "./test.txt",
+			wantErr:   false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := WriteMultipartBodyFile(
+				tt.w, tt.fieldName, tt.file,
+			); (err != nil) != tt.wantErr {
+				t.Errorf("WriteMultipartBodyFile() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestWriteMultipartBodyFields(t *testing.T) {
+	tests := []struct {
+		name    string
+		w       *multipart.Writer
+		t       *godog.Table
+		wantErr bool
+	}{
+		{
+			name: "Convert table error",
+			t: golium.NewTable(
+				[][]string{
+					{"field", "value"},
+				},
+			),
+			wantErr: true,
+		},
+		{
+			name: "Happy path",
+			w:    multipart.NewWriter(&bytes.Buffer{}),
+			t: golium.NewTable(
+				[][]string{
+					{"field", "value"},
+					{"field1", "value1"},
+				},
+			),
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := WriteMultipartBodyFields(
+				context.Background(), tt.w, tt.t,
+			); (err != nil) != tt.wantErr {
+				t.Errorf("WriteMultipartBodyFields() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
