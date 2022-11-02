@@ -52,12 +52,13 @@ func (s *Session) NewS3Session(ctx context.Context) error {
 	logger := GetLogger()
 	logger.LogMessage("Creating a new S3 session")
 
+	var err error
 	s3Config := aws.Config{}
+	minio := false
 
 	// Check if minio and adapt s3 session properly
 	if golium.GetEnvironment().Get("minio") != nil {
-		if minio := golium.Value(ctx, "[CONF:minio]").(bool); minio {
-			var err error
+		if minio = golium.Value(ctx, "[CONF:minio]").(bool); minio {
 			s3Config, err = awsconfig.LoadDefaultConfig(ctx,
 				awsconfig.WithEndpointResolverWithOptions(aws.EndpointResolverWithOptionsFunc(
 					func(service, region string, options ...interface{}) (aws.Endpoint, error) {
@@ -67,10 +68,13 @@ func (s *Session) NewS3Session(ctx context.Context) error {
 						}, nil
 					})),
 			)
-			if err != nil {
-				return fmt.Errorf("error setting aws config: %v", err)
-			}
 		}
+	}
+	if !minio {
+		s3Config, err = awsconfig.LoadDefaultConfig(ctx)
+	}
+	if err != nil {
+		return fmt.Errorf("error setting aws config: %v", err)
 	}
 
 	s.Client = s.S3ServiceClient.New(s3Config)

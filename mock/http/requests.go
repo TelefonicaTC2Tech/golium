@@ -16,6 +16,8 @@ package http
 
 import (
 	"net/http"
+	"regexp"
+	"strings"
 	"sync"
 
 	"github.com/TelefonicaTC2Tech/golium"
@@ -69,7 +71,7 @@ func matchMockRequest(r *http.Request, mockRequest *MockRequest) bool {
 	if mr.Method != "" && r.Method != mr.Method {
 		return false
 	}
-	if mr.Path != "" && r.URL.Path != mr.Path {
+	if !matchPath(r, mockRequest) {
 		return false
 	}
 	if len(mr.Headers) != 0 {
@@ -81,6 +83,23 @@ func matchMockRequest(r *http.Request, mockRequest *MockRequest) bool {
 				}
 			}
 		}
+	}
+	return true
+}
+
+var defaultPattern = regexp.MustCompile(`<\*>`)
+
+func matchPath(r *http.Request, mockRequest *MockRequest) bool {
+	mr := mockRequest.Request
+	if mr.Path == "" {
+		return false
+	}
+	corePath := strings.TrimSuffix(mr.Path, "<*>")
+	if defaultPattern.FindString(mr.Path) != "" && strings.HasPrefix(r.URL.Path, corePath) {
+		return true
+	}
+	if mr.Path != r.URL.Path {
+		return false
 	}
 	return true
 }
