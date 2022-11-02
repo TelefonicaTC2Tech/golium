@@ -1,14 +1,18 @@
 package model
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"reflect"
 	"strings"
 )
 
 const (
-	Slash = "/"
+	Slash                = "/"
+	HeaderContentTypeKey = "Content-Type"
+	JSONContentType      = "application/json"
 )
 
 // Request information of the Session.
@@ -25,6 +29,8 @@ type Request struct {
 	Method string
 	// Request body as slice of bytes
 	RequestBody []byte
+	// Multipart body
+	MultipartBody *bytes.Buffer
 	// Username for basic authentication
 	Username string
 	// Password for basic authentication
@@ -37,10 +43,14 @@ func NewRequest(
 ) Request {
 	var request = Request{}
 	request.Headers = make(map[string][]string)
-	request.Headers["Content-Type"] = []string{"application/json"}
+	request.Headers[HeaderContentTypeKey] = []string{JSONContentType}
 	request.Method = method
 	request.Endpoint = url + NormalizeEndpoint(endpoint, backslash)
 	return request
+}
+
+func (r *Request) SetContentType(contentType string) {
+	r.Headers[HeaderContentTypeKey] = []string{contentType}
 }
 
 func (r *Request) AddBody(message interface{}) {
@@ -50,6 +60,21 @@ func (r *Request) AddBody(message interface{}) {
 		return
 	}
 	r.RequestBody, _ = json.Marshal(message)
+}
+
+func (r *Request) AddMultipartBody(mBody bytes.Buffer) {
+	r.MultipartBody = &mBody
+}
+
+func (r *Request) GetBody() io.Reader {
+	var readBody io.Reader
+	if r.RequestBody != nil {
+		readBody = bytes.NewReader(r.RequestBody)
+	}
+	if r.MultipartBody != nil {
+		readBody = r.MultipartBody
+	}
+	return readBody
 }
 
 func (r *Request) AddAuthorization(apiKey, jwtValue string) {
@@ -78,7 +103,7 @@ func (r *Request) AddJSONHeaders() {
 	if r.Headers == nil {
 		r.Headers = make(map[string][]string)
 	}
-	r.Headers["Content-Type"] = []string{"application/json"}
+	r.Headers[HeaderContentTypeKey] = []string{JSONContentType}
 }
 
 // normalizeEndpoint Normalize Endpoint considering ending backslash need.
