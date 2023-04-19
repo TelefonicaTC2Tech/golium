@@ -16,7 +16,9 @@ package common
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net"
 	"net/url"
 	"os/exec"
 	"strings"
@@ -67,14 +69,10 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 		return fmt.Errorf("mismatch of values: expected '%s', actual '%s'", e, v)
 	})
 	scenCtx.Step(`^I store my local ip in context "([^"]*)"$`, func(key string) error {
-		cmd := exec.Command("hostname", "-i")
-		stdoutStderr, err := cmd.CombinedOutput()
-		if err != nil {
-			return fmt.Errorf("error executing `%s` command %v", cmd, string(stdoutStderr))
-		}
-		ip := strings.Trim(string(stdoutStderr), " \r\n")
-		golium.GetContext(ctx).Put(golium.ValueAsString(ctx, key), ip)
-		return nil
+		return getLocalIP(ctx, key, IPv4)
+	})
+	scenCtx.Step(`^I store my local ip v6 in context "([^"]*)"$`, func(key string) error {
+		return getLocalIP(ctx, key, IPv6)
 	})
 	scenCtx.Step(`^I store domain "([^"]*)" ip in context "([^"]*)"$`, func(domainParam, key string) error {
 		if domainParam == "" {
@@ -146,5 +144,37 @@ func ParseQuery(ctx context.Context, query, ctxtPrefix string) error {
 			return fmt.Errorf("failed storing query param '%s': %w", key, err)
 		}
 	}
+	return nil
+}
+
+type IPVersion uint8
+
+const (
+	IPv4 IPVersion = iota
+	IPv6
+)
+
+func getLocalIP(ctx context.Context, key string, ipVersion IPVersion) error {
+	var network, address string
+	switch ipVersion {
+	case IPv4:
+		network, address = "udp", "198.51.100.0:80"
+	case IPv6:
+		network, address = "udp6", "[2001:db8::]:80"
+	default:
+		return fmt.Errorf("unkwown IP version %v", ipVersion)
+	}
+
+	con, err := net.Dial(network, address)
+	if err != nil {
+		return err
+	}
+	defer con.Close()
+
+	localAddress := con.LocalAddr().(*net.UDPAddr)
+	if localAddress == nil {
+		return errors.New("couldn't find local IP")
+	}
+	golium.GetContext(ctx).Put(golium.ValueAsString(ctx, key), localAddress.String())
 	return nil
 }
