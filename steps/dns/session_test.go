@@ -178,7 +178,7 @@ func TestSendDoTQuery(t *testing.T) {
 			qdomain:   "www.telefonica.net.",
 			recursive: true,
 			expectedErr: fmt.Errorf("cannot create an upstream: %w",
-				errors.New("unsupported URL scheme: http")),
+				errors.New("unsupported url scheme: http")),
 		},
 	}
 
