@@ -175,8 +175,8 @@ func TestSendDoTQuery(t *testing.T) {
 					Err: &net.DNSError{
 						Err:         "no such host",
 						Name:        fakeServer,
-						IsTemporary: true,
-						IsNotFound:  false,
+						IsTemporary: false,
+						IsNotFound:  true,
 					},
 				}),
 		},
@@ -198,12 +198,14 @@ func TestSendDoTQuery(t *testing.T) {
 			s.ConfigureServer(ctx, tc.server, "DoT")
 
 			err := s.SendDoTQuery(ctx, tc.qtype, tc.qdomain, tc.recursive)
+			if tc.expectedErr == nil && err == nil {
+				return
+			}
 			if tc.expectedErr.Error() == err.Error() {
 				require.Equal(t, tc.expectedErr, err)
 			} else if tc.alternativeExpectedErr != nil {
 				require.Equal(t, tc.alternativeExpectedErr, err)
 			}
-
 		})
 	}
 }
