@@ -55,7 +55,6 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
-
       minio:
         image: lazybit/minio
         ports:
@@ -67,7 +66,16 @@ jobs:
           - ${{ github.workspace }}/../data:/data
         options: --name=minio --health-cmd "curl http://localhost:9000/minio/health/live"
     
-
+      httpbin:
+        image: kennethreitz/httpbin
+        ports:
+          - 8888:80
+        options: >-
+            --health-cmd "curl http://localhost:8888"
+            --health-interval 10s
+            --health-timeout 5s
+            --health-retries 5
+    
     steps:
     - uses: actions/checkout@v3.5.2
 
