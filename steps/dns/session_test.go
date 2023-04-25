@@ -175,7 +175,7 @@ func TestSendDoTQuery(t *testing.T) {
 					Err: &net.DNSError{
 						Err:         "server misbehaving",
 						Name:        fakeServer,
-						Server:      "127.0.0.1:53",
+						Server:      "127.0.0.53:53",
 						IsTemporary: true,
 						IsNotFound:  false,
 					},
