@@ -174,6 +174,7 @@ func TestSendDoTQuery(t *testing.T) {
 				&net.OpError{Op: "dial", Net: "udp",
 					Err: &net.DNSError{
 						Err:         "server misbehaving",
+						Name:        fakeServer,
 						Server:      "127.0.0.1:53",
 						IsTemporary: true,
 						IsNotFound:  false,
