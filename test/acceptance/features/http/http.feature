@@ -18,13 +18,13 @@ Feature: HTTP client
           | Content-Type | application/json |
       And the HTTP response body must comply with the JSON schema "test-schema"
       And the HTTP response body must have the JSON properties
-          | param                 | value                                                |
-          | headers.Authorization | Bearer access-token                                  |
-          | headers.Content-Type  | [NULL]                                               |
+          | param                 | value                                                        |
+          | headers.Authorization | Bearer access-token                                          |
+          | headers.Content-Type  | [NULL]                                                       |
           | headers.Host          | [CONF:httpbin.host]                                          |
-          | args.exists           | true                                                 |
-          | args.sort             | name                                                 |
-          | method                | GET                                                  |
+          | args.exists           | true                                                         |
+          | args.sort             | name                                                         |
+          | method                | GET                                                          |
           | url                   | [CONF:httpbin.url]/anything/test-query?exists=true&sort=name |
 
   @http
@@ -50,19 +50,19 @@ Feature: HTTP client
           | Content-Type | application/json |
       And the HTTP response body must comply with the JSON schema "test-schema"
       And the HTTP response body must have the JSON properties
-          | param                 | value                         |
-          | headers.Authorization | Bearer access-token           |
-          | headers.Content-Type  | application/json              |
+          | param                 | value                                 |
+          | headers.Authorization | Bearer access-token                   |
+          | headers.Content-Type  | application/json                      |
           | headers.Host          | [CONF:httpbin.host]                   |
-          | method                | POST                          |
+          | method                | POST                                  |
           | url                   | [CONF:httpbin.url]/anything/test-json |
-          | json.name             | golium                        |
-          | json.active           | [TRUE]                        |
-          | json.inactive         | [FALSE]                       |
-          | json.empty            | [EMPTY]                       |
-          | json.null             | [NULL]                        |
-          | json.integer          | [NUMBER:1234]                 |
-          | json.float            | [NUMBER:-34.6]                |
+          | json.name             | golium                                |
+          | json.active           | [TRUE]                                |
+          | json.inactive         | [FALSE]                               |
+          | json.empty            | [EMPTY]                               |
+          | json.null             | [NULL]                                |
+          | json.integer          | [NUMBER:1234]                         |
+          | json.float            | [NUMBER:-34.6]                        |
 
   @http
   Scenario: Send a POST request with a x-www-form-urlencoded body using a table of properties
@@ -84,16 +84,16 @@ Feature: HTTP client
           | Content-Type | application/json |
       And the HTTP response body must comply with the JSON schema "test-schema"
       And the HTTP response body must have the JSON properties
-          | param                 | value                               |
-          | headers.Authorization | Bearer access-token                 |
-          | headers.Content-Type  | application/x-www-form-urlencoded   |
+          | param                 | value                                       |
+          | headers.Authorization | Bearer access-token                         |
+          | headers.Content-Type  | application/x-www-form-urlencoded           |
           | headers.Host          | [CONF:httpbin.host]                         |
-          | method                | POST                                |
+          | method                | POST                                        |
           | url                   | [CONF:httpbin.url]/anything/test-urlencoded |
-          | form.name             | test                                |
-          | form.surname          | golium                              |
-          | form.boolean          | true                                |
-          | form.float            | -34.6                               |
+          | form.name             | test                                        |
+          | form.surname          | golium                                      |
+          | form.boolean          | true                                        |
+          | form.float            | -34.6                                       |
 
   @http
   Scenario: Send a POST request defined by a json string using the context storage
