@@ -69,7 +69,7 @@ jobs:
       httpbin:
         image: kennethreitz/httpbin
         ports:
-          - 8888:80
+          - 80:80
         options: >-
             --health-cmd "curl http://localhost"
             --health-interval 10s

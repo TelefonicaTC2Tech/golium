@@ -18,7 +18,7 @@ services:
   httpbin:
     image: kennethreitz/httpbin
     ports:
-      - 8888:80
+      - 80:80
   golium:
     build:
       context: .
