@@ -1,5 +1,6 @@
 # HTTP settings
 httpbin:
+  localhost: localhost
   host: httpbin
   url: http://httpbin
 urlSelfSigned: https://self-signed.badssl.com

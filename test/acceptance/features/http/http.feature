@@ -21,7 +21,7 @@ Feature: HTTP client
           | param                 | value                                                        |
           | headers.Authorization | Bearer access-token                                          |
           | headers.Content-Type  | [NULL]                                                       |
-          | headers.Host          | [CONF:httpbin.host]                                          |
+          | headers.Host          | [CONF:httpbin.localhost]                                     |
           | args.exists           | true                                                         |
           | args.sort             | name                                                         |
           | method                | GET                                                          |
@@ -53,7 +53,7 @@ Feature: HTTP client
           | param                 | value                                 |
           | headers.Authorization | Bearer access-token                   |
           | headers.Content-Type  | application/json                      |
-          | headers.Host          | [CONF:httpbin.host]                   |
+          | headers.Host          | [CONF:httpbin.localhost]              |
           | method                | POST                                  |
           | url                   | [CONF:httpbin.url]/anything/test-json |
           | json.name             | golium                                |
@@ -87,7 +87,7 @@ Feature: HTTP client
           | param                 | value                                       |
           | headers.Authorization | Bearer access-token                         |
           | headers.Content-Type  | application/x-www-form-urlencoded           |
-          | headers.Host          | [CONF:httpbin.host]                         |
+          | headers.Host          | [CONF:httpbin.localhost]                    |
           | method                | POST                                        |
           | url                   | [CONF:httpbin.url]/anything/test-urlencoded |
           | form.name             | test                                        |
