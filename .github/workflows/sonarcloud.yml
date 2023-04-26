@@ -28,7 +28,7 @@ jobs:
       - name: Test
         run: go test -v -coverprofile=coverage.txt -covermode=atomic `go list ./... | grep -v test/acceptance` -json > test-report.out
       - name: Coverage to Codecov
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v3.1.3
 
       - name: Golangci increment
         if: "!contains(github.ref, 'master')"
