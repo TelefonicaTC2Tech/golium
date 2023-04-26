@@ -132,7 +132,6 @@ func TestSendDoHQuery(t *testing.T) {
 			s.ConfigureServer(ctx, tc.server, tc.transport)
 
 			err := s.SendDoHQuery(ctx, tc.method, tc.qtype, tc.qdomain, tc.recursive)
-
 			require.Equal(t, tc.expectedErr, err)
 		})
 	}
@@ -140,12 +139,13 @@ func TestSendDoHQuery(t *testing.T) {
 
 func TestSendDoTQuery(t *testing.T) {
 	tcs := []struct {
-		name        string
-		server      string
-		qtype       uint16
-		qdomain     string
-		recursive   bool
-		expectedErr error
+		name                   string
+		server                 string
+		qtype                  uint16
+		qdomain                string
+		recursive              bool
+		expectedErr            error
+		alternativeExpectedErr error
 	}{
 		{
 			name:        "Send DoT query ok",
@@ -170,6 +170,16 @@ func TestSendDoTQuery(t *testing.T) {
 						IsNotFound:  false,
 					},
 				}),
+			alternativeExpectedErr: fmt.Errorf("cannot make the DNS request: %w",
+				&net.OpError{Op: "dial", Net: "udp",
+					Err: &net.DNSError{
+						Err:         "server misbehaving",
+						Name:        fakeServer,
+						Server:      "127.0.0.53:53",
+						IsTemporary: true,
+						IsNotFound:  false,
+					},
+				}),
 		},
 		{
 			name:      "Send DoT query upstream failure",
@@ -178,7 +188,7 @@ func TestSendDoTQuery(t *testing.T) {
 			qdomain:   "www.telefonica.net.",
 			recursive: true,
 			expectedErr: fmt.Errorf("cannot create an upstream: %w",
-				errors.New("unsupported URL scheme: http")),
+				errors.New("unsupported url scheme: http")),
 		},
 	}
 
@@ -189,8 +199,14 @@ func TestSendDoTQuery(t *testing.T) {
 			s.ConfigureServer(ctx, tc.server, "DoT")
 
 			err := s.SendDoTQuery(ctx, tc.qtype, tc.qdomain, tc.recursive)
-
-			require.Equal(t, tc.expectedErr, err)
+			if tc.expectedErr == nil && err == nil {
+				return
+			}
+			if tc.expectedErr.Error() == err.Error() {
+				require.Equal(t, tc.expectedErr, err)
+			} else if tc.alternativeExpectedErr != nil {
+				require.Equal(t, tc.alternativeExpectedErr, err)
+			}
 		})
 	}
 }

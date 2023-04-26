@@ -15,6 +15,10 @@ services:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
     command: server /data
+  httpbin:
+    image: kennethreitz/httpbin
+    ports:
+      - 80:80
   golium:
     build:
       context: .
@@ -30,3 +34,4 @@ services:
       - rabbit
       - elasticsearch
       - minio
+      - httpbin

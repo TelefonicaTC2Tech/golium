@@ -1,7 +1,8 @@
 # HTTP settings
 httpbin:
-  host: httpbin.org
-  url: https://httpbin.org
+  localhost: localhost
+  host: httpbin
+  url: http://httpbin
 urlSelfSigned: https://self-signed.badssl.com
 
 #API KEYS
