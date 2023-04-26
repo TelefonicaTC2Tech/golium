@@ -13,8 +13,8 @@ cloud.google.com/go/firestore v1.1.0/go.mod h1:ulACoGHTpvq5r8rxGJ4ddJZBZqakUQqCl
 cloud.google.com/go/pubsub v1.0.1/go.mod h1:R0Gpsv3s54REJCy4fxDixWD93lHJMoZTyQ2kNxGRt3I=
 cloud.google.com/go/storage v1.0.0/go.mod h1:IhtSnM/ZTZV8YYJWCY8RULGVqBDmpoyjwiyrjsg+URw=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
-github.com/AdguardTeam/dnsproxy v0.48.0 h1:sGViYy2pV0cEp2zCsxPjFd9rlgD0+yELpIeLkBxHAoI=
-github.com/AdguardTeam/dnsproxy v0.48.0/go.mod h1:9OHoeaVod+moWwrLjHF95RQnFWGi/6B1tfKsxWc/yGE=
+github.com/AdguardTeam/dnsproxy v0.49.1 h1:JpStBK05uCgA3ldleaNLRmIwE9V7vRg7/kVJQSdnQYg=
+github.com/AdguardTeam/dnsproxy v0.49.1/go.mod h1:Y7g7jRTd/u7+KJ/QvnGI2PCE8vnisp6EsW47/Sz0DZw=
 github.com/AdguardTeam/golibs v0.13.0 h1:hVBeNQXT/BgcjKz/4FMpFGvEYqXiXDJG+b5XpGCUOLk=
 github.com/AdguardTeam/golibs v0.13.0/go.mod h1:rIglKDHdLvFT1UbhumBLHO9S4cvWS9MEyT1njommI/Y=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=

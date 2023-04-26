@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	bou.ke/monkey v1.0.2
-	github.com/AdguardTeam/dnsproxy v0.48.0
+	github.com/AdguardTeam/dnsproxy v0.49.1
 	github.com/aws/aws-sdk-go-v2 v1.16.6
 	github.com/aws/aws-sdk-go-v2/config v1.15.12
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.11.17
