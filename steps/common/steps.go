@@ -175,6 +175,6 @@ func getLocalIP(ctx context.Context, key string, ipVersion IPVersion) error {
 	if localAddress == nil {
 		return errors.New("couldn't find local IP")
 	}
-	golium.GetContext(ctx).Put(golium.ValueAsString(ctx, key), localAddress.String())
+	golium.GetContext(ctx).Put(golium.ValueAsString(ctx, key), localAddress.IP.String())
 	return nil
 }
