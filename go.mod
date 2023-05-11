@@ -13,12 +13,12 @@ require (
 	github.com/cucumber/godog v0.12.0
 	github.com/cucumber/messages-go/v16 v16.0.1
 	github.com/elastic/go-elasticsearch/v7 v7.12.0
-	github.com/go-redis/redis/v8 v8.8.0
 	github.com/google/uuid v1.2.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/lestrrat-go/jwx v1.1.4
 	github.com/miekg/dns v1.1.50
 	github.com/pkg/errors v0.9.1
+	github.com/redis/go-redis/v9 v9.0.4
 	github.com/sirupsen/logrus v1.8.0
 	github.com/spf13/pflag v1.0.5
 	github.com/streadway/amqp v1.0.0
@@ -48,12 +48,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.13.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.11.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.16.8 // indirect
-	github.com/cespare/xxhash/v2 v2.1.1 // indirect
+	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/cucumber/gherkin-go/v19 v19.0.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v3 v3.0.0 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
-	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0 // indirect
 	github.com/goccy/go-json v0.4.7 // indirect
 	github.com/gofrs/uuid v4.0.0+incompatible // indirect
@@ -69,7 +68,6 @@ require (
 	github.com/lestrrat-go/option v1.0.0 // indirect
 	github.com/lestrrat-go/pdebug/v3 v3.0.1 // indirect
 	github.com/magefile/mage v1.10.0 // indirect
-	github.com/onsi/ginkgo v1.16.5 // indirect
 	github.com/onsi/ginkgo/v2 v2.7.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/quic-go/qpack v0.4.0 // indirect
@@ -80,9 +78,6 @@ require (
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
-	go.opentelemetry.io/otel v0.19.0 // indirect
-	go.opentelemetry.io/otel/metric v0.19.0 // indirect
-	go.opentelemetry.io/otel/trace v0.19.0 // indirect
 	golang.org/x/crypto v0.5.0 // indirect
 	golang.org/x/exp v0.0.0-20230306221820-f0f767cdffd6 // indirect
 	golang.org/x/mod v0.8.0 // indirect
