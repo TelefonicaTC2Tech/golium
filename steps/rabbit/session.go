@@ -316,32 +316,53 @@ func (s *Session) WaitForMessagesWithStandardProperties(
 			return err
 		}
 
-		// Only new messages are processed
-		for i := processedMessagesCount; i < len(s.Messages); i++ {
-			logrus.Debugf("Checking message: %s", s.Messages[i].Body)
-			processedMessagesCount++
-			if errValidate := s.validateMessageStandardProperties(ctx, s.Messages[i], props); errValidate == nil {
-				s.msg = s.Messages[i]
-				s.ConsumedMessages = append(s.ConsumedMessages, s.Messages[i])
-				count--
-				if count == 0 {
-					return nil
-				}
-			} else {
-				unconsumedMessages = append(unconsumedMessages, s.Messages[i])
-			}
+		count = s.processReceivedMessages(ctx, props, unconsumedMessages, &processedMessagesCount, count)
+		if count == 0 {
+			return nil
 		}
+
 		if count != expectedMessagesCount {
-			err = fmt.Errorf("not all expected messages matching the standard properties have been received. Expected '%d', actual '%d'", expectedMessagesCount, count)
+			err = fmt.Errorf("not all messages matching the standard properties have been received")
 		}
 		return err
 	})
 	return WaitForWithWantedErrorNormalizer(wantErr, err, "standard")
 }
 
+func (s *Session) processReceivedMessages(
+	ctx context.Context,
+	props amqp.Delivery,
+	unconsumedMessages []amqp.Delivery,
+	processedMessagesCount *int,
+	count int,
+) int {
+	// Only new messages are processed
+	for i := *processedMessagesCount; i < len(s.Messages); i++ {
+		logrus.Debugf("Checking message: %s", s.Messages[i].Body)
+		*processedMessagesCount++
+
+		errValidate := s.validateMessageStandardProperties(ctx, s.Messages[i], props)
+		if errValidate == nil {
+			s.msg = s.Messages[i]
+			s.ConsumedMessages = append(s.ConsumedMessages, s.Messages[i])
+			count--
+			if count == 0 {
+				break
+			}
+		} else {
+			unconsumedMessages = append(unconsumedMessages, s.Messages[i])
+		}
+	}
+
+	return count
+}
+
 // ValidateMessageStandardProperties checks if the message standard rabbit properties are equal
 // the expected values.
-func (s *Session) ValidateMessageStandardProperties(ctx context.Context, props amqp.Delivery) error {
+func (s *Session) ValidateMessageStandardProperties(
+	ctx context.Context,
+	props amqp.Delivery,
+) error {
 	return s.validateMessageStandardProperties(ctx, s.msg, props)
 }
 

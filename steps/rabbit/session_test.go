@@ -564,7 +564,7 @@ func TestWaitForMessagesWithStandardProperties(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "Not all expected messages matching the standard properties have been received",
+			name: "Not matching number of received messages with standard properties",
 			args: args{
 				count:    2,
 				messages: []amqp.Delivery{{Priority: 10}, {Priority: 5}},
@@ -575,7 +575,7 @@ func TestWaitForMessagesWithStandardProperties(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "Not all expected messages matching the standard properties have been received expecting error",
+			name: "Not matching number of received messages with standard properties expecting error",
 			args: args{
 				count:    2,
 				messages: []amqp.Delivery{{Priority: 10}, {Priority: 5}},
