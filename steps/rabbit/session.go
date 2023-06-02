@@ -316,7 +316,7 @@ func (s *Session) WaitForMessagesWithStandardProperties(
 			return err
 		}
 
-		count = s.processReceivedMessages(ctx, props, unconsumedMessages, &processedMessagesCount, count)
+		count = s.processReceivedMessages(props, unconsumedMessages, &processedMessagesCount, count)
 		if count == 0 {
 			return nil
 		}
@@ -330,7 +330,6 @@ func (s *Session) WaitForMessagesWithStandardProperties(
 }
 
 func (s *Session) processReceivedMessages(
-	ctx context.Context,
 	props amqp.Delivery,
 	unconsumedMessages []amqp.Delivery,
 	processedMessagesCount *int,
