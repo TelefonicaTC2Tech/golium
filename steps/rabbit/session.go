@@ -341,7 +341,7 @@ func (s *Session) processReceivedMessages(
 		logrus.Debugf("Checking message: %s", s.Messages[i].Body)
 		*processedMessagesCount++
 
-		errValidate := s.validateMessageStandardProperties(ctx, s.Messages[i], props)
+		errValidate := s.validateMessageStandardProperties(s.Messages[i], props)
 		if errValidate == nil {
 			s.msg = s.Messages[i]
 			s.ConsumedMessages = append(s.ConsumedMessages, s.Messages[i])
@@ -360,14 +360,12 @@ func (s *Session) processReceivedMessages(
 // ValidateMessageStandardProperties checks if the message standard rabbit properties are equal
 // the expected values.
 func (s *Session) ValidateMessageStandardProperties(
-	ctx context.Context,
 	props amqp.Delivery,
 ) error {
-	return s.validateMessageStandardProperties(ctx, s.msg, props)
+	return s.validateMessageStandardProperties(s.msg, props)
 }
 
 func (s *Session) validateMessageStandardProperties(
-	ctx context.Context,
 	msgToValidate amqp.Delivery,
 	props amqp.Delivery,
 ) error {

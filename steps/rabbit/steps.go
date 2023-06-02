@@ -84,7 +84,7 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 		if err := golium.ConvertTableWithoutHeaderToStruct(ctx, t, &props); err != nil {
 			return fmt.Errorf("failed configuring rabbit endpoint: %w", err)
 		}
-		return session.ValidateMessageStandardProperties(ctx, props)
+		return session.ValidateMessageStandardProperties(props)
 	})
 	scenCtx.Step(`^the rabbit message body has the text$`, func(m *godog.DocString) error {
 		message := golium.ValueAsString(ctx, m.Content)
