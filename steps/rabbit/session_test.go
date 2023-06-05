@@ -478,6 +478,7 @@ func TestWaitForMessagesWithStandardProperties(t *testing.T) {
 	type args struct {
 		timeout  time.Duration
 		count    int
+		strictly bool
 		messages []amqp.Delivery
 		table    *godog.Table
 		wantErr  bool
@@ -491,6 +492,7 @@ func TestWaitForMessagesWithStandardProperties(t *testing.T) {
 			name: "Convert table error",
 			args: args{
 				count:    0,
+				strictly: false,
 				messages: []amqp.Delivery{{Priority: 5}},
 				timeout:  1 * time.Second,
 				table:    golium.NewTable([][]string{{"Priority", "5"}}),
@@ -501,6 +503,7 @@ func TestWaitForMessagesWithStandardProperties(t *testing.T) {
 			name: "Message count < 0",
 			args: args{
 				count:    -1,
+				strictly: false,
 				messages: []amqp.Delivery{{Priority: 5}},
 				timeout:  1 * time.Second,
 				table:    golium.NewTable([][]string{{"param", "value"}, {"Priority", "5"}}),
@@ -512,6 +515,7 @@ func TestWaitForMessagesWithStandardProperties(t *testing.T) {
 			name: "Message count < 0 expecting error",
 			args: args{
 				count:    -1,
+				strictly: false,
 				messages: []amqp.Delivery{{Priority: 5}},
 				timeout:  1 * time.Second,
 				table:    golium.NewTable([][]string{{"param", "value"}, {"Priority", "5"}}),
@@ -523,6 +527,7 @@ func TestWaitForMessagesWithStandardProperties(t *testing.T) {
 			name: "Matching properties",
 			args: args{
 				count:    1,
+				strictly: false,
 				messages: []amqp.Delivery{{Priority: 5}},
 				timeout:  1 * time.Second,
 				table:    golium.NewTable([][]string{{"param", "value"}, {"Priority", "5"}}),
@@ -534,7 +539,8 @@ func TestWaitForMessagesWithStandardProperties(t *testing.T) {
 			name: "Matching properties expecting error",
 			args: args{
 				count:    1,
-				messages: []amqp.Delivery{{Priority: 5}},
+				strictly: false,
+				messages: []amqp.Delivery{{Priority: 5}, {Priority: 5}},
 				timeout:  1 * time.Second,
 				table:    golium.NewTable([][]string{{"param", "value"}, {"Priority", "5"}}),
 				wantErr:  true,
@@ -545,7 +551,8 @@ func TestWaitForMessagesWithStandardProperties(t *testing.T) {
 			name: "Not matching properties",
 			args: args{
 				count:    1,
-				messages: []amqp.Delivery{{Priority: 5}},
+				strictly: false,
+				messages: []amqp.Delivery{{Priority: 5}, {Priority: 5}},
 				timeout:  1 * time.Second,
 				table:    golium.NewTable([][]string{{"param", "value"}, {"Priority", "10"}}),
 				wantErr:  false,
@@ -556,6 +563,7 @@ func TestWaitForMessagesWithStandardProperties(t *testing.T) {
 			name: "Not matching properties expecting error",
 			args: args{
 				count:    1,
+				strictly: false,
 				messages: []amqp.Delivery{{Priority: 5}},
 				timeout:  1 * time.Second,
 				table:    golium.NewTable([][]string{{"param", "value"}, {"Priority", "10"}}),
@@ -567,6 +575,7 @@ func TestWaitForMessagesWithStandardProperties(t *testing.T) {
 			name: "Not matching number of received messages with standard properties",
 			args: args{
 				count:    2,
+				strictly: false,
 				messages: []amqp.Delivery{{Priority: 10}, {Priority: 5}},
 				timeout:  1 * time.Second,
 				table:    golium.NewTable([][]string{{"param", "value"}, {"Priority", "5"}}),
@@ -578,12 +587,37 @@ func TestWaitForMessagesWithStandardProperties(t *testing.T) {
 			name: "Not matching number of received messages with standard properties expecting error",
 			args: args{
 				count:    2,
+				strictly: false,
 				messages: []amqp.Delivery{{Priority: 10}, {Priority: 5}},
 				timeout:  1 * time.Second,
 				table:    golium.NewTable([][]string{{"param", "value"}, {"Priority", "5"}}),
 				wantErr:  true,
 			},
 			wantErr: false,
+		},
+		{
+			name: "Strictly matching number of received messages with standard properties",
+			args: args{
+				count:    2,
+				strictly: true,
+				messages: []amqp.Delivery{{Priority: 5}, {Priority: 10}, {Priority: 5}},
+				timeout:  1 * time.Second,
+				table:    golium.NewTable([][]string{{"param", "value"}, {"Priority", "5"}}),
+				wantErr:  false,
+			},
+			wantErr: false,
+		},
+		{
+			name: "Not strictly matching number of received messages with standard properties expecting",
+			args: args{
+				count:    2,
+				strictly: true,
+				messages: []amqp.Delivery{{Priority: 5}, {Priority: 10}, {Priority: 5}, {Priority: 5}},
+				timeout:  1 * time.Second,
+				table:    golium.NewTable([][]string{{"param", "value"}, {"Priority", "5"}}),
+				wantErr:  false,
+			},
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
@@ -594,6 +628,7 @@ func TestWaitForMessagesWithStandardProperties(t *testing.T) {
 				context.Background(),
 				tt.args.timeout,
 				tt.args.count,
+				tt.args.strictly,
 				tt.args.table,
 				tt.args.wantErr); (err != nil) != tt.wantErr {
 				t.Errorf(

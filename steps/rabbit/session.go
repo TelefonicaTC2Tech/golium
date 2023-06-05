@@ -284,12 +284,15 @@ func matchMessage(msg string, expectedProps map[string]interface{}) bool {
 
 // WaitForMessagesWithStandardProperties waits for 'count' messages with standard rabbit properties
 // that are equal to the expected values.
+// If strictly is set to true, function loops through all received messages to check that
+// the amount exactly matches the expected
 // When wantErr is set to true function returns error if message is found with the JSON properties
 // and returns no error when message is not found after timeout.
 func (s *Session) WaitForMessagesWithStandardProperties(
 	ctx context.Context,
 	timeout time.Duration,
 	count int,
+	strictly bool,
 	t *godog.Table,
 	wantErr bool,
 ) error {
@@ -304,9 +307,10 @@ func (s *Session) WaitForMessagesWithStandardProperties(
 	processedMessagesCount := 0
 	// Consume the processed messages
 	defer func() {
-		s.Messages = unconsumedMessages
 		if processedMessagesCount < len(s.Messages) {
-			s.Messages = append(s.Messages, s.Messages[processedMessagesCount:]...)
+			s.Messages = append(unconsumedMessages, s.Messages[processedMessagesCount:]...)
+		} else {
+			s.Messages = unconsumedMessages
 		}
 	}()
 
@@ -321,11 +325,20 @@ func (s *Session) WaitForMessagesWithStandardProperties(
 			return nil
 		}
 
-		if count != expectedMessagesCount {
+		if count < expectedMessagesCount {
 			err = fmt.Errorf("not all messages matching the standard properties have been received")
 		}
 		return err
 	})
+
+	// ensures that if there are messages to be processed, none of them match the standard properties
+	if err == nil && strictly {
+		count = s.processReceivedMessages(props, unconsumedMessages, &processedMessagesCount, count)
+		if count < 0 {
+			err = fmt.Errorf("more than expected message(s) received match(es) the standard properties")
+		}
+	}
+
 	return WaitForWithWantedErrorNormalizer(wantErr, err, "standard")
 }
 

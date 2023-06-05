@@ -73,7 +73,7 @@ Feature: Rabbit client
           | param | value   |
           | id2   | abc2    |
           | name2 | Golium2 |
-     Then I wait up to "5" seconds for "3" rabbit messages with the standard properties
+     Then I wait up to "5" seconds for exactly "3" rabbit messages with the standard properties
           | param         | value                |
           | ContentType   | application/json     |
           | CorrelationId | [CTXT:CorrelationId] |
