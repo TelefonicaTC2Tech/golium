@@ -320,7 +320,7 @@ func (s *Session) WaitForMessagesWithStandardProperties(
 			return err
 		}
 
-		count = s.processReceivedMessages(props, unconsumedMessages, &processedMessagesCount, count)
+		count = s.processReceivedMessages(props, &unconsumedMessages, &processedMessagesCount, count)
 		if count == 0 {
 			return nil
 		}
@@ -333,7 +333,7 @@ func (s *Session) WaitForMessagesWithStandardProperties(
 
 	// ensures that if there are messages to be processed, none of them match the standard properties
 	if err == nil && strictly {
-		count = s.processReceivedMessages(props, unconsumedMessages, &processedMessagesCount, count)
+		count = s.processReceivedMessages(props, &unconsumedMessages, &processedMessagesCount, count)
 		if count < 0 {
 			err = fmt.Errorf("more than expected message(s) received match(es) the standard properties")
 		}
@@ -344,7 +344,7 @@ func (s *Session) WaitForMessagesWithStandardProperties(
 
 func (s *Session) processReceivedMessages(
 	props amqp.Delivery,
-	unconsumedMessages []amqp.Delivery,
+	unconsumedMessages *[]amqp.Delivery,
 	processedMessagesCount *int,
 	count int,
 ) int {
@@ -362,7 +362,7 @@ func (s *Session) processReceivedMessages(
 				break
 			}
 		} else {
-			unconsumedMessages = append(unconsumedMessages, s.Messages[i])
+			*unconsumedMessages = append(*unconsumedMessages, s.Messages[i])
 		}
 	}
 
