@@ -27,6 +27,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 	"github.com/tidwall/sjson"
+	"golang.org/x/exp/slices"
 )
 
 const (
@@ -39,6 +40,8 @@ type Session struct {
 	Connection *amqp.Connection
 	// Messages received from the publish/subscribe channel
 	Messages []amqp.Delivery
+	// Messages consumed from the publish/subscribe channel
+	ConsumedMessages []amqp.Delivery
 	// Correlator is used to correlate the messages for a specific session
 	Correlator string
 	// rabbit channel
@@ -200,10 +203,17 @@ func (s *Session) WaitForTextMessage(ctx context.Context,
 	timeout time.Duration,
 	expectedMsg string,
 ) error {
+	s.ConsumedMessages = make([]amqp.Delivery, 0, len(s.Messages))
+
 	return waitUpTo(timeout, func() error {
 		for i := range s.Messages {
 			if string(s.Messages[i].Body) == expectedMsg {
 				s.msg = s.Messages[i]
+
+				// Consume the processed messages
+				s.ConsumedMessages = append(s.ConsumedMessages, s.Messages[i])
+				slices.Delete(s.Messages, i, i+1)
+
 				return nil
 			}
 		}
@@ -224,11 +234,19 @@ func (s *Session) WaitForJSONMessageWithProperties(ctx context.Context,
 	if err != nil {
 		return fmt.Errorf(convertTableToMapMessage+"%w", err)
 	}
+
+	s.ConsumedMessages = make([]amqp.Delivery, 0, len(s.Messages))
+
 	err = waitUpTo(timeout, func() error {
 		for i := range s.Messages {
 			logrus.Debugf("Checking message: %s", s.Messages[i].Body)
 			if matchMessage(string(s.Messages[i].Body), props) {
 				s.msg = s.Messages[i]
+
+				// Consume the processed messages
+				s.ConsumedMessages = append(s.ConsumedMessages, s.Messages[i])
+				slices.Delete(s.Messages, i, i+1)
+
 				return nil
 			}
 		}
@@ -242,7 +260,7 @@ func (s *Session) WaitForJSONMessageWithProperties(ctx context.Context,
 func WaitForWithWantedErrorNormalizer(wantErr bool, err error, propertiesType string) error {
 	if !wantErr {
 		if err != nil {
-			return fmt.Errorf("no message(s) received match(es) the with %s properties", propertiesType)
+			return fmt.Errorf("no message(s) received match(es) with %s properties", propertiesType)
 		}
 	} else {
 		if err == nil {
@@ -266,12 +284,15 @@ func matchMessage(msg string, expectedProps map[string]interface{}) bool {
 
 // WaitForMessagesWithStandardProperties waits for 'count' messages with standard rabbit properties
 // that are equal to the expected values.
+// If strictly is set to true, function loops through all received messages to check that
+// the amount exactly matches the expected
 // When wantErr is set to true function returns error if message is found with the JSON properties
 // and returns no error when message is not found after timeout.
 func (s *Session) WaitForMessagesWithStandardProperties(
 	ctx context.Context,
 	timeout time.Duration,
 	count int,
+	strictly bool,
 	t *godog.Table,
 	wantErr bool,
 ) error {
@@ -279,34 +300,88 @@ func (s *Session) WaitForMessagesWithStandardProperties(
 	if err := golium.ConvertTableWithoutHeaderToStruct(ctx, t, &props); err != nil {
 		return fmt.Errorf("failed configuring rabbit endpoint: %w", err)
 	}
+
+	expectedMessagesCount := count
+	s.ConsumedMessages = make([]amqp.Delivery, 0, len(s.Messages))
+	unconsumedMessages := make([]amqp.Delivery, 0, len(s.Messages))
+	processedMessagesCount := 0
+	// Consume the processed messages
+	defer func() {
+		if processedMessagesCount < len(s.Messages) {
+			s.Messages = append(unconsumedMessages, s.Messages[processedMessagesCount:]...)
+		} else {
+			s.Messages = unconsumedMessages
+		}
+	}()
+
 	err := waitUpTo(timeout, func() error {
 		err := fmt.Errorf("no message(s) received match(es) the standard properties")
 		if count < 0 {
 			return err
 		}
 
-		for i := range s.Messages {
-			logrus.Debugf("Checking message: %s", s.Messages[i].Body)
-			s.msg = s.Messages[i]
-			if err = s.ValidateMessageStandardProperties(ctx, props); err == nil {
-				count--
-				if count == 0 {
-					return nil
-				}
-			}
+		count = s.processReceivedMessages(props, &unconsumedMessages, &processedMessagesCount, count)
+		if count == 0 {
+			return nil
+		}
+
+		if count < expectedMessagesCount {
+			err = fmt.Errorf("not all messages matching the standard properties have been received")
 		}
 		return err
 	})
+
+	// ensures that if there are messages to be processed, none of them match the standard properties
+	if err == nil && strictly {
+		count = s.processReceivedMessages(props, &unconsumedMessages, &processedMessagesCount, count)
+		if count < 0 {
+			err = fmt.Errorf("more than expected message(s) received match(es) the standard properties")
+		}
+	}
+
 	return WaitForWithWantedErrorNormalizer(wantErr, err, "standard")
+}
+
+func (s *Session) processReceivedMessages(
+	props amqp.Delivery,
+	unconsumedMessages *[]amqp.Delivery,
+	processedMessagesCount *int,
+	count int,
+) int {
+	// Only new messages are processed
+	for i := *processedMessagesCount; i < len(s.Messages); i++ {
+		logrus.Debugf("Checking message: %s", s.Messages[i].Body)
+		*processedMessagesCount++
+
+		errValidate := s.validateMessageStandardProperties(s.Messages[i], props)
+		if errValidate == nil {
+			s.msg = s.Messages[i]
+			s.ConsumedMessages = append(s.ConsumedMessages, s.Messages[i])
+			count--
+			if count == 0 {
+				break
+			}
+		} else {
+			*unconsumedMessages = append(*unconsumedMessages, s.Messages[i])
+		}
+	}
+
+	return count
 }
 
 // ValidateMessageStandardProperties checks if the message standard rabbit properties are equal
 // the expected values.
 func (s *Session) ValidateMessageStandardProperties(
-	ctx context.Context,
 	props amqp.Delivery,
 ) error {
-	msg := reflect.ValueOf(s.msg)
+	return s.validateMessageStandardProperties(s.msg, props)
+}
+
+func (s *Session) validateMessageStandardProperties(
+	msgToValidate amqp.Delivery,
+	props amqp.Delivery,
+) error {
+	msg := reflect.ValueOf(msgToValidate)
 	expectedMsg := reflect.ValueOf(props)
 	t := expectedMsg.Type()
 	for i := 0; i < expectedMsg.NumField(); i++ {
@@ -370,13 +445,13 @@ func (s *Session) ValidateMessageJSONBody(ctx context.Context,
 	}
 	m := golium.NewMapFromJSONBytes(s.msg.Body)
 	if pos != -1 {
-		nMessages := len(s.Messages)
+		nMessages := len(s.ConsumedMessages)
 		if pos < 0 || pos >= nMessages {
 			return fmt.Errorf(
 				"trying to validate message in position: '%d', '%d' messages available",
 				pos, nMessages)
 		}
-		m = golium.NewMapFromJSONBytes(s.Messages[pos].Body)
+		m = golium.NewMapFromJSONBytes(s.ConsumedMessages[pos].Body)
 	}
 	for key, expectedValue := range props {
 		value := m.Get(key)

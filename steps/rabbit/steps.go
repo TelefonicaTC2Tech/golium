@@ -66,15 +66,15 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 	})
 	scenCtx.Step(`^I wait up to "(\d+)" seconds? for a rabbit message with the standard properties$`, func(timeout int, t *godog.Table) error {
 		timeoutDuration := time.Duration(timeout) * time.Second
-		return session.WaitForMessagesWithStandardProperties(ctx, timeoutDuration, 1, t, false)
+		return session.WaitForMessagesWithStandardProperties(ctx, timeoutDuration, 1, false, t, false)
 	})
-	scenCtx.Step(`^I wait up to "(\d+)" seconds? for "(\d+)" rabbit messages with the standard properties$`, func(timeout int, count int, t *godog.Table) error {
+	scenCtx.Step(`^I wait up to "(\d+)" seconds? for exactly "(\d+)" rabbit messages with the standard properties$`, func(timeout int, count int, t *godog.Table) error {
 		timeoutDuration := time.Duration(timeout) * time.Second
-		return session.WaitForMessagesWithStandardProperties(ctx, timeoutDuration, count, t, false)
+		return session.WaitForMessagesWithStandardProperties(ctx, timeoutDuration, count, true, t, false)
 	})
 	scenCtx.Step(`^I wait up to "(\d+)" seconds? without a rabbit message with the standard properties$`, func(timeout int, t *godog.Table) error {
 		timeoutDuration := time.Duration(timeout) * time.Second
-		return session.WaitForMessagesWithStandardProperties(ctx, timeoutDuration, 1, t, true)
+		return session.WaitForMessagesWithStandardProperties(ctx, timeoutDuration, 1, false, t, true)
 	})
 	scenCtx.Step(`^the rabbit message has the rabbit headers$`, func(t *godog.Table) error {
 		return session.ValidateMessageHeaders(ctx, t)
@@ -84,7 +84,7 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 		if err := golium.ConvertTableWithoutHeaderToStruct(ctx, t, &props); err != nil {
 			return fmt.Errorf("failed configuring rabbit endpoint: %w", err)
 		}
-		return session.ValidateMessageStandardProperties(ctx, props)
+		return session.ValidateMessageStandardProperties(props)
 	})
 	scenCtx.Step(`^the rabbit message body has the text$`, func(m *godog.DocString) error {
 		message := golium.ValueAsString(ctx, m.Content)
