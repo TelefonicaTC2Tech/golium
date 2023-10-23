@@ -50,14 +50,14 @@ func (us Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 	})
 	scenCtx.Step(`^I delete documents from the MongoDB "([^"]*)" collection whose "([^"]*)" field is "([^"]*)" value$`, func(collectionName string, field string, value string) error {
 		return session.DeleteDocumentscollectionNameStep(ctx, golium.ValueAsString(ctx, collectionName), golium.ValueAsString(ctx, field), value)
-	})	
+	})
 	scenCtx.Step(`^I check that the number of documents in collection "([^"]*)" is "(\d+)"$`, func(collectionName string, num int) error {
 		return session.CheckNumberDocumentscollectionNameStep(golium.ValueAsString(ctx, collectionName), num)
-	})	
+	})
 
 	scenCtx.After(func(ctx context.Context, sc *godog.Scenario, err error) (context.Context, error) {
-		return ctx, session.MongoDisconnection()	
+		return ctx, session.MongoDisconnection()
 	})
-	
+
 	return ctx
 }

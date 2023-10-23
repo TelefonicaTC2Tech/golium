@@ -70,7 +70,7 @@ type Session struct {
 // CheckMongoFieldExistOrEmptyStep check that a field does not exist or it does exist and is empty
 func (s *Session) CheckMongoFieldExistOrEmptyStep(
 	ctx context.Context, fieldSearched, collectionName, idCollection string,
-	) error {
+) error {
 	// 1-Setting the Collection Name in the Session
 	s.SetCollection(collectionName)
 
@@ -91,7 +91,7 @@ func (s *Session) CheckMongoFieldExistOrEmptyStep(
 // CheckMongoFieldNameStep check if the name of the field searched of the user collection is correct
 func (s *Session) CheckMongoFieldNameStep(
 	ctx context.Context, collectionName, fieldSearched, exist, idCollection string,
-	) error {
+) error {
 	// 1-Set collection name and fields collection name in Session
 	s.SetCollection(collectionName)
 	s.SetFieldsCollectionName(ctx, idCollection)
@@ -107,7 +107,7 @@ func (s *Session) CheckMongoFieldNameStep(
 // CheckMongoValueIDStep checks if the past idCollection exists in the collection
 func (s *Session) CheckMongoValueIDStep(
 	ctx context.Context, collectionName, idCollection, exist string,
-	) error {
+) error {
 	// 1-Set collection name and fields collection name in Session
 	s.SetCollection(collectionName)
 
@@ -122,7 +122,7 @@ func (s *Session) CheckMongoValueIDStep(
 // CheckMongoValuesStep checks the value of the MongoDB fields in the specified collection
 func (s *Session) CheckMongoValuesStep(
 	ctx context.Context, collectionName, idCollection, exist string, t *godog.Table,
-	) error {
+) error {
 	// 1-Set collection name and fields collection name in Session
 	s.SetCollection(collectionName)
 
@@ -140,7 +140,7 @@ func (s *Session) CheckMongoValuesStep(
 	return s.VerifyExistAndMustExistValue(existValue, mustExistValue, err)
 }
 
-// MongoConnectionStep establishes a connection in MongoDB. 
+// MongoConnectionStep establishes a connection in MongoDB.
 // The connection, client and database data are saved in s.clientOptions, s.client, and s.database
 func (s *Session) MongoConnectionStep(ctx context.Context) error {
 	// 1-Set credentials and host in session
@@ -172,7 +172,7 @@ func (s *Session) MongoConnectionStep(ctx context.Context) error {
 // CreateDocumentcollectionNameStep creates a number of documents in the specified collection
 func (s *Session) CreateDocumentscollectionNameStep(
 	ctx context.Context, num int, collectionName string,
-	) error {
+) error {
 	// 1-collection in which the insertion will be made, if it does not exist it is created
 	s.SetCollection(collectionName)
 
@@ -191,7 +191,7 @@ func (s *Session) CreateDocumentscollectionNameStep(
 // DeleteDocumentscollectionNameStep delete a document from the MongoDB collection
 func (s *Session) DeleteDocumentscollectionNameStep(
 	ctx context.Context, collectionName, field, value string,
-	) error {
+) error {
 	// 1-The collection in which the deletion is to be made is established.
 	s.SetCollection(collectionName)
 
@@ -242,7 +242,7 @@ func ContainsElement(expectedElement, sliceElements interface{}) bool {
 	}
 
 	for i := 0; i < sliceValue.Len(); i++ {
-		// 3-The slice element converted into an interface is compared with the searched element. 
+		// 3-The slice element converted into an interface is compared with the searched element.
 		// The comparison is made in value and type
 		if reflect.DeepEqual(sliceValue.Index(i).Interface(), expectedElement) {
 			return true
@@ -263,10 +263,10 @@ func GetFilter(key string, value interface{}) primitive.M {
 // GetFilterConverted returns a filter with field and data type required for delete a record
 func GetFilterConverted(field, value string) primitive.M {
 	/* In Golang:
-	 - the values "1", "true", "t", "T", "TRUE", "True" are interpreted as true
-	 - the values "0", "false", "f", "F", "FALSE", "False" are interpreted as false.
-	 To force only a few values in a cell to be considered Boolean, this slice is created.
-	 */
+	- the values "1", "true", "t", "T", "TRUE", "True" are interpreted as true
+	- the values "0", "false", "f", "F", "FALSE", "False" are interpreted as false.
+	To force only a few values in a cell to be considered Boolean, this slice is created.
+	*/
 	boolSlice := []string{"true", "TRUE", "True", "false", "FALSE", "False"}
 
 	// Try to convert to bool
@@ -326,7 +326,7 @@ func (s *Session) CreateDocumentsCollection(ctx context.Context, num int) []inte
 	}
 	// 3-Creating Documents and Inserting Into the Slice
 	for i := 1; i <= num; i++ {
-		// Defines the document to be inserted. 
+		// Defines the document to be inserted.
 		// The _id will be the same across all + _ + iteration number
 		document := map[string]interface{}{
 			"_id":         id.(string) + "_" + strconv.Itoa(i),
@@ -380,17 +380,17 @@ func (s *Session) SetDatabase(ctx context.Context) {
 // SetSingleResult set a Single Result from a Filter Search (GetFilter(...) function)
 func (s *Session) SetSingleResult(
 	ctx context.Context, fieldSearched string, value interface{},
-	) error {
+) error {
 	s.singleResult = s.collection.FindOne(
 		ctx, GetFilter(fieldSearched, value), GetOptionsSearchAllFields())
 	if s.singleResult.Err() != nil {
 		return fmt.Errorf("error: the searched '%s' field does not have the '%s' value "+
-		"in the '%s' collection", fieldSearched, value, s.collection.Name())
+			"in the '%s' collection", fieldSearched, value, s.collection.Name())
 	}
 	return nil
 }
 
-// SetCollection sets the collection. If the collection does not exist, no error is returned. 
+// SetCollection sets the collection. If the collection does not exist, no error is returned.
 // Collections are created dynamically when you insert a document
 func (s *Session) SetCollection(collectionName string) {
 	s.collection = s.client.Database(s.database).Collection(collectionName)
@@ -452,7 +452,7 @@ func (s *Session) VerifyExistID(ctx context.Context, idCollection string) (bool,
 	err := s.SetSingleResult(ctx, "_id", idCollection)
 	if err != nil {
 		return false, fmt.Errorf("error: searched _id '%s' does not exist in the '%s' collection",
-		 idCollection, s.collection.Name())
+			idCollection, s.collection.Name())
 	}
 	return true, nil
 }
@@ -468,13 +468,13 @@ func (s *Session) VerifyExistAndMustExistValue(exist, mustExist bool, err error)
 		return err
 	}
 	return fmt.Errorf("error: the value DOES NOT EXIST and SHOULD, or EXIST and SHOULD NOT, "+
-	"in '%s' collection", s.collection.Name())
+		"in '%s' collection", s.collection.Name())
 }
 
 // ValidateDataMongo verifies that the feature table data exists in the MongoDB collection
 func (s *Session) ValidateDataMongo(
 	ctx context.Context, idCollection string, props map[string]interface{},
-	) (bool, error) {
+) (bool, error) {
 	// 1-Sets a document to s.singleResult from a filter search
 	s.SetSingleResult(ctx, "_id", idCollection)
 
@@ -509,11 +509,11 @@ func (s *Session) ValidateDataMongo(
 				continue
 			} else if value != expectedValue {
 				return false, fmt.Errorf("error: mismatch of mongo field '%s': expected '%s',"+
-				"actual '%s'", key, expectedValue, value)
+					"actual '%s'", key, expectedValue, value)
 			}
 		} else {
 			return false, fmt.Errorf("error: the field '%s': does not exist in '%s' collection",
-			 key, s.collection.Name())
+				key, s.collection.Name())
 		}
 	}
 	return true, nil
