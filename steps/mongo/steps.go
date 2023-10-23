@@ -52,7 +52,7 @@ func (us Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 		return session.DeleteDocumentscollectionNameStep(ctx, golium.ValueAsString(ctx, collectionName), golium.ValueAsString(ctx, field), value)
 	})	
 	scenCtx.Step(`^I check that the number of documents in collection "([^"]*)" is "(\d+)"$`, func(collectionName string, num int) error {
-		return session.CheckNumberDocumentscollectionNameStep(ctx, golium.ValueAsString(ctx, collectionName), num)
+		return session.CheckNumberDocumentscollectionNameStep(golium.ValueAsString(ctx, collectionName), num)
 	})	
 
 	scenCtx.After(func(ctx context.Context, sc *godog.Scenario, err error) (context.Context, error) {

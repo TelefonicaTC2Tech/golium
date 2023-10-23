@@ -75,7 +75,7 @@ func (s *Session) CheckMongoFieldExistOrEmptyStep(
 	s.SetCollection(collectionName)
 
 	// 2-Set fields collection name in Session: s.fieldsCollectionName
-	err := s.SetFieldsCollectionName(ctx, idCollection, s.collection)
+	err := s.SetFieldsCollectionName(ctx, idCollection)
 	if err != nil {
 		return err
 	}
@@ -94,7 +94,7 @@ func (s *Session) CheckMongoFieldNameStep(
 	) error {
 	// 1-Set collection name and fields collection name in Session
 	s.SetCollection(collectionName)
-	s.SetFieldsCollectionName(ctx, idCollection, s.collection)
+	s.SetFieldsCollectionName(ctx, idCollection)
 
 	// 2-Get boolean if field exist and must exist in collection
 	existField := s.ExistFieldCollection(fieldSearched)
@@ -177,7 +177,7 @@ func (s *Session) CreateDocumentscollectionNameStep(
 	s.SetCollection(collectionName)
 
 	// 2-The documents to be inserted are created
-	allDocuments := s.CreateDocumentsCollection(ctx, num, collectionName)
+	allDocuments := s.CreateDocumentsCollection(ctx, num)
 
 	// 3-Insert the documents into the "collectionName" collection of the database
 	_, err := s.collection.InsertMany(context.TODO(), allDocuments)
@@ -206,9 +206,7 @@ func (s *Session) DeleteDocumentscollectionNameStep(
 }
 
 // CheckNumberDocumentscollectionNameStep verify the number of documents in collection
-func (s *Session) CheckNumberDocumentscollectionNameStep(
-	ctx context.Context, collectionName string, num int,
-	) error {
+func (s *Session) CheckNumberDocumentscollectionNameStep(collectionName string, num int) error {
 	// 1-The collection from which the documents are to be counted is established
 	s.SetCollection(collectionName)
 
@@ -234,7 +232,7 @@ func (s *Session) CheckNumberDocumentscollectionNameStep(
 // GENERIC FUNCTIONS
 
 // ContainsElement check if an item exists in a slice
-func ContainsElement(expectedElement interface{}, sliceElements interface{}) bool {
+func ContainsElement(expectedElement, sliceElements interface{}) bool {
 	// 1-Create a reflection object from the slice
 	sliceValue := reflect.ValueOf(sliceElements)
 
@@ -305,18 +303,13 @@ func GetOptionsSearchAllFields() *options.FindOneOptions {
 
 // VerifyMustExist returns a boolean indicating whether the element should exist
 func VerifyMustExist(exist string) bool {
-	if strings.Contains(strings.ToLower(exist), "not") {
-		return false
-	}
-	return true
+	return !strings.Contains(strings.ToLower(exist), "not")
 }
 
 // SESSION FUNCTIONS
 
 // CreateDocumentsCollection creates num documents in a slice and inserts them into a collection
-func (s *Session) CreateDocumentsCollection(
-	ctx context.Context, num int, collectionName string,
-	) []interface{} {
+func (s *Session) CreateDocumentsCollection(ctx context.Context, num int) []interface{} {
 	// 1-Initialize the document slice
 	allDocuments := []interface{}{}
 
@@ -334,7 +327,7 @@ func (s *Session) CreateDocumentsCollection(
 	// 3-Creating Documents and Inserting Into the Slice
 	for i := 1; i <= num; i++ {
 		// Defines the document to be inserted. 
-		//The _id will be the same across all + _ + iteration number
+		// The _id will be the same across all + _ + iteration number
 		document := map[string]interface{}{
 			"_id":         id.(string) + "_" + strconv.Itoa(i),
 			"fieldString": "Example field string " + strconv.Itoa(i),
@@ -435,14 +428,12 @@ func (s *Session) SetDataCollectionJSONBytes(bsonDoc bson.D) error {
 }
 
 // SetFieldsCollectionName save a slice with the names of the fields in s.fieldsCollectionName
-func (s *Session) SetFieldsCollectionName(
-	ctx context.Context, idCollection string, collectionName *mongo.Collection,
-	) error {
+func (s *Session) SetFieldsCollectionName(ctx context.Context, idCollection string) error {
 	// Make a query to find past _id's document
 	var document bson.M
 	err := s.collection.FindOne(ctx, GetFilter("_id", idCollection)).Decode(&document)
 	if err == mongo.ErrNoDocuments {
-		return fmt.Errorf("error: no documents matching the filter were found.")
+		return fmt.Errorf("error: no documents matching the filter were found")
 	} else if err != nil {
 		return fmt.Errorf("error: '%s'", err)
 	} else {
@@ -470,15 +461,14 @@ func (s *Session) VerifyExistID(ctx context.Context, idCollection string) (bool,
 func (s *Session) VerifyExistAndMustExistValue(exist, mustExist bool, err error) error {
 	// If Exist and should NOT exist or NOT exist and should exist return error
 	// If Exist and shoud exist OR not exist and should not exist return nil
-	if exist && mustExist || !exist && !mustExist {
+	if exist == mustExist {
 		return nil
-	} else {
-		if err != nil {
-			return err
-		}
-		return fmt.Errorf("error: the value DOES NOT EXIST and SHOULD, or EXIST and SHOULD NOT, "+
-		"in '%s' collection", s.collection.Name())
 	}
+	if err != nil {
+		return err
+	}
+	return fmt.Errorf("error: the value DOES NOT EXIST and SHOULD, or EXIST and SHOULD NOT, "+
+	"in '%s' collection", s.collection.Name())
 }
 
 // ValidateDataMongo verifies that the feature table data exists in the MongoDB collection
@@ -501,7 +491,7 @@ func (s *Session) ValidateDataMongo(
 	}
 
 	// 4-Set the list of fields in the document to fieldsCollectionName
-	s.SetFieldsCollectionName(ctx, idCollection, s.collection)
+	s.SetFieldsCollectionName(ctx, idCollection)
 	if err != nil {
 		return false, err
 	}
@@ -515,7 +505,7 @@ func (s *Session) ValidateDataMongo(
 		fieldTableFeature := strings.Split(key, ".")[0]
 		if ContainsElement(fieldTableFeature, s.fieldsCollectionName) {
 			if value == nil && expectedValue == "" {
-				//The value of the field in MongoDB is null and expectedValue is [EMPTY]
+				// The value of the field in MongoDB is null and expectedValue is [EMPTY]
 				continue
 			} else if value != expectedValue {
 				return false, fmt.Errorf("error: mismatch of mongo field '%s': expected '%s',"+
@@ -534,7 +524,7 @@ func (s *Session) MongoDisconnection() error {
 	if s.client != nil {
 		err := s.client.Disconnect(context.Background())
 		if err != nil {
-			return fmt.Errorf("error: problem in MongoDB disconnection: '%s'\n", err)
+			return fmt.Errorf("error: problem in MongoDB disconnection: '%s'", err)
 		}
 	}
 	return nil
