@@ -19,20 +19,13 @@ import (
 
 	"github.com/TelefonicaTC2Tech/golium"
 	"github.com/cucumber/godog"
-	 "github.com/cucumber/messages-go/v16"		
-
-	"go.mongodb.org/mongo-driver/mongo"
-
 )
 
-var client *mongo.Client
-var collection *mongo.Collection
-
-type MongoSteps struct {
+type Steps struct {
 }
 
 // InitializeSteps initializes all the steps
-func (us MongoSteps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioContext) context.Context {
+func (us Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioContext) context.Context {
 	// Initialize the HTTP session in the context
 	ctx = InitializeContext(ctx)
 	session := GetSession(ctx)
@@ -62,9 +55,9 @@ func (us MongoSteps) InitializeSteps(ctx context.Context, scenCtx *godog.Scenari
 		return session.CheckNumberDocumentscollectionNameStep(ctx, golium.ValueAsString(ctx, collectionName), num)
 	})	
 
-	scenCtx.AfterScenario(func(sc *messages.Pickle, err error) {
-		session.MongoDisconnection(ctx)
+	scenCtx.After(func(ctx context.Context, sc *godog.Scenario, err error) (context.Context, error) {
+		return ctx, session.MongoDisconnection()	
 	})
-
+	
 	return ctx
 }

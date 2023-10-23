@@ -14,17 +14,14 @@
 
 package mongo
 
- import (
- 	"context"
+import (
+	"context"
 
-
-	"go.mongodb.org/mongo-driver/mongo"	
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type ClientFunctions interface {
-
-	Ping(ctx context.Context, client *mongo.Client) error
-	
+	Ping(client *mongo.Client) error
 }
 type ClientService struct{}
 
@@ -32,7 +29,7 @@ func NewMongoClientService() *ClientService {
 	return &ClientService{}
 }
 
-//Ping check that there is a connection to MongoDB
-func (c ClientService) Ping(ctx context.Context, client *mongo.Client) error {
+// Ping check that there is a connection to MongoDB
+func (c ClientService) Ping(client *mongo.Client) error {
 	return client.Ping(context.Background(), nil)
 }
