@@ -129,7 +129,7 @@ func (s *Session) CheckMongoValuesStep(
 	// 2-Get value of specified table
 	props, err := golium.ConvertTableToMap(ctx, t)
 	if err != nil {
-		return fmt.Errorf("ERROR: failed processing the table for validating the body: %w", err)
+		return fmt.Errorf("ERROR: failed processing the table for validating the body: '%w'", err)
 	}
 
 	// 3-Get boolean if data exist and must exist in collection
@@ -154,13 +154,13 @@ func (s *Session) MongoConnectionStep(ctx context.Context) error {
 	var err error
 	s.client, err = mongo.Connect(context.Background(), s.clientOptions)
 	if err != nil {
-		return fmt.Errorf("error: problems with the client options or with the context. %s", err)
+		return fmt.Errorf("error: problems with the client options or with the context. '%s'", err)
 	}
 
 	// 4-Check the connection to the MongoDB server
 	err = s.MongoClientService.Ping(s.client)
 	if err != nil {
-		return fmt.Errorf("error: problems with connection to MongoDB. %s", err)
+		return fmt.Errorf("error: problems with connection to MongoDB. '%s'", err)
 	}
 
 	// 5-Set the database in session
@@ -215,7 +215,7 @@ func (s *Session) CheckNumberDocumentscollectionNameStep(
 	// 2-Make a query to get all the documents in the collection
 	cursor, err := s.collection.Find(context.Background(), bson.D{})
 	if err != nil {
-		return fmt.Errorf("error: query error: %s", err)
+		return fmt.Errorf("error: query error: '%s'", err)
 	}
 
 	// 3-Iterate through the documents and count the ones that are there
@@ -391,8 +391,8 @@ func (s *Session) SetSingleResult(
 	s.singleResult = s.collection.FindOne(
 		ctx, GetFilter(fieldSearched, value), GetOptionsSearchAllFields())
 	if s.singleResult.Err() != nil {
-		return fmt.Errorf("error: the searched field (%s) does not have the value (%s) "+
-		"in the collection (%s)", fieldSearched, value, s.collection)
+		return fmt.Errorf("error: the searched '%s' field does not have the '%s' value "+
+		"in the '%s' collection", fieldSearched, value, s.collection.Name())
 	}
 	return nil
 }
@@ -418,7 +418,7 @@ func (s *Session) ExistFieldCollection(fieldSearched string) bool {
 func (s *Session) GetDecodeDocument(singleResult mongo.SingleResult) (bson.D, error) {
 	var bsonDoc bson.D
 	if err := singleResult.Decode(&bsonDoc); err != nil {
-		err = fmt.Errorf("erro: the decoding of the BSON has been erroneous: %s", err)
+		err = fmt.Errorf("error: the decoding of the BSON has been erroneous: '%s'", err)
 		return nil, err
 	}
 	return bsonDoc, nil
@@ -429,7 +429,7 @@ func (s *Session) SetDataCollectionJSONBytes(bsonDoc bson.D) error {
 	var err error
 	s.dataCollectionJSONBytes, err = bson.MarshalExtJSON(bsonDoc, false, false)
 	if err != nil {
-		return fmt.Errorf("error: the conversion from BSON to JSON has been erroneous: %s", err)
+		return fmt.Errorf("error: the conversion from BSON to JSON has been erroneous: '%s'", err)
 	}
 	return nil
 }
@@ -444,7 +444,7 @@ func (s *Session) SetFieldsCollectionName(
 	if err == mongo.ErrNoDocuments {
 		return fmt.Errorf("error: no documents matching the filter were found.")
 	} else if err != nil {
-		return fmt.Errorf("error: %s", err)
+		return fmt.Errorf("error: '%s'", err)
 	} else {
 		// s.fieldsCollectionName is flushed, and the names of the fields in the document are added
 		s.fieldsCollectionName = s.fieldsCollectionName[:0]
@@ -460,7 +460,7 @@ func (s *Session) VerifyExistID(ctx context.Context, idCollection string) (bool,
 	// Perform the search and get the result as singleResult
 	err := s.SetSingleResult(ctx, "_id", idCollection)
 	if err != nil {
-		return false, fmt.Errorf("error: searched _id (%s) does not exist in the '%s' collection",
+		return false, fmt.Errorf("error: searched _id '%s' does not exist in the '%s' collection",
 		 idCollection, s.collection.Name())
 	}
 	return true, nil
@@ -523,7 +523,7 @@ func (s *Session) ValidateDataMongo(
 			}
 		} else {
 			return false, fmt.Errorf("error: the field '%s': does not exist in '%s' collection",
-			 key, s.collection)
+			 key, s.collection.Name())
 		}
 	}
 	return true, nil
@@ -534,7 +534,7 @@ func (s *Session) MongoDisconnection() error {
 	if s.client != nil {
 		err := s.client.Disconnect(context.Background())
 		if err != nil {
-			return fmt.Errorf("error: problem in MongoDB disconnection: %s\n", err)
+			return fmt.Errorf("error: problem in MongoDB disconnection: '%s'\n", err)
 		}
 	}
 	return nil
