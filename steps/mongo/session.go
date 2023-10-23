@@ -174,7 +174,7 @@
 	
 		// 2-The documents to be inserted are created
 		allDocuments := s.CreateDocumentsCollection(ctx, num, collectionName)
-	
+		
 		// 3-Insert the documents into the "collectionName" collection of the database
 		_, err := s.collection.InsertMany(context.TODO(), allDocuments)
 		if err != nil {
@@ -261,38 +261,40 @@
 	
 	// GetFilterConverted returns a filter with the field and data type required for the deletion of a record
 	func GetFilterConverted(field string, value string) primitive.M {
-		// In golang, the values "1", "true", "t", "T", "TRUE", "True" and "0", "false", "f", "F", "FALSE", "False" are interpreted as Boolean. To force only a few values in a cell to be considered Boolean, this slice is created.		
-		boolSlice := []string{"true", "[TRUE]", "TRUE", "True",	"false", "[FALSE]", "FALSE", "False"}
-
-		var filter bson.M
-		
+		// In Golang, the values "1", "true", "t", "T", "TRUE", "True" and "0", "false", "f", "F", "FALSE", "False" are interpreted as Booleans.
+		// To force only a few values in a cell to be considered Boolean, this slice is created.
+		boolSlice := []string{"true", "TRUE", "True", "false", "FALSE", "False"}
+	
+		// var filter bson.M
+	
 		// Try to convert to bool
 		if ContainsElement(value, boolSlice) {
 			convertedValue, err := strconv.ParseBool(value)
 			if err == nil {
-				filter = bson.M{field: convertedValue}
-			}
-		} else {
-			// Try to convert to int
-			if convertedValue, err := strconv.Atoi(value); err == nil {
-				filter = bson.M{field: convertedValue}			
-			} else {
-				// Try converting to float64
-				if convertedValue, err := strconv.ParseFloat(value, 64); err == nil {
-					filter = bson.M{field: convertedValue}				
-				} else {
-					// If the passed value is [EMPTY] or [NULL] it evaluates to nil
-					if value == "[EMPTY]" || value == "[NULL]"{
-						filter = bson.M{field: nil}				
-					} else{
-						// If none of the above is true, the value remains as the original type (string)
-						filter = bson.M{field: value}				
-					}
-				}
+				fmt.Println("bool: ", bson.M{field: convertedValue})
+				return bson.M{field: convertedValue}
 			}
 		}
-		return filter
+	
+		// Try to convert to int
+		if convertedValue, err := strconv.Atoi(value); err == nil {
+			return bson.M{field: convertedValue}
+		}
+	
+		// Try converting to float64
+		if convertedValue, err := strconv.ParseFloat(value, 64); err == nil {
+			return bson.M{field: convertedValue}
+		}
+	
+		// If the passed value is "[EMPTY]" or "[NULL]", it evaluates to nil
+		if value == "[EMPTY]" || value == "[NULL]" {
+			return bson.M{field: nil}
+		}
+	
+		// If none of the above is true, the value remains as the original type (string)
+		return bson.M{field: value}
 	}
+	
 	
 	// GetOptionsSearchAllFields create an "Options" that states that the search will be done in all fields of the collection
 	func GetOptionsSearchAllFields() *options.FindOneOptions {
@@ -384,7 +386,7 @@
 
 		s.singleResult = s.collection.FindOne(ctx, GetFilter(fieldSearched, value), GetOptionsSearchAllFields())
 		if s.singleResult.Err() != nil {
-			return errors.New(fmt.Sprintf("ERROR. The searched field (%s) does not have the value (%s) in the collection (%s)", fieldSearched, value, s.collection))
+			return errors.New(fmt.Sprintf("ERROR. The searched field (%s) does not have the value (%s) in the collection (%s)", fieldSearched, value, s.collection.Name()))
 		}
 		return nil
 	}
@@ -506,7 +508,7 @@
 					return false, errors.New(fmt.Sprintf("ERROR. Mismatch of mongo field '%s': expected '%s', actual '%s'", key, expectedValue, value))
 				}
 			} else {
-				return false, errors.New(fmt.Sprintf("ERROR. The mongo field '%s': does not exist in '%s' collection", key, s.collection))
+				return false, errors.New(fmt.Sprintf("ERROR. The mongo field '%s': does not exist in '%s' collection", key, s.collection.Name()))
 			}
 		}
 		return true, nil
