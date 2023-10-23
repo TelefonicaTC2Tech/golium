@@ -110,11 +110,11 @@
 		s.SetCollection(ctx, collectionName)
 	
 		// 2-Get boolean if _id exist and must exist in collection
-		exist_id, err := s.VerifyExist_id(ctx, idCollection)
-		mustExist_id := VerifyMustExist(exist)
+		existId, err := s.VerifyExistId(ctx, idCollection)
+		mustExistId := VerifyMustExist(exist)
 	
 		// 3-Verify exist and must exist
-		return s.VerifyExistAndMustExistValue(exist_id, mustExist_id, err)
+		return s.VerifyExistAndMustExistValue(existId, mustExistId, err)
 	}
 	
 	// CheckMongoValuesStep checks the value of the MongoDB fields in the specified collection
@@ -202,8 +202,6 @@
 	// CheckNumberDocumentscollectionNameStep verify the number of documents in collection
 	func (s *Session) CheckNumberDocumentscollectionNameStep(ctx context.Context, collectionName string, num int) error {
 	
-		//TODO. Investigate why the appropriate method for this function (CountDouments) is not working properly
-
 		// 1-The collection from which the documents are to be counted is established
 		s.SetCollection(ctx, collectionName) 
 	
@@ -446,8 +444,8 @@
 		return nil
 	}
 	
-	// VerifyExist_id returns a boolean indicating whether the _id searched exists in the collection
-	func (s *Session) VerifyExist_id(ctx context.Context, idCollection string) (bool, error) {
+	// VerifyExistId returns a boolean indicating whether the _id searched exists in the collection
+	func (s *Session) VerifyExistId(ctx context.Context, idCollection string) (bool, error) {
 		//Perform the search and get the result as singleResult		
 		err := s.SetSingleResult(ctx, "_id", idCollection)
 		if err != nil {
