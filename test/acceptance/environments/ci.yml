@@ -117,9 +117,16 @@ elasticsearch:
   addresses:
     - http://localhost:9200
 
+# MongoDB settings
+mongoHost: mongo:27017
+mongoUsername: mongoadmin
+mongoPassword: mongoadmin
+mongoDatabase: golium-demo
+
 # Redis
 redis:
   endpoint: localhost:6379
+  
 # s3
 s3Autoclean: true
 s3Bucket: golium-demo

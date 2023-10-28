@@ -1,6 +1,11 @@
 version: "3.4"
 
 services:
+  mongo:
+    image: mongo:4.4.4
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongoadmin
+      MONGO_INITDB_ROOT_PASSWORD: mongoadmin
   redis:
     image: redis:alpine
   rabbit:
@@ -30,6 +35,7 @@ services:
       AWS_SECRET_ACCESS_KEY: minioadmin
       AWS_REGION: eu-west-1
     depends_on:
+      - mongo
       - redis
       - rabbit
       - elasticsearch
