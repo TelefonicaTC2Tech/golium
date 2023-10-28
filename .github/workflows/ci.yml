@@ -24,6 +24,16 @@ jobs:
       ENVIRONMENT: ci
 
     services:
+      mongo:
+        image: mongo
+        options: >-
+          --health-cmd "echo 'db.stats().ok' | mongo localhost:27017/hodor --quiet"
+          --health-interval 10s
+          --health-timeout 10s
+          --health-retries 10
+        ports:
+          - 27017:27017
+
       redis:
         image: redis
         options: >-
