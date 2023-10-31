@@ -12,14 +12,14 @@ endpoints:
   posts:
     api-endpoint: posts/
     api-key: "valid_apiKey"
-    files-path: "./test_data"    
+    files-path: "./test_data"
   users:
     api-endpoint: users/
     api-key: "valid_apiKey"
   bin-empty:
     api-endpoint: ""
     api-key: ""
-    files-path: "./test_data" 
+    files-path: "./test_data"
 
 # DNS settings
 dns: dns.google:53
@@ -121,6 +121,7 @@ elasticsearch:
 mongoHost: localhost:27017
 mongoUsername: mongoadmin
 mongoPassword: mongoadmin
+mongoAuthSource: admin
 mongoDatabase: golium-demo
 
 # Redis
