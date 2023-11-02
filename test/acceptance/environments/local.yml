@@ -28,7 +28,9 @@ dot: tls://dns.google:853
 timeout: 2000
 
 # RabbitMQ settings
-rabbitmq: amqp://guest:guest@rabbit:5672/
+rabbitmqSchema: amqp://
+rabbitmqCredentials: guest:guest
+rabbitmqHost: "@rabbit:5672/"
 
 # JWT settings
 signSymmetricKey: sign_symmetric_key_that_is_long_enough_for_algorithm_HS512_(with_more_than 256 bits!)
