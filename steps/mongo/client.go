@@ -14,22 +14,9 @@
 
 package mongo
 
-import (
-	"context"
-
-	"go.mongodb.org/mongo-driver/mongo"
-)
-
-type ClientFunctions interface {
-	Ping(client *mongo.Client) error
-}
+type ClientFunctions interface{}
 type ClientService struct{}
 
 func NewMongoClientService() *ClientService {
 	return &ClientService{}
-}
-
-// Ping check that there is a connection to MongoDB
-func (c ClientService) Ping(client *mongo.Client) error {
-	return client.Ping(context.Background(), nil)
 }

@@ -34,13 +34,7 @@ import (
 // Session contains the information of a MongoDB session.
 type Session struct {
 
-	// Save MongoDB login credentials: username, password, and AuthSource
-	credentials options.Credential
-
-	// Saves the host from accessing MongoDB
-	host string
-
-	// Save the MongoDB database
+	// Set the MongoDB database
 	database string
 
 	// Set the host and credentials for the connection
@@ -52,10 +46,13 @@ type Session struct {
 	// Points to a record in a collection
 	singleResult *mongo.SingleResult
 
+	// Saves the _id collection to be used
+	idCollection string
+
 	// Saves the collection to be used
 	collection *mongo.Collection
 
-	// Save the name of the collectionName fields
+	// Save the names of the collection fields
 	fieldsCollectionName []string
 
 	// Save collection items as JSON
@@ -67,9 +64,9 @@ type Session struct {
 
 // FUNCTIONS CALLED BY STEPS
 
-// CheckMongoFieldExistOrEmptyStep check that a field does not exist or it does exist and is empty
-func (s *Session) CheckMongoFieldExistOrEmptyStep(
-	ctx context.Context, fieldSearched, collectionName, idCollection string,
+// CheckMongoFieldDoesNotExistOrEmptyStep check that a field does not exist or it does exist and is empty
+func (s *Session) CheckMongoFieldDoesNotExistOrEmptyStep(
+	ctx context.Context, collectionName, fieldSearched, idCollection string,
 ) error {
 	// 1-Setting the Collection Name in the Session
 	s.SetCollection(collectionName)
@@ -140,71 +137,6 @@ func (s *Session) CheckMongoValuesStep(
 	return s.VerifyExistAndMustExistValue(existValue, mustExistValue, err)
 }
 
-// MongoConnectionStep establishes a connection in MongoDB.
-// The connection, client and database data are saved in s.clientOptions, s.client, and s.database
-func (s *Session) MongoConnectionStep(ctx context.Context) error {
-	// 1-Set credentials and host in session
-	s.SetCredentials(ctx)
-	s.SetHost(ctx)
-
-	// 2-Set clientOptions in session
-	s.clientOptions = options.Client().SetHosts(strings.Split(s.host, ",")).SetAuth(s.credentials)
-
-	// 3-Connect to the MongoDB server and set client in session
-	var err error
-	s.client, err = mongo.Connect(context.Background(), s.clientOptions)
-	if err != nil {
-		return fmt.Errorf("error: problems with the client options or with the context. '%s'", err)
-	}
-
-	// 4-Check the connection to the MongoDB server
-	err = s.MongoClientService.Ping(s.client)
-	if err != nil {
-		return fmt.Errorf("error: problems with connection to MongoDB. '%s'", err)
-	}
-
-	// 5-Set the database in session
-	s.SetDatabase(ctx)
-
-	return nil
-}
-
-// CreateDocumentcollectionNameStep creates a number of documents in the specified collection
-func (s *Session) CreateDocumentscollectionNameStep(
-	ctx context.Context, num int, collectionName string,
-) error {
-	// 1-collection in which the insertion will be made, if it does not exist it is created
-	s.SetCollection(collectionName)
-
-	// 2-The documents to be inserted are created
-	allDocuments := s.CreateDocumentsCollection(ctx, num)
-
-	// 3-Insert the documents into the "collectionName" collection of the database
-	_, err := s.collection.InsertMany(context.TODO(), allDocuments)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// DeleteDocumentscollectionNameStep delete a document from the MongoDB collection
-func (s *Session) DeleteDocumentscollectionNameStep(
-	ctx context.Context, collectionName, field, value string,
-) error {
-	// 1-The collection in which the deletion is to be made is established.
-	s.SetCollection(collectionName)
-
-	// 2-Performs the deletion of documents that match the filter after the data type is converted.
-	// Only it is possible filter by string, int, float, or boolean values, also in slices and maps.
-	_, err := s.collection.DeleteMany(ctx, GetFilterConverted(field, value))
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // CheckNumberDocumentscollectionNameStep verify the number of documents in collection
 func (s *Session) CheckNumberDocumentscollectionNameStep(collectionName string, num int) error {
 	// 1-The collection from which the documents are to be counted is established
@@ -229,10 +161,115 @@ func (s *Session) CheckNumberDocumentscollectionNameStep(collectionName string, 
 	return nil
 }
 
+// CreateDocumentcollectionNameStep creates a number of documents in the specified collection
+func (s *Session) CreateDocumentscollectionNameStep(
+	ctx context.Context, num int, collectionName string) error {
+	// 1-collection in which the insertion will be made, if it does not exist it is created
+	s.SetCollection(collectionName)
+
+	// 2-The documents to be inserted are created
+	allDocuments := s.CreateDocumentsCollection(ctx, num)
+
+	// 3-Insert the documents into the "collectionName" collection of the database
+	_, err := s.collection.InsertMany(context.TODO(), allDocuments)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// DeleteDocumentscollectionNameStep delete a document from the MongoDB collection
+func (s *Session) DeleteAllDocumentscollectionNameStep(ctx context.Context, collectionName string,
+	) error {
+	// 1-The collection in which the deletion is to be made is established.
+	s.SetCollection(collectionName)
+
+	// 2-Delete all documents
+	_, err := s.collection.DeleteMany(ctx, bson.D{})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// DeleteDocumentscollectionNameStep delete a document from the MongoDB collection
+func (s *Session) DeleteDocumentscollectionNameStep(
+	ctx context.Context, collectionName, field, value string) error {
+	// 1-The collection in which the deletion is to be made is established.
+	s.SetCollection(collectionName)
+
+	// 2-Performs the deletion of documents that match the filter after the data type is converted.
+	// Only it is possible filter by string, int, float, or boolean values, also in slices and maps.
+	_, err := s.collection.DeleteMany(ctx, GetFilterConverted(field, value))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// GenerateUUIDStoreIt create uuid in string format like _id and save in struct and context like _ID
+func (s *Session) GenerateUUIDStoreItStep(ctx context.Context) error {
+	guid, err := uuid.NewRandom()
+	if err != nil {
+		return fmt.Errorf("failed generating UUID: %w", err)
+	}
+	s.idCollection = guid.String()
+	golium.GetContext(ctx).Put("_ID", s.idCollection)
+
+	return nil
+}
+
+// MongoConnectionStep establishes a connection in MongoDB.
+// The connection, client and database data are saved in s.clientOptions, s.client, and s.database
+func (s *Session) MongoConnectionStep(ctx context.Context, t *godog.Table) error {
+	// 1-Set credentials and host in session
+	var err error
+	props, err := golium.ConvertTableToMap(ctx, t)
+	if err != nil {
+		return fmt.Errorf("ERROR: failed processing the table for validating the body: '%w'", err)
+	}
+	uri := fmt.Sprintf("mongodb://%s:%s@%s/%s",
+		props["User"], props["Password"], props["Host"], props["AuthSource"])
+
+	// 2-Set clientOptions in session
+	s.clientOptions = options.Client().ApplyURI(uri)
+
+	// 3-Connect to the MongoDB server and set client in session
+	s.client, err = mongo.Connect(ctx, s.clientOptions)
+	if err != nil {
+		return fmt.Errorf("error: problems with the client options or with the context. '%s'", err)
+	}
+
+	// 4-Check the connection to the MongoDB server
+	err = s.client.Ping(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("error: problems with connection to MongoDB. '%s'", err)
+	}
+
+	// 5-Set the database in session
+	s.database = props["Database"].(string)
+
+	return nil
+}
+
+// MongoDisconnection closes the connection to MongoDB if it exists
+func (s *Session) MongoDisconnectionStep() error {
+	if s.client != nil {
+		err := s.client.Disconnect(context.Background())
+		if err != nil {
+			return fmt.Errorf("error: problem in MongoDB disconnection: '%s'", err)
+		}
+	}
+	return nil
+}
+
 // GENERIC FUNCTIONS
 
-// ContainsElement check if an item exists in a slice
-func ContainsElement(expectedElement, sliceElements interface{}) bool {
+// ContainsElements check if an item exists in a slice
+func ContainsElements(expectedElement, sliceElements interface{}) bool {
 	// 1-Create a reflection object from the slice
 	sliceValue := reflect.ValueOf(sliceElements)
 
@@ -270,7 +307,7 @@ func GetFilterConverted(field, value string) primitive.M {
 	boolSlice := []string{"true", "TRUE", "True", "false", "FALSE", "False"}
 
 	// Try to convert to bool
-	if ContainsElement(value, boolSlice) {
+	if ContainsElements(value, boolSlice) {
 		convertedValue, err := strconv.ParseBool(value)
 		if err == nil {
 			return bson.M{field: convertedValue}
@@ -296,7 +333,7 @@ func GetFilterConverted(field, value string) primitive.M {
 	return bson.M{field: value}
 }
 
-// GetOptionsSearchAllFields creates an "Options" to search all fields in the collection
+// GetOptionsSearchAllFields creates an "options" to search all fields in the collection
 func GetOptionsSearchAllFields() *options.FindOneOptions {
 	return options.FindOne().SetProjection(bson.M{})
 }
@@ -313,36 +350,34 @@ func (s *Session) CreateDocumentsCollection(ctx context.Context, num int) []inte
 	// 1-Initialize the document slice
 	allDocuments := []interface{}{}
 
-	// 2-Obtaining the _id of the context, if it does not exist it is created
-	id := golium.GetContext(ctx).Get("_ID")
-	if id == nil {
-		var err error
-		id, err = uuid.NewRandom()
+	//2-Obtaining the _id of the struct, if it does not exist it is created
+	id := s.idCollection
+	if id == "" {
+		newUUID, err := uuid.NewRandom()
 		if err != nil {
 			return nil
 		}
-		// Transforming id into an interface
-		id = id.(uuid.UUID).String()
+		id = newUUID.String()
 	}
 	// 3-Creating Documents and Inserting Into the Slice
 	for i := 1; i <= num; i++ {
 		// Defines the document to be inserted.
 		// The _id will be the same across all + _ + iteration number
 		document := map[string]interface{}{
-			"_id":         id.(string) + "_" + strconv.Itoa(i),
+			"_id":         id + "_" + strconv.Itoa(i),
 			"fieldString": "Example field string " + strconv.Itoa(i),
 			"fieldInt":    i,
 			"fieldFloat":  3.14,
 			"fieldBool":   true,
 			"fieldSlice":  []string{"itemSlice_" + strconv.Itoa(i), "itemSlice20", "itemSlice30"},
 			"fieldEmpty":  nil,
-			"fieldMap": map[string]interface{}{
+			"fieldMap":    map[string]interface{}{
 				"fieldString":     "Example field in map string " + strconv.Itoa(i),
 				"fieldInt":        i * 10,
 				"fieldFloat":      1974.1976,
 				"fieldBool":       false,
 				"fieldSliceEmpty": []string{},
-				"fieldMap2": map[string]interface{}{
+				"fieldMap2": 	   map[string]interface{}{
 					"fieldString":    "Example field in map map string " + strconv.Itoa(i),
 					"fieldInt":       i * 100,
 					"fieldFloat":     1974.1976,
@@ -355,45 +390,6 @@ func (s *Session) CreateDocumentsCollection(ctx context.Context, num int) []inte
 		allDocuments = append(allDocuments, document)
 	}
 	return allDocuments
-}
-
-// SetCredentials set an Options element. Credential with MongoDB access credentials
-func (s *Session) SetCredentials(ctx context.Context) {
-	credentials := options.Credential{
-		Username:   golium.ValueAsString(ctx, "[CONF:mongoUsername]"),
-		Password:   golium.ValueAsString(ctx, "[CONF:mongoPassword]"),
-		AuthSource: golium.ValueAsString(ctx, "[CONF:mongoAuthSource]"),
-	}
-	s.credentials = credentials
-}
-
-// SetHost set a string with the host
-func (s *Session) SetHost(ctx context.Context) {
-	s.host = golium.ValueAsString(ctx, "[CONF:mongoHost]")
-}
-
-// SetDatabase set a string with the database
-func (s *Session) SetDatabase(ctx context.Context) {
-	s.database = golium.ValueAsString(ctx, "[CONF:mongoDatabase]")
-}
-
-// SetSingleResult set a Single Result from a Filter Search (GetFilter(...) function)
-func (s *Session) SetSingleResult(
-	ctx context.Context, fieldSearched string, value interface{},
-) error {
-	s.singleResult = s.collection.FindOne(
-		ctx, GetFilter(fieldSearched, value), GetOptionsSearchAllFields())
-	if s.singleResult.Err() != nil {
-		return fmt.Errorf("error: the searched '%s' field does not have the '%s' value "+
-			"in the '%s' collection", fieldSearched, value, s.collection.Name())
-	}
-	return nil
-}
-
-// SetCollection sets the collection. If the collection does not exist, no error is returned.
-// Collections are created dynamically when you insert a document
-func (s *Session) SetCollection(collectionName string) {
-	s.collection = s.client.Database(s.database).Collection(collectionName)
 }
 
 // ExistFieldCollection evaluate whether or not the searched field exists
@@ -415,6 +411,12 @@ func (s *Session) GetDecodeDocument(singleResult mongo.SingleResult) (bson.D, er
 		return nil, err
 	}
 	return bsonDoc, nil
+}
+
+// SetCollection sets the collection. If the collection does not exist, no error is returned.
+// Collections are created dynamically when you insert a document
+func (s *Session) SetCollection(collectionName string) {
+	s.collection = s.client.Database(s.database).Collection(collectionName)
 }
 
 // SetDataCollectionJSONBytes convert BSON object to JSON
@@ -443,38 +445,25 @@ func (s *Session) SetFieldsCollectionName(ctx context.Context, idCollection stri
 			s.fieldsCollectionName = append(s.fieldsCollectionName, fieldName)
 		}
 	}
+
 	return nil
 }
 
-// VerifyExistID returns a boolean indicating whether the _id searched exists in the collection
-func (s *Session) VerifyExistID(ctx context.Context, idCollection string) (bool, error) {
-	// Perform the search and get the result as singleResult
-	err := s.SetSingleResult(ctx, "_id", idCollection)
-	if err != nil {
-		return false, fmt.Errorf("error: searched _id '%s' does not exist in the '%s' collection",
-			idCollection, s.collection.Name())
+// SetSingleResult set a Single Result from a Filter Search (GetFilter(...) function)
+func (s *Session) SetSingleResult(
+	ctx context.Context, fieldSearched string, value interface{}) error {
+	s.singleResult = s.collection.FindOne(
+		ctx, GetFilter(fieldSearched, value), GetOptionsSearchAllFields())
+	if s.singleResult.Err() != nil {
+		return fmt.Errorf("error: the searched '%s' field does not have the '%s' value "+
+			"in the '%s' collection", fieldSearched, value, s.collection.Name())
 	}
-	return true, nil
-}
-
-// VerifyExistAndMustExistValue check if the values exist and should exist
-func (s *Session) VerifyExistAndMustExistValue(exist, mustExist bool, err error) error {
-	// If Exist and should NOT exist or NOT exist and should exist return error
-	// If Exist and shoud exist OR not exist and should not exist return nil
-	if exist == mustExist {
-		return nil
-	}
-	if err != nil {
-		return err
-	}
-	return fmt.Errorf("error: the value DOES NOT EXIST and SHOULD, or EXIST and SHOULD NOT, "+
-		"in '%s' collection", s.collection.Name())
+	return nil
 }
 
 // ValidateDataMongo verifies that the feature table data exists in the MongoDB collection
 func (s *Session) ValidateDataMongo(
-	ctx context.Context, idCollection string, props map[string]interface{},
-) (bool, error) {
+	ctx context.Context, idCollection string, props map[string]interface{}) (bool, error) {
 	// 1-Sets a document to s.singleResult from a filter search
 	s.SetSingleResult(ctx, "_id", idCollection)
 
@@ -503,7 +492,7 @@ func (s *Session) ValidateDataMongo(
 		// Verify that the name of the clean field (fieldTableFeature) exists
 		// in the list of fields in the collection (s.fieldsCollectionName)
 		fieldTableFeature := strings.Split(key, ".")[0]
-		if ContainsElement(fieldTableFeature, s.fieldsCollectionName) {
+		if ContainsElements(fieldTableFeature, s.fieldsCollectionName) {
 			if value == nil && expectedValue == "" {
 				// The value of the field in MongoDB is null and expectedValue is [EMPTY]
 				continue
@@ -519,13 +508,27 @@ func (s *Session) ValidateDataMongo(
 	return true, nil
 }
 
-// MongoDisconnection closes the connection to MongoDB if it exists
-func (s *Session) MongoDisconnection() error {
-	if s.client != nil {
-		err := s.client.Disconnect(context.Background())
-		if err != nil {
-			return fmt.Errorf("error: problem in MongoDB disconnection: '%s'", err)
-		}
+// VerifyExistAndMustExistValue check if the values exist and should exist
+func (s *Session) VerifyExistAndMustExistValue(exist, mustExist bool, err error) error {
+	// If Exist and should NOT exist or NOT exist and should exist return error
+	// If Exist and shoud exist OR not exist and should not exist return nil
+	if exist == mustExist {
+		return nil
 	}
-	return nil
+	if err != nil {
+		return err
+	}
+	return fmt.Errorf("error: the value DOES NOT EXIST and SHOULD, or EXIST and SHOULD NOT, "+
+		"in the collection")
+}
+
+// VerifyExistID returns a boolean indicating whether the _id searched exists in the collection
+func (s *Session) VerifyExistID(ctx context.Context, idCollection string) (bool, error) {
+	// Perform the search and get the result as singleResult
+	err := s.SetSingleResult(ctx, "_id", idCollection)
+	if err != nil {
+		return false, fmt.Errorf("error: searched _id '%s' does not exist in the '%s' collection",
+			idCollection, s.collection.Name())
+	}
+	return true, nil
 }
