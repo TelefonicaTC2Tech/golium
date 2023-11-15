@@ -195,7 +195,7 @@ func TestCollectionFind(t *testing.T) {
 			FindCursor = tt.findCursor
 			FindError = tt.findError
 			c, _ := s.MongoCollectionService.Find(context.Background(), nil, &mongo.Collection{})
-			if (c != nil) != tt.wantErr {
+			if (c != nil) == tt.wantErr {
 				t.Errorf("Session.Find() error, wantErr %v", tt.wantErr)
 			}
 		})
