@@ -61,13 +61,14 @@ type Session struct {
 	// Access MongoDB Client features
 	MongoClientService ClientFunctions
 
-	// Access MongoDB Colleciton features
+	// Access MongoDB Collecti	on features
 	MongoCollectionService CollectionFunctions
 }
 
 // FUNCTIONS CALLED BY STEPS
 
-// CheckMongoFieldDoesNotExistOrEmptyStep check that a field does not exist or it does exist and is empty
+// CheckMongoFieldDoesNotExistOrEmptyStep check that a field
+// does not exist or it does exist and is empty
 func (s *Session) CheckMongoFieldDoesNotExistOrEmptyStep(
 	ctx context.Context, collectionName, fieldSearched, idCollection string,
 ) error {
@@ -146,7 +147,8 @@ func (s *Session) CheckNumberDocumentscollectionNameStep(collectionName string, 
 	s.SetCollection(collectionName)
 
 	// 2-Make a query to get all the documents in the collection
-	cursor, err := s.MongoCollectionService.Find(context.Background(), bson.D{}, s.collection, &options.FindOptions{})
+	cursor, err := s.MongoCollectionService.Find(context.Background(),
+		bson.D{}, s.collection, &options.FindOptions{})
 	if err != nil {
 		return fmt.Errorf("error: query error: '%s'", err)
 	}
@@ -353,7 +355,7 @@ func (s *Session) CreateDocumentsCollection(ctx context.Context, num int) []inte
 	// 1-Initialize the document slice
 	allDocuments := []interface{}{}
 
-	//2-Obtaining the _id of the struct, if it does not exist it is created
+	// 2-Obtaining the _id of the struct, if it does not exist it is created
 	id := s.idCollection
 	if id == "" {
 		newUUID, err := uuid.NewRandom()
@@ -437,7 +439,8 @@ func (s *Session) SetDataCollectionJSONBytes(bsonDoc bson.D) error {
 func (s *Session) SetFieldsCollectionName(ctx context.Context, idCollection string) error {
 	// Make a query to find past _id's document
 	var document bson.M
-	err := s.MongoCollectionService.FindOne(ctx, GetFilter("_id", idCollection), s.collection, &options.FindOneOptions{}).Decode(&document)
+	err := s.MongoCollectionService.FindOne(ctx,
+		GetFilter("_id", idCollection), s.collection, &options.FindOneOptions{}).Decode(&document)
 	if err == mongo.ErrNoDocuments {
 		return fmt.Errorf("error: no documents matching the filter were found")
 	} else if err != nil {

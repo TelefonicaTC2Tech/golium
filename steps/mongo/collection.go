@@ -24,10 +24,14 @@ import (
 type CollectionFunctions interface {
 	Collection(name string, database *mongo.Database) *mongo.Collection
 	Name(collection *mongo.Collection) string
-	Find(ctx context.Context, filter interface{}, collection *mongo.Collection, opts ...*options.FindOptions) (*mongo.Cursor, error)
-	FindOne(ctx context.Context, filter interface{}, collection *mongo.Collection, opt ...*options.FindOneOptions) *mongo.SingleResult
-	InsertMany(ctx context.Context, documents []interface{}, collection *mongo.Collection) (*mongo.InsertManyResult, error)
-	DeleteMany(ctx context.Context, filter interface{}, opt *options.DeleteOptions, collection *mongo.Collection) (*mongo.DeleteResult, error)
+	Find(ctx context.Context, filter interface{}, collection *mongo.Collection,
+		opts ...*options.FindOptions) (*mongo.Cursor, error)
+	FindOne(ctx context.Context, filter interface{}, collection *mongo.Collection,
+		opt ...*options.FindOneOptions) *mongo.SingleResult
+	InsertMany(ctx context.Context, documents []interface{},
+		collection *mongo.Collection) (*mongo.InsertManyResult, error)
+	DeleteMany(ctx context.Context, filter interface{},
+		opt *options.DeleteOptions, collection *mongo.Collection) (*mongo.DeleteResult, error)
 }
 
 type CollectionService struct{}
@@ -44,18 +48,22 @@ func (c CollectionService) Name(collection *mongo.Collection) string {
 	return collection.Name()
 }
 
-func (c CollectionService) FindOne(ctx context.Context, filter interface{}, collection *mongo.Collection, opts ...*options.FindOneOptions) *mongo.SingleResult {
+func (c CollectionService) FindOne(ctx context.Context, filter interface{},
+	collection *mongo.Collection, opts ...*options.FindOneOptions) *mongo.SingleResult {
 	return collection.FindOne(ctx, filter, opts...)
 }
 
-func (c CollectionService) Find(ctx context.Context, filter interface{}, collection *mongo.Collection, opts ...*options.FindOptions) (*mongo.Cursor, error) {
+func (c CollectionService) Find(ctx context.Context, filter interface{},
+	collection *mongo.Collection, opts ...*options.FindOptions) (*mongo.Cursor, error) {
 	return collection.Find(ctx, filter, opts...)
 }
 
-func (c CollectionService) InsertMany(ctx context.Context, documents []interface{}, collection *mongo.Collection) (*mongo.InsertManyResult, error) {
+func (c CollectionService) InsertMany(ctx context.Context, documents []interface{},
+	collection *mongo.Collection) (*mongo.InsertManyResult, error) {
 	return collection.InsertMany(ctx, documents)
 }
 
-func (c CollectionService) DeleteMany(ctx context.Context, filter interface{}, opt *options.DeleteOptions, collection *mongo.Collection) (*mongo.DeleteResult, error) {
+func (c CollectionService) DeleteMany(ctx context.Context, filter interface{},
+	opt *options.DeleteOptions, collection *mongo.Collection) (*mongo.DeleteResult, error) {
 	return collection.DeleteMany(ctx, filter, opt)
 }

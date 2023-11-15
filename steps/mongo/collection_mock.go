@@ -35,7 +35,8 @@ var (
 
 type CollectionServiceFuncMock struct{}
 
-func (c CollectionServiceFuncMock) Collection(name string, database *mongo.Database) *mongo.Collection {
+func (c CollectionServiceFuncMock) Collection(name string,
+	database *mongo.Database) *mongo.Collection {
 	return CollectionCollection
 }
 
@@ -43,18 +44,22 @@ func (c CollectionServiceFuncMock) Name(collection *mongo.Collection) string {
 	return NameString
 }
 
-func (c CollectionServiceFuncMock) FindOne(ctx context.Context, filter interface{}, collection *mongo.Collection, opts ...*options.FindOneOptions) *mongo.SingleResult {
+func (c CollectionServiceFuncMock) FindOne(ctx context.Context, filter interface{},
+	collection *mongo.Collection, opts ...*options.FindOneOptions) *mongo.SingleResult {
 	return FindOneSingleResult
 }
 
-func (c CollectionServiceFuncMock) Find(ctx context.Context, filter interface{}, collection *mongo.Collection, opts ...*options.FindOptions) (*mongo.Cursor, error) {
+func (c CollectionServiceFuncMock) Find(ctx context.Context, filter interface{},
+	collection *mongo.Collection, opts ...*options.FindOptions) (*mongo.Cursor, error) {
 	return FindCursor, FindError
 }
 
-func (c CollectionServiceFuncMock) InsertMany(ctx context.Context, documents []interface{}, collection *mongo.Collection) (*mongo.InsertManyResult, error) {
+func (c CollectionServiceFuncMock) InsertMany(ctx context.Context, documents []interface{},
+	collection *mongo.Collection) (*mongo.InsertManyResult, error) {
 	return InsertManyInsertManyResult, InsertManyError
 }
 
-func (c CollectionServiceFuncMock) DeleteMany(ctx context.Context, filter interface{}, opt *options.DeleteOptions, collection *mongo.Collection) (*mongo.DeleteResult, error) {
+func (c CollectionServiceFuncMock) DeleteMany(ctx context.Context, filter interface{},
+	opt *options.DeleteOptions, collection *mongo.Collection) (*mongo.DeleteResult, error) {
 	return DeleteResultDeleteResult, DeleteResultError
 }

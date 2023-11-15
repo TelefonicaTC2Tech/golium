@@ -44,7 +44,8 @@ func TestPing(t *testing.T) {
 			s := &Session{}
 			s.MongoClientService = ClientServiceFuncMock{}
 			PingError = tt.pingErr
-			if err := s.MongoClientService.Ping(context.Background(), nil, s.client); (err != nil) != tt.wantErr {
+			if err := s.MongoClientService.Ping(context.Background(),
+				nil, s.client); (err != nil) != tt.wantErr {
 				t.Errorf("Session.Ping() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -102,7 +103,8 @@ func TestDisconnect(t *testing.T) {
 			s := &Session{}
 			s.MongoClientService = ClientServiceFuncMock{}
 			DisconnectError = tt.disconnectErr
-			if err := s.MongoClientService.Disconnect(context.Background(), s.client); (err != nil) != tt.wantErr {
+			if err := s.MongoClientService.Disconnect(context.Background(),
+				s.client); (err != nil) != tt.wantErr {
 				t.Errorf("Session.Disconnect() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -131,7 +133,8 @@ func TestCollectionCollection(t *testing.T) {
 			s := &Session{}
 			s.MongoCollectionService = CollectionServiceFuncMock{}
 			CollectionCollection = tt.collection
-			if d := s.MongoCollectionService.Collection("test", &mongo.Database{}); (d != nil) == tt.wantErr {
+			if d := s.MongoCollectionService.Collection("test",
+				&mongo.Database{}); (d != nil) == tt.wantErr {
 				t.Errorf("Session.Collection() error, wantErr %v", tt.wantErr)
 			}
 		})
@@ -161,7 +164,7 @@ func TestCollectionName(t *testing.T) {
 			s.collection = &mongo.Collection{}
 			s.MongoCollectionService = CollectionServiceFuncMock{}
 			NameString = tt.nameString
-			if n := s.MongoCollectionService.Name(s.collection); (len(n) == 0) != tt.wantErr {
+			if n := s.MongoCollectionService.Name(s.collection); (n == "") != tt.wantErr {
 				t.Errorf("Session.Name() error, wantErr %v", tt.wantErr)
 			}
 		})
@@ -225,7 +228,8 @@ func TestCollectionFindOne(t *testing.T) {
 			s.collection = &mongo.Collection{}
 			s.MongoCollectionService = CollectionServiceFuncMock{}
 			FindOneSingleResult = tt.findOneSingleResult
-			if f := s.MongoCollectionService.FindOne(context.Background(), nil, s.collection); (f != nil) == tt.wantErr {
+			if f := s.MongoCollectionService.FindOne(context.Background(),
+				nil, s.collection); (f != nil) == tt.wantErr {
 				t.Errorf("Session.FindOne() error, wantErr %v", tt.wantErr)
 			}
 		})

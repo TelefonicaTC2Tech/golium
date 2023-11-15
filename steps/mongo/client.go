@@ -33,7 +33,8 @@ func NewMongoClientService() *ClientService {
 	return &ClientService{}
 }
 
-func (c ClientService) Ping(ctx context.Context, rp *readpref.ReadPref, client *mongo.Client) error {
+func (c ClientService) Ping(ctx context.Context, rp *readpref.ReadPref,
+	client *mongo.Client) error {
 	return client.Ping(ctx, rp)
 }
 

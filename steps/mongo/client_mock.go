@@ -29,7 +29,8 @@ var (
 
 type ClientServiceFuncMock struct{}
 
-func (c ClientServiceFuncMock) Ping(ctx context.Context, rp *readpref.ReadPref, client *mongo.Client) error {
+func (c ClientServiceFuncMock) Ping(ctx context.Context, rp *readpref.ReadPref,
+	client *mongo.Client) error {
 	return PingError
 }
 
