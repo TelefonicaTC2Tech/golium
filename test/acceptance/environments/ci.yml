@@ -12,14 +12,14 @@ endpoints:
   posts:
     api-endpoint: posts/
     api-key: "valid_apiKey"
-    files-path: "./test_data"    
+    files-path: "./test_data"
   users:
     api-endpoint: users/
     api-key: "valid_apiKey"
   bin-empty:
     api-endpoint: ""
     api-key: ""
-    files-path: "./test_data" 
+    files-path: "./test_data"
 
 # DNS settings
 dns: dns.google:53
@@ -28,7 +28,10 @@ dot: tls://dns.google:853
 timeout: 2000
 
 # RabbitMQ settings
-rabbitmq: amqp://guest:guest@localhost:5672/
+rabbitmq:
+  schema: amqp://
+  credentials: guest:guest
+  host: "@localhost:5672/"
 
 # JWT settings
 signSymmetricKey: sign_symmetric_key_that_is_long_enough_for_algorithm_HS512_(with_more_than 256 bits!)
@@ -117,9 +120,17 @@ elasticsearch:
   addresses:
     - http://localhost:9200
 
+# MongoDB settings
+mongoHost: localhost:27017
+mongoUsername: mongoadmin
+mongoPassword: mongoadmin
+mongoAuthSource: admin
+mongoDatabase: golium-demo
+
 # Redis
 redis:
   endpoint: localhost:6379
+
 # s3
 s3Autoclean: true
 s3Bucket: golium-demo

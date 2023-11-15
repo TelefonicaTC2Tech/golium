@@ -30,7 +30,7 @@ type Steps struct {
 
 // InitializeSteps initializes all the steps.
 func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioContext) context.Context {
-	// Initialize the HTTP session in the context
+	// Initialize the Redis session in the context
 	ctx = InitializeContext(ctx)
 	session := GetSession(ctx)
 	// Initialize the steps

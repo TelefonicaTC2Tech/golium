@@ -26,6 +26,7 @@ import (
 	"github.com/TelefonicaTC2Tech/golium/steps/elasticsearch"
 	"github.com/TelefonicaTC2Tech/golium/steps/http"
 	"github.com/TelefonicaTC2Tech/golium/steps/jwt"
+	"github.com/TelefonicaTC2Tech/golium/steps/mongo"
 	"github.com/TelefonicaTC2Tech/golium/steps/rabbit"
 	"github.com/TelefonicaTC2Tech/golium/steps/redis"
 
@@ -56,6 +57,7 @@ func InitializeScenario(ctx context.Context, scenarioCtx *godog.ScenarioContext)
 		common.Steps{},
 		jwt.Steps{},
 		dns.Steps{},
+		mongo.Steps{},
 		redis.Steps{},
 		rabbit.Steps{},
 		mockhttp.Steps{},

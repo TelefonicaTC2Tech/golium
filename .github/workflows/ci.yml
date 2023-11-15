@@ -24,6 +24,19 @@ jobs:
       ENVIRONMENT: ci
 
     services:
+      mongo:
+        image: mongo:4.4.4
+        env:
+          MONGO_INITDB_ROOT_USERNAME: mongoadmin
+          MONGO_INITDB_ROOT_PASSWORD: mongoadmin
+        options: >-
+          --health-cmd "echo 'db.stats().ok' | mongo localhost:27017/mongoadmin --quiet"
+          --health-interval 10s
+          --health-timeout 10s
+          --health-retries 10
+        ports:
+          - 27017:27017
+
       redis:
         image: redis
         options: >-
