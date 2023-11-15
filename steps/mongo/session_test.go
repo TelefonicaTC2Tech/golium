@@ -17,8 +17,12 @@ package mongo
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"testing"
 
+	"github.com/TelefonicaTC2Tech/golium"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -304,4 +308,145 @@ func TestCollectionDeletetMany(t *testing.T) {
 			}
 		})
 	}
+}
+
+// FUNCTIONS CALLED BY STEPS
+
+func TestGenerateUUIDStoreItStep(t *testing.T) {
+	// 1-Establish a Session instance and context
+	s := &Session{}
+	ctx := golium.InitializeContext(context.Background())
+
+	// 2-Generating a Random UUID
+	t.Run("Generating a Random UUID", func(t *testing.T) {
+		if s.GenerateUUIDStoreItStep(ctx) != nil {
+			t.Errorf("Error generating a random UUID")
+		}
+	})
+
+	// 3-Verifying that a UUID has been created
+	if len(s.idCollection) != 36 {
+		t.Errorf("s.idCollection was not created")
+	}
+}
+
+// GENERIC FUNCTIONS
+
+func TestContainsElements(t *testing.T) {
+	t.Run("Element exists in slice", func(t *testing.T) {
+		slice := []int{1, 2, 3, 4, 5}
+		element := 3
+		result := ContainsElements(element, slice)
+		if !result {
+			t.Errorf("Expected %v to be in the slice, but it wasn't.", element)
+		}
+	})
+	t.Run("Element does not exist in slice", func(t *testing.T) {
+		slice := []string{"Alcorcon", "Madrid", "Barcelona"}
+		element := "Valladolid"
+		result := ContainsElements(element, slice)
+		if result {
+			t.Errorf("Expected %v not to be in the slice, but it was.", element)
+		}
+	})
+}
+
+func TestGetFilter(t *testing.T) {
+	t.Run("Create filter with non-nil value", func(t *testing.T) {
+		key := "age"
+		value := 30
+		filter := GetFilter(key, value)
+		expectedFilter := bson.M{"age": 30}
+		if !reflect.DeepEqual(filter, expectedFilter) {
+			t.Errorf("Expected filter: %v, but got: %v", expectedFilter, filter)
+		}
+	})
+	t.Run("Create filter with nil value", func(t *testing.T) {
+		key := "name"
+		var value interface{} = nil
+		filter := GetFilter(key, value)
+		expectedFilter := bson.M{"name": nil}
+		if !reflect.DeepEqual(filter, expectedFilter) {
+			t.Errorf("Expected filter: %v, but got: %v", expectedFilter, filter)
+		}
+	})
+}
+
+func TestGetFilterConverted(t *testing.T) {
+	t.Run("Convert to boolean (true)", func(t *testing.T) {
+		field := "is_boolean"
+		value := "true"
+		filter := GetFilterConverted(field, value)
+		expectedFilter := primitive.M{field: true}
+		if filter[field] != expectedFilter[field] {
+			t.Errorf("Expected filter: %v, but got: %v", expectedFilter, filter)
+		}
+	})
+	t.Run("Convert to boolean (false)", func(t *testing.T) {
+		field := "is_boolean"
+		value := "false"
+		filter := GetFilterConverted(field, value)
+		expectedFilter := primitive.M{field: false}
+		if filter[field] != expectedFilter[field] {
+			t.Errorf("Expected filter: %v, but got: %v", expectedFilter, filter)
+		}
+	})
+	t.Run("Convert to integer", func(t *testing.T) {
+		field := "quantity number"
+		value := "42"
+		filter := GetFilterConverted(field, value)
+		expectedFilter := primitive.M{field: 42}
+		if filter[field] != expectedFilter[field] {
+			t.Errorf("Expected filter: %v, but got: %v", expectedFilter, filter)
+		}
+	})
+	t.Run("Convert to float64", func(t *testing.T) {
+		field := "quantity decimal number"
+		value := "99.99"
+		filter := GetFilterConverted(field, value)
+		expectedFilter := primitive.M{field: 99.99}
+		if filter[field] != expectedFilter[field] {
+			t.Errorf("Expected filter: %v, but got: %v", expectedFilter, filter)
+		}
+	})
+	t.Run("Convert to nil (empty)", func(t *testing.T) {
+		field := "nil or empty"
+		value := "[EMPTY]"
+		filter := GetFilterConverted(field, value)
+		expectedFilter := primitive.M{field: nil}
+		if filter[field] != expectedFilter[field] {
+			t.Errorf("Expected filter: %v, but got: %v", expectedFilter, filter)
+		}
+	})
+	t.Run("No conversion (string)", func(t *testing.T) {
+		field := "Nadie"
+		value := "Juan"
+		filter := GetFilterConverted(field, value)
+		expectedFilter := primitive.M{field: value}
+		if filter[field] != expectedFilter[field] {
+			t.Errorf("Expected filter: %v, but got: %v", expectedFilter, filter)
+		}
+	})
+}
+
+func TestGetOptionsSearchAllFields(t *testing.T) {
+	t.Run("Check creates an 'Options' to search all fields in the collection", func(t *testing.T) {
+		options := GetOptionsSearchAllFields()
+		if options.Projection == nil {
+			t.Errorf("Expected Projection to be nil, but got: %v", options.Projection)
+		}
+	})
+}
+
+func TestVerifyMustExist(t *testing.T) {
+	t.Run("exist is true", func(t *testing.T) {
+		if VerifyMustExist("does exist") != true {
+			t.Errorf("Expected true, but got false")
+		}
+	})
+	t.Run("exist is false", func(t *testing.T) {
+		if VerifyMustExist("does not exist") != false {
+			t.Errorf("Expected false, but got true")
+		}
+	})
 }
