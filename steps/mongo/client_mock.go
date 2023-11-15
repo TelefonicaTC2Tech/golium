@@ -25,19 +25,28 @@ var (
 	PingError        error
 	DisconnectError  error
 	DatabaseDatabase *mongo.Database
+	ContextCliFake   context.Context
+	ClientCliFake    *mongo.Client
+	NameCliFake      string
 )
 
 type ClientServiceFuncMock struct{}
 
 func (c ClientServiceFuncMock) Ping(ctx context.Context, rp *readpref.ReadPref,
 	client *mongo.Client) error {
+	ContextCliFake = ctx
+	ClientCliFake = client
 	return PingError
 }
 
 func (c ClientServiceFuncMock) Disconnect(ctx context.Context, client *mongo.Client) error {
+	ContextCliFake = ctx
+	ClientCliFake = client
 	return DisconnectError
 }
 
 func (c ClientServiceFuncMock) Database(name string, client *mongo.Client) *mongo.Database {
+	NameCliFake = name
+	ClientCliFake = client
 	return DatabaseDatabase
 }

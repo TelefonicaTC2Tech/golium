@@ -31,7 +31,7 @@ type CollectionFunctions interface {
 	InsertMany(ctx context.Context, documents []interface{},
 		collection *mongo.Collection) (*mongo.InsertManyResult, error)
 	DeleteMany(ctx context.Context, filter interface{},
-		opt *options.DeleteOptions, collection *mongo.Collection) (*mongo.DeleteResult, error)
+		collection *mongo.Collection, opts ...*options.DeleteOptions) (*mongo.DeleteResult, error)
 }
 
 type CollectionService struct{}
@@ -64,6 +64,6 @@ func (c CollectionService) InsertMany(ctx context.Context, documents []interface
 }
 
 func (c CollectionService) DeleteMany(ctx context.Context, filter interface{},
-	opt *options.DeleteOptions, collection *mongo.Collection) (*mongo.DeleteResult, error) {
-	return collection.DeleteMany(ctx, filter, opt)
+	collection *mongo.Collection, opts ...*options.DeleteOptions) (*mongo.DeleteResult, error) {
+	return collection.DeleteMany(ctx, filter, opts...)
 }

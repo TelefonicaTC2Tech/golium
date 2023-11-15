@@ -31,35 +31,62 @@ var (
 	InsertManyError            error
 	DeleteResultDeleteResult   *mongo.DeleteResult
 	DeleteResultError          error
+	ContextColFake             context.Context
+	CollectionColFake          *mongo.Collection
+	FindOptsColFake            []*options.FindOptions
+	FindOneOptsColFake         []*options.FindOneOptions
+	DeleteOptsColFake          []*options.DeleteOptions
+	DatabaseColFake            *mongo.Database
+	NameColFake                string
+	FilterColFake              interface{}
+	DocumentsColFake           interface{}
 )
 
 type CollectionServiceFuncMock struct{}
 
 func (c CollectionServiceFuncMock) Collection(name string,
 	database *mongo.Database) *mongo.Collection {
+	NameColFake = name
+	DatabaseColFake = database
 	return CollectionCollection
 }
 
 func (c CollectionServiceFuncMock) Name(collection *mongo.Collection) string {
+	CollectionColFake = collection
 	return NameString
 }
 
 func (c CollectionServiceFuncMock) FindOne(ctx context.Context, filter interface{},
 	collection *mongo.Collection, opts ...*options.FindOneOptions) *mongo.SingleResult {
+	ContextColFake = ctx
+	FilterColFake = filter
+	CollectionColFake = collection
+	FindOneOptsColFake = opts
 	return FindOneSingleResult
 }
 
 func (c CollectionServiceFuncMock) Find(ctx context.Context, filter interface{},
 	collection *mongo.Collection, opts ...*options.FindOptions) (*mongo.Cursor, error) {
+	ContextColFake = ctx
+	FilterColFake = filter
+	CollectionColFake = collection
+	FindOptsColFake = opts
 	return FindCursor, FindError
 }
 
 func (c CollectionServiceFuncMock) InsertMany(ctx context.Context, documents []interface{},
 	collection *mongo.Collection) (*mongo.InsertManyResult, error) {
+	ContextColFake = ctx
+	DocumentsColFake = documents
+	CollectionColFake = collection
 	return InsertManyInsertManyResult, InsertManyError
 }
 
 func (c CollectionServiceFuncMock) DeleteMany(ctx context.Context, filter interface{},
-	opt *options.DeleteOptions, collection *mongo.Collection) (*mongo.DeleteResult, error) {
+	collection *mongo.Collection, opts ...*options.DeleteOptions) (*mongo.DeleteResult, error) {
+	ContextColFake = ctx
+	FilterColFake = filter
+	CollectionColFake = collection
+	DeleteOptsColFake = opts
 	return DeleteResultDeleteResult, DeleteResultError
 }
