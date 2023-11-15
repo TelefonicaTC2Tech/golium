@@ -352,7 +352,8 @@ func VerifyMustExist(exist string) bool {
 
 // CreateDocumentsCollection creates num documents in a slice and inserts them into a collection
 func (s *Session) CreateDocumentsCollection(ctx context.Context, num int) []interface{} {
-	ctx = nil
+	ContextCliFake = ctx
+
 	// 1-Initialize the document slice
 	allDocuments := []interface{}{}
 

@@ -28,6 +28,7 @@ var (
 	ContextCliFake   context.Context
 	ClientCliFake    *mongo.Client
 	NameCliFake      string
+	ReadPrefCliFake  *readpref.ReadPref
 )
 
 type ClientServiceFuncMock struct{}
@@ -35,6 +36,7 @@ type ClientServiceFuncMock struct{}
 func (c ClientServiceFuncMock) Ping(ctx context.Context, rp *readpref.ReadPref,
 	client *mongo.Client) error {
 	ContextCliFake = ctx
+	ReadPrefCliFake = rp
 	ClientCliFake = client
 	return PingError
 }

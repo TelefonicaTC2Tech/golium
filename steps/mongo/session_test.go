@@ -298,9 +298,9 @@ func TestCollectionDeletetMany(t *testing.T) {
 			s.MongoCollectionService = CollectionServiceFuncMock{}
 			DeleteResultDeleteResult = tt.deleteResult
 			DeleteResultError = tt.deleteResultError
-			_, err := s.MongoCollectionService.DeleteMany(context.Background(), nil, s.collection)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Session.DeleteMany() error = %v, wantErr %v", err, tt.wantErr)
+			d, _ := s.MongoCollectionService.DeleteMany(context.Background(), nil, s.collection)
+			if (d == nil) != tt.wantErr {
+				t.Errorf("Session.DeleteMany() error, wantErr %v", tt.wantErr)
 			}
 		})
 	}
