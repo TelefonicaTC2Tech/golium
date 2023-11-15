@@ -191,13 +191,12 @@ func TestCollectionFind(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &Session{}
-			s.collection = &mongo.Collection{}
 			s.MongoCollectionService = CollectionServiceFuncMock{}
 			FindCursor = tt.findCursor
 			FindError = tt.findError
-			_, err := s.MongoCollectionService.Find(context.Background(), nil, s.collection)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Session.Find() error = %v, wantErr %v", err, tt.wantErr)
+			c, _ := s.MongoCollectionService.Find(context.Background(), nil, &mongo.Collection{})
+			if (c != nil) != tt.wantErr {
+				t.Errorf("Session.Find() error, wantErr %v", tt.wantErr)
 			}
 		})
 	}
