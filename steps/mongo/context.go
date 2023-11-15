@@ -26,7 +26,9 @@ const contextKey ContextKey = "mongoSession"
 // InitializeContext adds the mongo session to the context.
 // The new context is returned because context is immutable.
 func InitializeContext(ctx context.Context) context.Context {
-	return context.WithValue(ctx, contextKey, &Session{MongoClientService: *NewMongoClientService()})
+	return context.WithValue(ctx, contextKey, &Session{
+		MongoClientService:     *NewMongoClientService(),
+		MongoCollectionService: *NewMongoCollectionService()})
 }
 
 // GetSession returns the mongo session stored in context.

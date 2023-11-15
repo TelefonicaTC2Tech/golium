@@ -21,26 +21,22 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-type ClientFunctions interface {
-	Ping(ctx context.Context, rp *readpref.ReadPref, client *mongo.Client) error
-	Disconnect(ctx context.Context, client *mongo.Client) error
-	Database(name string, client *mongo.Client) *mongo.Database
+var (
+	PingError        error
+	DisconnectError  error
+	DatabaseDatabase *mongo.Database
+)
+
+type ClientServiceFuncMock struct{}
+
+func (c ClientServiceFuncMock) Ping(ctx context.Context, rp *readpref.ReadPref, client *mongo.Client) error {
+	return PingError
 }
 
-type ClientService struct{}
-
-func NewMongoClientService() *ClientService {
-	return &ClientService{}
+func (c ClientServiceFuncMock) Disconnect(ctx context.Context, client *mongo.Client) error {
+	return DisconnectError
 }
 
-func (c ClientService) Ping(ctx context.Context, rp *readpref.ReadPref, client *mongo.Client) error {
-	return client.Ping(ctx, rp)
-}
-
-func (c ClientService) Disconnect(ctx context.Context, client *mongo.Client) error {
-	return client.Disconnect(ctx)
-}
-
-func (c ClientService) Database(name string, client *mongo.Client) *mongo.Database {
-	return client.Database(name)
+func (c ClientServiceFuncMock) Database(name string, client *mongo.Client) *mongo.Database {
+	return DatabaseDatabase
 }

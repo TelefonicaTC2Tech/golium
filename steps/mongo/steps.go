@@ -26,7 +26,7 @@ type Steps struct {
 
 // InitializeSteps initializes all the steps
 func (us Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioContext) context.Context {
-	// Initialize the HTTP session in the context
+	// Initialize the Mongo session in the context
 	ctx = InitializeContext(ctx)
 	session := GetSession(ctx)
 
@@ -44,7 +44,7 @@ func (us Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 	})
 	scenCtx.Step(`^I check that in the MongoDB "([^"]*)" collection, "([^"]*)" field does not exist or is empty for the "([^"]*)" _id$`, func(collectionName, fieldSearched, idCollection string) error {
 		return session.CheckMongoFieldDoesNotExistOrEmptyStep(ctx, golium.ValueAsString(ctx, collectionName), golium.ValueAsString(ctx, fieldSearched), golium.ValueAsString(ctx, idCollection))
-	})	
+	})
 	scenCtx.Step(`^I create "(\d+)" documents in the MongoDB "([^"]*)" collection$`, func(num int, collectionName string) error {
 		return session.CreateDocumentscollectionNameStep(ctx, num, golium.ValueAsString(ctx, collectionName))
 	})

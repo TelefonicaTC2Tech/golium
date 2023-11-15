@@ -58,8 +58,11 @@ type Session struct {
 	// Save collection items as JSON
 	dataCollectionJSONBytes []byte
 
-	// Access MongoDB features
+	// Access MongoDB Client features
 	MongoClientService ClientFunctions
+
+	// Access MongoDB Colleciton features
+	MongoCollectionService CollectionFunctions
 }
 
 // FUNCTIONS CALLED BY STEPS
@@ -143,7 +146,7 @@ func (s *Session) CheckNumberDocumentscollectionNameStep(collectionName string, 
 	s.SetCollection(collectionName)
 
 	// 2-Make a query to get all the documents in the collection
-	cursor, err := s.collection.Find(context.Background(), bson.D{})
+	cursor, err := s.MongoCollectionService.Find(context.Background(), bson.D{}, s.collection, &options.FindOptions{})
 	if err != nil {
 		return fmt.Errorf("error: query error: '%s'", err)
 	}
@@ -171,7 +174,7 @@ func (s *Session) CreateDocumentscollectionNameStep(
 	allDocuments := s.CreateDocumentsCollection(ctx, num)
 
 	// 3-Insert the documents into the "collectionName" collection of the database
-	_, err := s.collection.InsertMany(context.TODO(), allDocuments)
+	_, err := s.MongoCollectionService.InsertMany(context.TODO(), allDocuments, s.collection)
 	if err != nil {
 		return err
 	}
@@ -181,7 +184,7 @@ func (s *Session) CreateDocumentscollectionNameStep(
 
 // DeleteDocumentscollectionNameStep delete a document from the MongoDB collection
 func (s *Session) DeleteAllDocumentscollectionNameStep(ctx context.Context, collectionName string,
-	) error {
+) error {
 	// 1-The collection in which the deletion is to be made is established.
 	s.SetCollection(collectionName)
 
@@ -244,7 +247,7 @@ func (s *Session) MongoConnectionStep(ctx context.Context, t *godog.Table) error
 	}
 
 	// 4-Check the connection to the MongoDB server
-	err = s.client.Ping(ctx, nil)
+	err = s.MongoClientService.Ping(ctx, nil, s.client)
 	if err != nil {
 		return fmt.Errorf("error: problems with connection to MongoDB. '%s'", err)
 	}
@@ -258,7 +261,7 @@ func (s *Session) MongoConnectionStep(ctx context.Context, t *godog.Table) error
 // MongoDisconnection closes the connection to MongoDB if it exists
 func (s *Session) MongoDisconnectionStep() error {
 	if s.client != nil {
-		err := s.client.Disconnect(context.Background())
+		err := s.MongoClientService.Disconnect(context.Background(), s.client)
 		if err != nil {
 			return fmt.Errorf("error: problem in MongoDB disconnection: '%s'", err)
 		}
@@ -371,13 +374,13 @@ func (s *Session) CreateDocumentsCollection(ctx context.Context, num int) []inte
 			"fieldBool":   true,
 			"fieldSlice":  []string{"itemSlice_" + strconv.Itoa(i), "itemSlice20", "itemSlice30"},
 			"fieldEmpty":  nil,
-			"fieldMap":    map[string]interface{}{
+			"fieldMap": map[string]interface{}{
 				"fieldString":     "Example field in map string " + strconv.Itoa(i),
 				"fieldInt":        i * 10,
 				"fieldFloat":      1974.1976,
 				"fieldBool":       false,
 				"fieldSliceEmpty": []string{},
-				"fieldMap2": 	   map[string]interface{}{
+				"fieldMap2": map[string]interface{}{
 					"fieldString":    "Example field in map map string " + strconv.Itoa(i),
 					"fieldInt":       i * 100,
 					"fieldFloat":     1974.1976,
@@ -416,7 +419,8 @@ func (s *Session) GetDecodeDocument(singleResult mongo.SingleResult) (bson.D, er
 // SetCollection sets the collection. If the collection does not exist, no error is returned.
 // Collections are created dynamically when you insert a document
 func (s *Session) SetCollection(collectionName string) {
-	s.collection = s.client.Database(s.database).Collection(collectionName)
+	database := s.MongoClientService.Database(s.database, s.client)
+	s.collection = s.MongoCollectionService.Collection(collectionName, database)
 }
 
 // SetDataCollectionJSONBytes convert BSON object to JSON
@@ -433,7 +437,7 @@ func (s *Session) SetDataCollectionJSONBytes(bsonDoc bson.D) error {
 func (s *Session) SetFieldsCollectionName(ctx context.Context, idCollection string) error {
 	// Make a query to find past _id's document
 	var document bson.M
-	err := s.collection.FindOne(ctx, GetFilter("_id", idCollection)).Decode(&document)
+	err := s.MongoCollectionService.FindOne(ctx, GetFilter("_id", idCollection), s.collection, &options.FindOneOptions{}).Decode(&document)
 	if err == mongo.ErrNoDocuments {
 		return fmt.Errorf("error: no documents matching the filter were found")
 	} else if err != nil {
@@ -452,8 +456,8 @@ func (s *Session) SetFieldsCollectionName(ctx context.Context, idCollection stri
 // SetSingleResult set a Single Result from a Filter Search (GetFilter(...) function)
 func (s *Session) SetSingleResult(
 	ctx context.Context, fieldSearched string, value interface{}) error {
-	s.singleResult = s.collection.FindOne(
-		ctx, GetFilter(fieldSearched, value), GetOptionsSearchAllFields())
+	s.singleResult = s.MongoCollectionService.FindOne(
+		ctx, GetFilter(fieldSearched, value), s.collection, GetOptionsSearchAllFields())
 	if s.singleResult.Err() != nil {
 		return fmt.Errorf("error: the searched '%s' field does not have the '%s' value "+
 			"in the '%s' collection", fieldSearched, value, s.collection.Name())
@@ -518,7 +522,7 @@ func (s *Session) VerifyExistAndMustExistValue(exist, mustExist bool, err error)
 	if err != nil {
 		return err
 	}
-	return fmt.Errorf("error: the value DOES NOT EXIST and SHOULD, or EXIST and SHOULD NOT, "+
+	return fmt.Errorf("error: the value DOES NOT EXIST and SHOULD, or EXIST and SHOULD NOT, " +
 		"in the collection")
 }
 
