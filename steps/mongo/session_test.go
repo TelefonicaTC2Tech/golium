@@ -26,6 +26,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+var ISBOOLEAN = "is_boolean"
+
 func TestPing(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -363,8 +365,7 @@ func TestGetFilter(t *testing.T) {
 	})
 	t.Run("Create filter with nil value", func(t *testing.T) {
 		key := "name"
-		var value interface{} = nil
-		filter := GetFilter(key, value)
+		filter := GetFilter(key, nil)
 		expectedFilter := bson.M{"name": nil}
 		if !reflect.DeepEqual(filter, expectedFilter) {
 			t.Errorf("Expected filter: %v, but got: %v", expectedFilter, filter)
@@ -374,7 +375,7 @@ func TestGetFilter(t *testing.T) {
 
 func TestGetFilterConverted(t *testing.T) {
 	t.Run("Convert to boolean (true)", func(t *testing.T) {
-		field := "is_boolean"
+		field := ISBOOLEAN
 		value := "true"
 		filter := GetFilterConverted(field, value)
 		expectedFilter := primitive.M{field: true}
@@ -383,7 +384,7 @@ func TestGetFilterConverted(t *testing.T) {
 		}
 	})
 	t.Run("Convert to boolean (false)", func(t *testing.T) {
-		field := "is_boolean"
+		field := ISBOOLEAN
 		value := "false"
 		filter := GetFilterConverted(field, value)
 		expectedFilter := primitive.M{field: false}
@@ -411,7 +412,7 @@ func TestGetFilterConverted(t *testing.T) {
 	})
 	t.Run("Convert to nil (empty)", func(t *testing.T) {
 		field := "nil or empty"
-		value := "[EMPTY]"
+		value := EMPTY
 		filter := GetFilterConverted(field, value)
 		expectedFilter := primitive.M{field: nil}
 		if filter[field] != expectedFilter[field] {

@@ -31,6 +31,11 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+var (
+	EMPTY = "[EMPTY]"
+	NULL  = "[NULL]"
+)
+
 // Session contains the information of a MongoDB session.
 type Session struct {
 
@@ -330,7 +335,7 @@ func GetFilterConverted(field, value string) primitive.M {
 	}
 
 	// If the passed value is "[EMPTY]" or "[NULL]", it evaluates to nil
-	if value == "[EMPTY]" || value == "[NULL]" {
+	if value == EMPTY || value == NULL {
 		return bson.M{field: nil}
 	}
 
