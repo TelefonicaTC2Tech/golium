@@ -212,7 +212,7 @@ func (s *Session) WaitForTextMessage(ctx context.Context,
 
 				// Consume the processed messages
 				s.ConsumedMessages = append(s.ConsumedMessages, s.Messages[i])
-				slices.Delete(s.Messages, i, i+1)
+				s.Messages = slices.Delete(s.Messages, i, i+1)
 
 				return nil
 			}
@@ -245,7 +245,7 @@ func (s *Session) WaitForJSONMessageWithProperties(ctx context.Context,
 
 				// Consume the processed messages
 				s.ConsumedMessages = append(s.ConsumedMessages, s.Messages[i])
-				slices.Delete(s.Messages, i, i+1)
+				s.Messages = slices.Delete(s.Messages, i, i+1)
 
 				return nil
 			}
