@@ -30,7 +30,6 @@ import (
 	"time"
 
 	"github.com/TelefonicaTC2Tech/golium"
-	"github.com/TelefonicaTC2Tech/golium/steps/common"
 	"github.com/TelefonicaTC2Tech/golium/steps/http/model"
 	"github.com/TelefonicaTC2Tech/golium/steps/http/schema"
 	"github.com/cucumber/godog"
@@ -84,8 +83,7 @@ func (s *Session) URL() (*url.URL, error) {
 	//  * - Docs: https://pkg.go.dev/path#Join
 	//  */
 
-	// Resolves HTTP parameter pollution. CWE:235
-	u.RawQuery = common.NeutralizeParamPollution(s.Request.QueryParams)
+	u.RawQuery = neutralize(s.Request.QueryParams)
 
 	return u, nil
 }
@@ -688,4 +686,17 @@ func (s *Session) GetURL(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("url shall be initialized in Configuration or Context")
 	}
 	return URL, nil
+}
+
+// Neutralization HTTP parameter pollution. CWE:235
+func neutralize(queryParams map[string][]string) string {
+	params := url.Values{}
+	for key, values := range queryParams {
+		for _, value := range values {
+			if !params.Has(key) {
+				params.Add(key, value)
+			}
+		}
+	}
+	return params.Encode()
 }

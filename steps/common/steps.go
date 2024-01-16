@@ -21,6 +21,7 @@ import (
 	"net"
 	"net/url"
 	"os/exec"
+	"regexp"
 	"strings"
 	"time"
 
@@ -79,14 +80,9 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 			return nil
 		}
 		domain := golium.ValueAsString(ctx, domainParam)
-		domainN := NeutralizeDomain(domain)
+		domainN := neutralize(domain)
 
-		uri, err := url.Parse(domainN)
-		if err != nil {
-			return fmt.Errorf("failed parsing domain '%s': %w", domainN, err)
-		}
-
-		command := fmt.Sprintf("ping -c 1 %s | head -1 | grep -oe '[0-9]*\\.[0-9]*\\.[0-9]*\\.[0-9]*'", uri)
+		command := fmt.Sprintf("ping -c 1 %s | head -1 | grep -oe '[0-9]*\\.[0-9]*\\.[0-9]*\\.[0-9]*'", domainN)
 		cmd := exec.Command("/bin/sh", "-c", command)
 		stdoutStderr, err := cmd.CombinedOutput()
 		if err != nil {
@@ -184,4 +180,18 @@ func getLocalIP(ctx context.Context, key string, ipVersion IPVersion) error {
 	}
 	golium.GetContext(ctx).Put(golium.ValueAsString(ctx, key), localAddress.IP.String())
 	return nil
+}
+
+// Neutralization for unwanted command injections in domain string
+func neutralize(input string) string {
+	pattern := "^(?:https?://)?(?:www.)?([^:/\n&=?¿\"!| %]+)"
+	regex := regexp.MustCompile(pattern)
+	domainN := regex.FindString(input)
+
+	uri, err := url.Parse(domainN)
+	if err != nil {
+		return ""
+	}
+
+	return uri.String()
 }
