@@ -83,7 +83,8 @@ func (s *Session) URL() (*url.URL, error) {
 	//  * - Docs: https://pkg.go.dev/path#Join
 	//  */
 
-	u.RawQuery = sanitize(s.Request.QueryParams)
+	rawQueryN := sanitize(s.Request.QueryParams)
+	u.RawQuery = rawQueryN
 
 	return u, nil
 }

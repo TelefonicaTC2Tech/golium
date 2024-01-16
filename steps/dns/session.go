@@ -23,6 +23,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/AdguardTeam/dnsproxy/upstream"
@@ -153,7 +154,10 @@ func (s *Session) SendDoHQuery(
 			return err
 		}
 
-		u.RawQuery = sanitize(s.DoHQueryParams)
+		rawQuery := sanitize(s.DoHQueryParams)
+		rawQueryN := neutralize(rawQuery)
+		u.RawQuery = rawQueryN
+
 		request, err = http.NewRequest("POST", u.String(), bytes.NewReader(data))
 		if err != nil {
 			return err
@@ -297,4 +301,10 @@ func sanitize(queryParams map[string][]string) string {
 		}
 	}
 	return params.Encode()
+}
+
+func neutralize(p string) string {
+	p = strings.ReplaceAll(p, "\r", "")
+	p = strings.ReplaceAll(p, "\n", "")
+	return p
 }

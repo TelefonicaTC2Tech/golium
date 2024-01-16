@@ -80,10 +80,11 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 			return nil
 		}
 		domain := golium.ValueAsString(ctx, domainParam)
-		domainN := neutralize(domain)
+		domainN := neutralizeDomain(domain)
 
 		command := fmt.Sprintf("ping -c 1 %s | head -1 | grep -oe '[0-9]*\\.[0-9]*\\.[0-9]*\\.[0-9]*'", domainN)
-		cmd := exec.Command("/bin/sh", "-c", command)
+		commandN := neutralize(command)
+		cmd := exec.Command("/bin/sh", "-c", commandN)
 		stdoutStderr, err := cmd.CombinedOutput()
 		if err != nil {
 			return fmt.Errorf("error executing `%s` command %v", cmd, string(stdoutStderr))
@@ -93,6 +94,12 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 		return nil
 	})
 	return ctx
+}
+
+func neutralize(p string) string {
+	p = strings.ReplaceAll(p, "\r", "")
+	p = strings.ReplaceAll(p, "\n", "")
+	return p
 }
 
 // StoreValueInContext stores a value in golium.Context using the key name.
@@ -183,7 +190,7 @@ func getLocalIP(ctx context.Context, key string, ipVersion IPVersion) error {
 }
 
 // Neutralization for unwanted command injections in domain string
-func neutralize(input string) string {
+func neutralizeDomain(input string) string {
 	pattern := "^(?:https?://)?(?:www.)?([^:/\n&=?¿\"!| %]+)"
 	regex := regexp.MustCompile(pattern)
 	domainN := regex.FindString(input)
