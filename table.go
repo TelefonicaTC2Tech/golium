@@ -22,7 +22,7 @@ import (
 	"reflect"
 
 	"github.com/cucumber/godog"
-	"github.com/cucumber/messages-go/v16"
+	messages "github.com/cucumber/messages/go/v21"
 )
 
 // Remove headers form table
