@@ -79,7 +79,14 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 			return nil
 		}
 		domain := golium.ValueAsString(ctx, domainParam)
-		command := fmt.Sprintf("ping -c 1 %s | head -1 | grep -oe '[0-9]*\\.[0-9]*\\.[0-9]*\\.[0-9]*'", domain)
+		domainN := NeutralizeDomain(domain)
+
+		uri, err := url.Parse(domainN)
+		if err != nil {
+			return fmt.Errorf("failed parsing domain '%s': %w", domainN, err)
+		}
+
+		command := fmt.Sprintf("ping -c 1 %s | head -1 | grep -oe '[0-9]*\\.[0-9]*\\.[0-9]*\\.[0-9]*'", uri)
 		cmd := exec.Command("/bin/sh", "-c", command)
 		stdoutStderr, err := cmd.CombinedOutput()
 		if err != nil {

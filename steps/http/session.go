@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"github.com/TelefonicaTC2Tech/golium"
+	"github.com/TelefonicaTC2Tech/golium/steps/common"
 	"github.com/TelefonicaTC2Tech/golium/steps/http/model"
 	"github.com/TelefonicaTC2Tech/golium/steps/http/schema"
 	"github.com/cucumber/godog"
@@ -83,8 +84,9 @@ func (s *Session) URL() (*url.URL, error) {
 	//  * - Docs: https://pkg.go.dev/path#Join
 	//  */
 
-	params := url.Values(s.Request.QueryParams)
-	u.RawQuery = params.Encode()
+	// Resolves HTTP parameter pollution. CWE:235
+	u.RawQuery = common.NeutralizeParamPollution(s.Request.QueryParams)
+
 	return u, nil
 }
 

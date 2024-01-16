@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/AdguardTeam/dnsproxy/upstream"
+	"github.com/TelefonicaTC2Tech/golium/steps/common"
 	"github.com/google/uuid"
 	"github.com/miekg/dns"
 )
@@ -152,8 +153,8 @@ func (s *Session) SendDoHQuery(
 		if errParse != nil {
 			return err
 		}
-		params := url.Values(s.DoHQueryParams)
-		u.RawQuery = params.Encode()
+		// Resolves HTTP parameter pollution. CWE:235
+		u.RawQuery = common.NeutralizeParamPollution(s.DoHQueryParams)
 		request, err = http.NewRequest("POST", u.String(), bytes.NewReader(data))
 		if err != nil {
 			return err
