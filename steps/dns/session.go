@@ -153,7 +153,7 @@ func (s *Session) SendDoHQuery(
 			return err
 		}
 
-		u.RawQuery = neutralize(s.DoHQueryParams)
+		u.RawQuery = sanitize(s.DoHQueryParams)
 		request, err = http.NewRequest("POST", u.String(), bytes.NewReader(data))
 		if err != nil {
 			return err
@@ -286,8 +286,8 @@ func (s *Session) ValidateResponseWithRecords(
 	return nil
 }
 
-// Neutralization HTTP parameter pollution. CWE:235
-func neutralize(queryParams map[string][]string) string {
+// Sanitize HTTP parameter pollution. CWE:235
+func sanitize(queryParams map[string][]string) string {
 	params := url.Values{}
 	for key, values := range queryParams {
 		for _, value := range values {

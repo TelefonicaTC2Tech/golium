@@ -83,7 +83,7 @@ func (s *Session) URL() (*url.URL, error) {
 	//  * - Docs: https://pkg.go.dev/path#Join
 	//  */
 
-	u.RawQuery = neutralize(s.Request.QueryParams)
+	u.RawQuery = sanitize(s.Request.QueryParams)
 
 	return u, nil
 }
@@ -688,8 +688,8 @@ func (s *Session) GetURL(ctx context.Context) (string, error) {
 	return URL, nil
 }
 
-// Neutralization HTTP parameter pollution. CWE:235
-func neutralize(queryParams map[string][]string) string {
+// Sanitize HTTP parameter pollution. CWE:235
+func sanitize(queryParams map[string][]string) string {
 	params := url.Values{}
 	for key, values := range queryParams {
 		for _, value := range values {
