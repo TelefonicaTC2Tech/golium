@@ -27,6 +27,7 @@ import (
 	"net/url"
 	"path"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/TelefonicaTC2Tech/golium"
@@ -49,17 +50,11 @@ const (
 	DefaultTestURL = "https://jsonplaceholder.typicode.com/"
 )
 
-// Sanitize HTTP parameter pollution. CWE:235
-func sanitize(queryParams map[string][]string) string {
-	params := url.Values{}
-	for key, values := range queryParams {
-		for _, value := range values {
-			if !params.Has(key) {
-				params.Add(key, value)
-			}
-		}
-	}
-	return params.Encode()
+// Neutralize HTTP parameter pollution. CWE:235
+func neutralize(p string) string {
+	p = strings.ReplaceAll(p, "\r", "")
+	p = strings.ReplaceAll(p, "\n", "")
+	return p
 }
 
 // Session contains the information of a HTTP session (request and response).
@@ -95,9 +90,17 @@ func (s *Session) URL() (*url.URL, error) {
 	//  * - Reference: https://forum.golangbridge.org/t/how-to-concatenate-paths-for-api-request/5791
 	//  * - Docs: https://pkg.go.dev/path#Join
 	//  */
-
-	rawQueryN := sanitize(s.Request.QueryParams)
-	u.RawQuery = rawQueryN
+	params := url.Values{}
+	for key, values := range s.Request.QueryParams {
+		for _, value := range values {
+			if !params.Has(key) {
+				keyN := neutralize(key)
+				valueN := neutralize(value)
+				params.Add(keyN, valueN)
+			}
+		}
+	}
+	u.RawQuery = neutralize(params.Encode())
 
 	return u, nil
 }
