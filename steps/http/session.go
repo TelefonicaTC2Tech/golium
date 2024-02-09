@@ -94,9 +94,7 @@ func (s *Session) URL() (*url.URL, error) {
 	for key, values := range s.Request.QueryParams {
 		for _, value := range values {
 			if !params.Has(key) {
-				keyN := neutralize(key)
-				valueN := neutralize(value)
-				params.Add(keyN, valueN)
+				params.Add(key, value)
 			}
 		}
 	}
@@ -240,7 +238,7 @@ func (s *Session) SendHTTPRequest(ctx context.Context, method string) error {
 	if s.Request.Headers != nil {
 		hostHeaders, found := s.Request.Headers["Host"]
 		if found && len(hostHeaders) > 0 {
-			req.Host = hostHeaders[0]
+			req.Host = neutralize(hostHeaders[0])
 		}
 	}
 	req.Header = s.Request.Headers
