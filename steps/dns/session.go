@@ -31,6 +31,25 @@ import (
 	"github.com/miekg/dns"
 )
 
+// Sanitize HTTP parameter pollution. CWE:235
+func sanitize(queryParams map[string][]string) string {
+	params := url.Values{}
+	for key, values := range queryParams {
+		for _, value := range values {
+			if !params.Has(key) {
+				params.Add(key, value)
+			}
+		}
+	}
+	return params.Encode()
+}
+
+func neutralize(p string) string {
+	p = strings.ReplaceAll(p, "\r", "")
+	p = strings.ReplaceAll(p, "\n", "")
+	return p
+}
+
 // Session contains the information related to a DNS query and response.
 type Session struct {
 	// Server is the address to the DNS server, including the server port (e.g. 8.8.8.8:53).
@@ -288,23 +307,4 @@ func (s *Session) ValidateResponseWithRecords(
 		}
 	}
 	return nil
-}
-
-// Sanitize HTTP parameter pollution. CWE:235
-func sanitize(queryParams map[string][]string) string {
-	params := url.Values{}
-	for key, values := range queryParams {
-		for _, value := range values {
-			if !params.Has(key) {
-				params.Add(key, value)
-			}
-		}
-	}
-	return params.Encode()
-}
-
-func neutralize(p string) string {
-	p = strings.ReplaceAll(p, "\r", "")
-	p = strings.ReplaceAll(p, "\n", "")
-	return p
 }

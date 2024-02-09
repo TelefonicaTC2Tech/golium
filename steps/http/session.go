@@ -49,6 +49,19 @@ const (
 	DefaultTestURL = "https://jsonplaceholder.typicode.com/"
 )
 
+// Sanitize HTTP parameter pollution. CWE:235
+func sanitize(queryParams map[string][]string) string {
+	params := url.Values{}
+	for key, values := range queryParams {
+		for _, value := range values {
+			if !params.Has(key) {
+				params.Add(key, value)
+			}
+		}
+	}
+	return params.Encode()
+}
+
 // Session contains the information of a HTTP session (request and response).
 type Session struct {
 	Request            model.Request
@@ -687,17 +700,4 @@ func (s *Session) GetURL(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("url shall be initialized in Configuration or Context")
 	}
 	return URL, nil
-}
-
-// Sanitize HTTP parameter pollution. CWE:235
-func sanitize(queryParams map[string][]string) string {
-	params := url.Values{}
-	for key, values := range queryParams {
-		for _, value := range values {
-			if !params.Has(key) {
-				params.Add(key, value)
-			}
-		}
-	}
-	return params.Encode()
 }

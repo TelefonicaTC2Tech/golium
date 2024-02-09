@@ -30,6 +30,26 @@ import (
 	"github.com/google/uuid"
 )
 
+// Neutralization for unwanted command injections in domain string
+func neutralizeDomain(input string) string {
+	pattern := "^(?:https?://)?(?:www.)?([^:/\n&=?¿\"!| %]+)"
+	regex := regexp.MustCompile(pattern)
+	domainN := regex.FindString(input)
+
+	uri, err := url.Parse(domainN)
+	if err != nil {
+		return ""
+	}
+
+	return uri.String()
+}
+
+func neutralize(p string) string {
+	p = strings.ReplaceAll(p, "\r", "")
+	p = strings.ReplaceAll(p, "\n", "")
+	return p
+}
+
 // Steps to initialize common steps.
 type Steps struct {
 }
@@ -94,12 +114,6 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 		return nil
 	})
 	return ctx
-}
-
-func neutralize(p string) string {
-	p = strings.ReplaceAll(p, "\r", "")
-	p = strings.ReplaceAll(p, "\n", "")
-	return p
 }
 
 // StoreValueInContext stores a value in golium.Context using the key name.
@@ -187,18 +201,4 @@ func getLocalIP(ctx context.Context, key string, ipVersion IPVersion) error {
 	}
 	golium.GetContext(ctx).Put(golium.ValueAsString(ctx, key), localAddress.IP.String())
 	return nil
-}
-
-// Neutralization for unwanted command injections in domain string
-func neutralizeDomain(input string) string {
-	pattern := "^(?:https?://)?(?:www.)?([^:/\n&=?¿\"!| %]+)"
-	regex := regexp.MustCompile(pattern)
-	domainN := regex.FindString(input)
-
-	uri, err := url.Parse(domainN)
-	if err != nil {
-		return ""
-	}
-
-	return uri.String()
 }
