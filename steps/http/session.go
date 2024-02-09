@@ -51,7 +51,21 @@ const (
 )
 
 // Neutralize HTTP parameter pollution. CWE:235
-func neutralize(p string) string {
+func neutralize(queryParams map[string][]string) string {
+	params := url.Values{}
+	for key, values := range queryParams {
+		for _, value := range values {
+			if !params.Has(key) {
+				keyS := sanitize(key)
+				valueS := sanitize(value)
+				params.Add(keyS, valueS)
+			}
+		}
+	}
+	return params.Encode()
+}
+
+func sanitize(p string) string {
 	p = strings.ReplaceAll(p, "\r", "")
 	p = strings.ReplaceAll(p, "\n", "")
 	return p
@@ -90,15 +104,7 @@ func (s *Session) URL() (*url.URL, error) {
 	//  * - Reference: https://forum.golangbridge.org/t/how-to-concatenate-paths-for-api-request/5791
 	//  * - Docs: https://pkg.go.dev/path#Join
 	//  */
-	params := url.Values{}
-	for key, values := range s.Request.QueryParams {
-		for _, value := range values {
-			if !params.Has(key) {
-				params.Add(key, value)
-			}
-		}
-	}
-	u.RawQuery = neutralize(params.Encode())
+	u.RawQuery = neutralize(s.Request.QueryParams)
 
 	return u, nil
 }
@@ -238,7 +244,7 @@ func (s *Session) SendHTTPRequest(ctx context.Context, method string) error {
 	if s.Request.Headers != nil {
 		hostHeaders, found := s.Request.Headers["Host"]
 		if found && len(hostHeaders) > 0 {
-			req.Host = neutralize(hostHeaders[0])
+			req.Host = sanitize(hostHeaders[0])
 		}
 	}
 	req.Header = s.Request.Headers
