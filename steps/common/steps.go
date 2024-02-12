@@ -103,8 +103,7 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 		domainN := neutralizeDomain(domain)
 
 		command := fmt.Sprintf("ping -c 1 %s | head -1 | grep -oe '[0-9]*\\.[0-9]*\\.[0-9]*\\.[0-9]*'", domainN)
-		commandN := neutralize(command)
-		cmd := exec.Command("/bin/sh", "-c", commandN)
+		cmd := exec.Command("/bin/sh", "-c", neutralize(command))
 		stdoutStderr, err := cmd.CombinedOutput()
 		if err != nil {
 			return fmt.Errorf("error executing `%s` command %v", cmd, string(stdoutStderr))

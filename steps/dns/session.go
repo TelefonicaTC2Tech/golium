@@ -31,19 +31,7 @@ import (
 	"github.com/miekg/dns"
 )
 
-// Sanitize HTTP parameter pollution. CWE:235
-func sanitize(queryParams map[string][]string) string {
-	params := url.Values{}
-	for key, values := range queryParams {
-		for _, value := range values {
-			if !params.Has(key) {
-				params.Add(key, value)
-			}
-		}
-	}
-	return params.Encode()
-}
-
+// Neutralize HTTP parameter pollution. CWE:235
 func neutralize(p string) string {
 	p = strings.ReplaceAll(p, "\r", "")
 	p = strings.ReplaceAll(p, "\n", "")
@@ -173,9 +161,15 @@ func (s *Session) SendDoHQuery(
 			return err
 		}
 
-		rawQuery := sanitize(s.DoHQueryParams)
-		rawQueryN := neutralize(rawQuery)
-		u.RawQuery = rawQueryN
+		params := url.Values{}
+		for key, values := range s.DoHQueryParams {
+			for _, value := range values {
+				if !params.Has(key) {
+					params.Add(key, value)
+				}
+			}
+		}
+		u.RawQuery = neutralize(params.Encode())
 
 		request, err = http.NewRequest("POST", u.String(), bytes.NewReader(data))
 		if err != nil {
