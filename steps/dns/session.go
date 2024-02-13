@@ -23,12 +23,20 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/AdguardTeam/dnsproxy/upstream"
 	"github.com/google/uuid"
 	"github.com/miekg/dns"
 )
+
+// Neutralize HTTP parameter pollution. CWE:235
+func neutralize(p string) string {
+	p = strings.ReplaceAll(p, "\r", "")
+	p = strings.ReplaceAll(p, "\n", "")
+	return p
+}
 
 // Session contains the information related to a DNS query and response.
 type Session struct {
@@ -138,30 +146,39 @@ func (s *Session) SendDoHQuery(
 		Transport: tr,
 	}
 	var request *http.Request
+	var urlStr string
+	var bodyRequest io.Reader
 
 	switch method {
 	case "GET":
 		dq := base64.RawURLEncoding.EncodeToString(data)
-		urlStr := fmt.Sprintf("%s?dns=%s", s.Server, dq)
-		request, err = http.NewRequest("GET", urlStr, http.NoBody)
-		if err != nil {
-			return err
-		}
+		urlStr = fmt.Sprintf("%s?dns=%s", s.Server, dq)
+		bodyRequest = http.NoBody
 	case "POST":
 		u, errParse := url.Parse(s.Server)
 		if errParse != nil {
 			return err
 		}
-		params := url.Values(s.DoHQueryParams)
-		u.RawQuery = params.Encode()
-		request, err = http.NewRequest("POST", u.String(), bytes.NewReader(data))
-		if err != nil {
-			return err
+
+		params := url.Values{}
+		for key, values := range s.DoHQueryParams {
+			for _, value := range values {
+				if !params.Has(key) {
+					params.Add(key, value)
+				}
+			}
 		}
+		u.RawQuery = neutralize(params.Encode())
+		urlStr = u.String()
+		bodyRequest = bytes.NewReader(data)
 	default:
 		return fmt.Errorf("unsupported method. %s", method)
 	}
 
+	request, err = http.NewRequest(method, neutralize(urlStr), bodyRequest)
+	if err != nil {
+		return err
+	}
 	request.Header.Set("Content-Type", "application/dns-message")
 	response, err := client.Do(request)
 	if err != nil {
@@ -172,14 +189,14 @@ func (s *Session) SendDoHQuery(
 		return fmt.Errorf("error in Content-Type Header. Value: %s, Expected: %s",
 			response.Header.Get("Content-Type"), "application/dns-message")
 	}
-	body, err := io.ReadAll(response.Body)
+	bodyResponse, err := io.ReadAll(response.Body)
 	if err != nil {
 		return fmt.Errorf("error reading the response body. %s", err)
 	}
 	response.Body.Close()
 	// Get the response body and Unpack it to convert from a DNS wireformat
 	dnsResp := new(dns.Msg)
-	err = dnsResp.Unpack(body)
+	err = dnsResp.Unpack(bodyResponse)
 	if err != nil {
 		return fmt.Errorf("error unpacking body. %s", err)
 	}

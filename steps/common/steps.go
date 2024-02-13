@@ -21,6 +21,7 @@ import (
 	"net"
 	"net/url"
 	"os/exec"
+	"regexp"
 	"strings"
 	"time"
 
@@ -28,6 +29,26 @@ import (
 	"github.com/cucumber/godog"
 	"github.com/google/uuid"
 )
+
+// Neutralization for unwanted command injections in domain string
+func neutralizeDomain(input string) string {
+	pattern := "^(?:https?://)?(?:www.)?([^:/\n&=?¿\"!| %]+)"
+	regex := regexp.MustCompile(pattern)
+	domainN := regex.FindString(input)
+
+	uri, err := url.Parse(domainN)
+	if err != nil {
+		return ""
+	}
+
+	return uri.String()
+}
+
+func neutralize(p string) string {
+	p = strings.ReplaceAll(p, "\r", "")
+	p = strings.ReplaceAll(p, "\n", "")
+	return p
+}
 
 // Steps to initialize common steps.
 type Steps struct {
@@ -79,8 +100,10 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 			return nil
 		}
 		domain := golium.ValueAsString(ctx, domainParam)
-		command := fmt.Sprintf("ping -c 1 %s | head -1 | grep -oe '[0-9]*\\.[0-9]*\\.[0-9]*\\.[0-9]*'", domain)
-		cmd := exec.Command("/bin/sh", "-c", command)
+		domainN := neutralizeDomain(domain)
+
+		command := fmt.Sprintf("ping -c 1 %s | head -1 | grep -oe '[0-9]*\\.[0-9]*\\.[0-9]*\\.[0-9]*'", domainN)
+		cmd := exec.Command("/bin/sh", "-c", neutralize(command))
 		stdoutStderr, err := cmd.CombinedOutput()
 		if err != nil {
 			return fmt.Errorf("error executing `%s` command %v", cmd, string(stdoutStderr))
