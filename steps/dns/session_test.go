@@ -173,9 +173,9 @@ func TestSendDoTQuery(t *testing.T) {
 			alternativeExpectedErr: fmt.Errorf("cannot make the DNS request: %w",
 				fmt.Errorf("dialing %q: %w", fakeServer+":53",
 					fmt.Errorf("resolving hostname: %w", &net.DNSError{
-						Err:         "no such host",
+						Err:         "server misbehaving",
 						Name:        fakeServer,
-						Server:      "172.20.16.1:53",
+						Server:      "127.0.0.53:53",
 						IsTimeout:   false,
 						IsTemporary: false,
 						IsNotFound:  true,
