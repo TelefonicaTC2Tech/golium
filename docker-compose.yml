@@ -6,9 +6,9 @@ services:
   rabbit:
     image: rabbitmq:3.8.3-alpine
   elasticsearch:
-    image: elasticsearch:7.12.0
+    image: elasticsearch:7.16.1
     environment:
-     - discovery.type=single-node
+      - discovery.type=single-node
   minio:
     image: minio/minio
     environment:
