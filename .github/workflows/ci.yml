@@ -2,12 +2,11 @@ name: Golium CI pipeline
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
-
   build:
     name: Build and Test (Golium Go ${{ matrix.go-version }})
 
@@ -15,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        go-version: ["1.19", "1.20"]
+        go-version: ["1.20", "1.21", "1.22"]
 
     env:
       AWS_ACCESS_KEY_ID: minioadmin
@@ -43,9 +42,9 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-     
+
       elasticsearch:
-        image: elasticsearch:7.12.0
+        image: elasticsearch:7.16.1
         ports:
           - 9200:9200
         options: >-
@@ -65,22 +64,22 @@ jobs:
         volumes:
           - ${{ github.workspace }}/../data:/data
         options: --name=minio --health-cmd "curl http://localhost:9000/minio/health/live"
-    
+
       httpbin:
         image: kennethreitz/httpbin
         ports:
           - 80:80
-    
+
     steps:
-    - uses: actions/checkout@v3.5.2
+      - uses: actions/checkout@v3.5.2
 
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: ${{ matrix.go-version }}
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ matrix.go-version }}
 
-    - name: Build
-      run: go build -v ./...
+      - name: Build
+        run: go build -v ./...
 
-    - name: Test
-      run: go test -v ./...
+      - name: Test
+        run: go test -v ./...
