@@ -68,6 +68,9 @@ func (cs Steps) InitializeSteps(ctx context.Context, scenCtx *godog.ScenarioCont
 		}
 		return session.SetJSONValue(ctx, golium.ValueAsString(ctx, key), props)
 	})
+	scenCtx.Step(`^I delete the redis key "([^"]*)"`, func(key string) error {
+		return session.DeleteKeyValue(ctx, golium.ValueAsString(ctx, key))
+	})
 	scenCtx.Step(`^the redis key "([^"]*)" must have the text`, func(key string, value *godog.DocString) error {
 		return session.ValidateTextValue(ctx, golium.ValueAsString(ctx, key), golium.ValueAsString(ctx, value.Content))
 	})

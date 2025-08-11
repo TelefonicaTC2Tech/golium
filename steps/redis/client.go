@@ -37,6 +37,11 @@ type ClientFunctions interface {
 		key string,
 		values ...interface{},
 	) error
+	Del(
+		ctx context.Context,
+		client *redis.Client,
+		key string,
+	) error
 	PExpire(
 		ctx context.Context,
 		client *redis.Client,
@@ -108,6 +113,15 @@ func (c ClientService) HSet(
 	values ...interface{},
 ) error {
 	return client.HSet(ctx, key, values...).Err()
+}
+
+func (c ClientService) Del(
+	ctx context.Context,
+	client *redis.Client,
+	key string,
+
+) error {
+	return client.Del(ctx, key).Err()
 }
 
 func (c ClientService) PExpire(

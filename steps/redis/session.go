@@ -112,6 +112,19 @@ func (s *Session) SetJSONValue(
 	return s.SetTextValue(ctx, key, json)
 }
 
+// DeleteKeyValue deletes a redis key
+func (s *Session) DeleteKeyValue(
+	ctx context.Context,
+	key string,
+) error {
+	err := s.RedisClientService.Del(ctx, s.Client, key)
+	if err != nil {
+		return err
+	}
+	GetLogger().LogDelKey(key, s.Correlator)
+	return nil
+}
+
 // ValidateTextValue checks if the text value for a redis key equals the expected value.
 // It uses session TTL to establish an expiration time (no expiration if TTL is 0).
 func (s *Session) ValidateTextValue(ctx context.Context, key, expectedValue string) error {
