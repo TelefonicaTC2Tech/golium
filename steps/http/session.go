@@ -27,10 +27,10 @@ import (
 	"net/url"
 	"path"
 	"reflect"
-	"strings"
 	"time"
 
 	"github.com/TelefonicaTC2Tech/golium"
+	"github.com/TelefonicaTC2Tech/golium/sanitize"
 	"github.com/TelefonicaTC2Tech/golium/steps/http/model"
 	"github.com/TelefonicaTC2Tech/golium/steps/http/schema"
 	"github.com/cucumber/godog"
@@ -49,13 +49,6 @@ const (
 	Slash          = "/"
 	DefaultTestURL = "https://jsonplaceholder.typicode.com/"
 )
-
-// Neutralize HTTP parameter pollution. CWE:235
-func neutralize(p string) string {
-	p = strings.ReplaceAll(p, "\r", "")
-	p = strings.ReplaceAll(p, "\n", "")
-	return p
-}
 
 // Session contains the information of a HTTP session (request and response).
 type Session struct {
@@ -90,15 +83,6 @@ func (s *Session) URL() (*url.URL, error) {
 	//  * - Reference: https://forum.golangbridge.org/t/how-to-concatenate-paths-for-api-request/5791
 	//  * - Docs: https://pkg.go.dev/path#Join
 	//  */
-	params := url.Values{}
-	for key, values := range s.Request.QueryParams {
-		for _, value := range values {
-			if !params.Has(key) {
-				params.Add(key, value)
-			}
-		}
-	}
-	u.RawQuery = neutralize(params.Encode())
 
 	return u, nil
 }
@@ -230,7 +214,12 @@ func (s *Session) SendHTTPRequest(ctx context.Context, method string) error {
 	}
 	reqBody := s.Request.GetBody()
 
-	req, err := http.NewRequest(method, u.String(), reqBody)
+	sanitizedURL, err := sanitize.SanitizeURLParams(u.String())
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest(method, sanitizedURL, reqBody)
 	if err != nil {
 		return fmt.Errorf("failed creating the HTTP request with method '%s' and url '%s'. %w",
 			method, u, err)
@@ -238,7 +227,7 @@ func (s *Session) SendHTTPRequest(ctx context.Context, method string) error {
 	if s.Request.Headers != nil {
 		hostHeaders, found := s.Request.Headers["Host"]
 		if found && len(hostHeaders) > 0 {
-			req.Host = neutralize(hostHeaders[0])
+			req.Host = hostHeaders[0]
 		}
 	}
 	req.Header = s.Request.Headers
