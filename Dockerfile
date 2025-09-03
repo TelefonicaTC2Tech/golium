@@ -1,4 +1,4 @@
-FROM golang:1.20-alpine3.17
+FROM golang:1.22-alpine3.20
 RUN apk add build-base
 
 WORKDIR /github.com/TelefonicaTC2Tech/golium

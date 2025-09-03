@@ -8,7 +8,7 @@ Feature: Redis client
 
   @redis
   Scenario: Set and get a text message
-     Given I generate a UUID and store it in context "key"
+    Given I generate a UUID and store it in context "key"
      When I set the redis key "golium:key:text:[CTXT:key]" with the text
           """
           This is a test value with id: [CTXT:key]
@@ -17,6 +17,16 @@ Feature: Redis client
           """
           This is a test value with id: [CTXT:key]
           """
+
+  @redis
+  Scenario: Set and delete a text message, then get no message
+    Given I generate a UUID and store it in context "key"
+     When I set the redis key "golium:key:text:[CTXT:key]" with the text
+          """
+          This is a test value with id: [CTXT:key]
+          """
+      And I delete the redis key "golium:key:text:[CTXT:key]"
+     Then the redis key "golium:key:text:[CTXT:key]" must not exist
 
   @redis
   Scenario: Set and get a mapped message
@@ -33,6 +43,18 @@ Feature: Redis client
           | golium.string | test       |
           | golium.bool   | 1          |
           | golium.id     | [CTXT:key] |
+
+  @redis
+  Scenario: Set and delete a mapped message, then get no message
+    Given I generate a UUID and store it in context "key"
+     When I set the redis key "golium:key:mapped:[CTXT:key]" with hash properties
+          | param         | value      |
+          | golium.number | [NUMBER:4] |
+          | golium.string | test       |
+          | golium.bool   | [TRUE]     |
+          | golium.id     | [CTXT:key] |
+      And I delete the redis key "golium:key:mapped:[CTXT:key]"
+     Then the redis key "golium:key:mapped:[CTXT:key]" must not exist
 
   @redis
   Scenario: Set and get a mapped message with TTL
@@ -68,6 +90,18 @@ Feature: Redis client
           | golium.string | test       |
           | golium.bool   | [TRUE]     |
           | golium.id     | [CTXT:key] |
+
+  @redis
+  Scenario: Set and delete a JSON message, then get no message
+    Given I generate a UUID and store it in context "key"
+     When I set the redis key "golium:key:json:[CTXT:key]" with the JSON properties
+          | param         | value      |
+          | golium.number | [NUMBER:4] |
+          | golium.string | test       |
+          | golium.bool   | [TRUE]     |
+          | golium.id     | [CTXT:key] |
+      And I delete the redis key "golium:key:json:[CTXT:key]"
+     Then the redis key "golium:key:json:[CTXT:key]" must not exist
 
   @redis
   Scenario: Set and get a JSON message with TTL

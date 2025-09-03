@@ -26,6 +26,7 @@ var (
 	DoError            error
 	SetError           error
 	HSetError          error
+	DelError           error
 	PExpireError       error
 	ExistsError        error
 	ExistsValue        int64
@@ -69,6 +70,14 @@ func (c ClientServiceFuncMock) HSet(
 	values ...interface{},
 ) error {
 	return HSetError
+}
+
+func (c ClientServiceFuncMock) Del(
+	ctx context.Context,
+	client *redis.Client,
+	key string,
+) error {
+	return DelError
 }
 
 func (c ClientServiceFuncMock) PExpire(

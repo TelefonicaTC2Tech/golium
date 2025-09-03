@@ -171,15 +171,16 @@ func TestSendDoTQuery(t *testing.T) {
 					},
 				}),
 			alternativeExpectedErr: fmt.Errorf("cannot make the DNS request: %w",
-				&net.OpError{Op: "dial", Net: "udp",
-					Err: &net.DNSError{
+				fmt.Errorf("dialing %q: %w", fakeServer+":53",
+					fmt.Errorf("resolving hostname: %w", &net.DNSError{
 						Err:         "server misbehaving",
 						Name:        fakeServer,
 						Server:      "127.0.0.53:53",
 						IsTemporary: true,
 						IsNotFound:  false,
-					},
-				}),
+					}),
+				),
+			),
 		},
 		{
 			name:      "Send DoT query upstream failure",

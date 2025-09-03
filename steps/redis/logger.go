@@ -45,6 +45,11 @@ func (l Logger) LogHSetKey(key string, value interface{}, corr string) {
 	l.Log.Printf("HSet key %s to [%s]:\n%+v\n\n", key, corr, value)
 }
 
+// LogHDeleteKey logs a redis DEL command.
+func (l Logger) LogDelKey(key string, corr string) {
+	l.Log.Printf("Del key %s to [%s]\n\n", key, corr)
+}
+
 // LogGetKey logs a redis GET command.
 func (l Logger) LogGetKey(key, value, corr string) {
 	l.Log.Printf("Get key %s with value[%s]:\n%s\n\n", key, corr, value)
