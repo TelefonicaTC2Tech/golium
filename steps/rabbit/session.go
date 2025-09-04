@@ -62,7 +62,7 @@ type Session struct {
 // ConfigureConnection creates a rabbit connection based on the URI.
 func (s *Session) ConfigureConnection(ctx context.Context, uri string) error {
 	var err error
-	s.Connection, err = s.AMQPServiceClient.Dial(uri)
+	s.Connection, err = s.AMQPServiceClient.DialConfig(uri, amqp.Config{Properties: make(amqp.Table)})
 	if err != nil {
 		return fmt.Errorf("failed configuring connection '%s': %w", uri, err)
 	}
