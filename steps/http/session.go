@@ -30,7 +30,6 @@ import (
 	"time"
 
 	"github.com/TelefonicaTC2Tech/golium"
-	"github.com/TelefonicaTC2Tech/golium/sanitize"
 	"github.com/TelefonicaTC2Tech/golium/steps/http/model"
 	"github.com/TelefonicaTC2Tech/golium/steps/http/schema"
 	"github.com/cucumber/godog"
@@ -83,6 +82,8 @@ func (s *Session) URL() (*url.URL, error) {
 	//  * - Reference: https://forum.golangbridge.org/t/how-to-concatenate-paths-for-api-request/5791
 	//  * - Docs: https://pkg.go.dev/path#Join
 	//  */
+	params := url.Values(s.Request.QueryParams)
+	u.RawQuery = params.Encode()
 
 	return u, nil
 }
@@ -214,12 +215,12 @@ func (s *Session) SendHTTPRequest(ctx context.Context, method string) error {
 	}
 	reqBody := s.Request.GetBody()
 
-	sanitizedURL, err := sanitize.SanitizeURLParams(u.String())
-	if err != nil {
-		return err
-	}
+	//sanitizedURL, err := sanitize.SanitizeURLParams(u.String())
+	//if err != nil {
+	//	return err
+	//}
 
-	req, err := http.NewRequest(method, sanitizedURL, reqBody)
+	req, err := http.NewRequest(method, u.String(), reqBody)
 	if err != nil {
 		return fmt.Errorf("failed creating the HTTP request with method '%s' and url '%s'. %w",
 			method, u, err)

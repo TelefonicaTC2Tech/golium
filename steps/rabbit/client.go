@@ -40,7 +40,7 @@ func NewAMQPService() *AMQPService {
 }
 
 func (a AMQPService) Dial(url string) (*amqp.Connection, error) {
-	return amqp.Dial(url)
+	return amqp.DialConfig(url, amqp.Config{Properties: make(amqp.Table)})
 }
 
 func (a AMQPService) ConnectionChannel(connection *amqp.Connection) (*amqp.Channel, error) {
