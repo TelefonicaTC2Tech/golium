@@ -30,30 +30,6 @@ Feature: HTTP Request Senders
     Then the HTTP status code must be "200"
 
   @http @request
-  Scenario: Send a GET request with parameter pollution. Duplicated keys
-    When I send a "GET" request to "posts" endpoint with query params
-      | field  | value |
-      | userId | 1     |
-      | id     | 1     |
-      | userId | 2     |
-    Then the HTTP status code must be "200"
-    And the HTTP response body must have the JSON properties
-      | property | value      |
-      | #        | [NUMBER:1] |
-      | 0.userId | [NUMBER:1] |
-      | 0.id     | [NUMBER:1] |
-
-  @http @request
-  Scenario: Send a GET request with parameter pollution. Encode query parameters
-    When I send a "GET" request to "posts" endpoint with query params
-      | field | value      |
-      | id    | 1&userId=1 |
-    Then the HTTP status code must be "200"
-    And the HTTP response body must have the JSON properties
-      | property | value      |
-      | #        | [NUMBER:0] |
-
-  @http @request
   Scenario Outline: Send a GET request with single filter
     When I send a "GET" request to "posts" endpoint with "<filters>" filters
     Then the HTTP status code must be "200"

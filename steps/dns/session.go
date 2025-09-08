@@ -26,7 +26,6 @@ import (
 	"time"
 
 	"github.com/AdguardTeam/dnsproxy/upstream"
-	"github.com/TelefonicaTC2Tech/golium/sanitize"
 	"github.com/google/uuid"
 	"github.com/miekg/dns"
 )
@@ -160,12 +159,7 @@ func (s *Session) SendDoHQuery(
 		return fmt.Errorf("unsupported method. %s", method)
 	}
 
-	sanitizedURL, err := sanitize.SanitizeURLParams(urlStr)
-	if err != nil {
-		return err
-	}
-
-	request, err = http.NewRequest(method, sanitizedURL, bodyRequest)
+	request, err = http.NewRequest(method, urlStr, bodyRequest)
 	if err != nil {
 		return err
 	}
