@@ -31,7 +31,7 @@ var (
 
 type AMQPServiceFuncMock struct{}
 
-func (a AMQPServiceFuncMock) Dial(url string) (*amqp.Connection, error) {
+func (a AMQPServiceFuncMock) DialConfig(url string, config amqp.Config) (*amqp.Connection, error) {
 	return nil, DialError
 }
 

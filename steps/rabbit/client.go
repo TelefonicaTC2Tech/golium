@@ -19,7 +19,7 @@ import (
 )
 
 type AMQPServiceFunctions interface {
-	Dial(url string) (*amqp.Connection, error)
+	DialConfig(url string, config amqp.Config) (*amqp.Connection, error)
 	ConnectionChannel(c *amqp.Connection) (*amqp.Channel, error)
 	ChannelExchangeDeclare(channel *amqp.Channel, name string) error
 	ChannelQueueDeclare(channel *amqp.Channel) (amqp.Queue, error)
@@ -39,8 +39,8 @@ func NewAMQPService() *AMQPService {
 	return &AMQPService{}
 }
 
-func (a AMQPService) Dial(url string) (*amqp.Connection, error) {
-	return amqp.Dial(url)
+func (a AMQPService) DialConfig(url string, config amqp.Config) (*amqp.Connection, error) {
+	return amqp.DialConfig(url, config)
 }
 
 func (a AMQPService) ConnectionChannel(connection *amqp.Connection) (*amqp.Channel, error) {
