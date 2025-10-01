@@ -108,6 +108,11 @@ func (s *Session) SendUDPQuery(
 	return nil
 }
 
+const (
+	HeaderContentType = "Content-Type"
+	DoHMediaType      = "application/dns-message"
+)
+
 // SendDoHQuery sends a DoH query to resolve a domain.
 func (s *Session) SendDoHQuery(
 	ctx context.Context,
@@ -163,15 +168,15 @@ func (s *Session) SendDoHQuery(
 	if err != nil {
 		return err
 	}
-	request.Header.Set("Content-Type", "application/dns-message")
+	request.Header.Set(HeaderContentType, DoHMediaType)
 	response, err := client.Do(request)
 	if err != nil {
 		return fmt.Errorf("error sending request. %s", err)
 	}
 	// Check Content-Type
-	if response.Header.Get("Content-Type") != "application/dns-message" {
+	if response.Header.Get(HeaderContentType) != DoHMediaType {
 		return fmt.Errorf("error in Content-Type Header. Value: %s, Expected: %s",
-			response.Header.Get("Content-Type"), "application/dns-message")
+			response.Header.Get(HeaderContentType), DoHMediaType)
 	}
 	bodyResponse, err := io.ReadAll(response.Body)
 	if err != nil {
