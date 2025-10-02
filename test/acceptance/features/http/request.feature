@@ -36,7 +36,7 @@ Feature: HTTP Request Senders
     And the HTTP response body must have the JSON properties
       | property | value             |
       | #        | <filtered_values> |
-    Examples:
+      Examples:
       | filters  | filtered_values |
       | userId=1 | [NUMBER:10]     |
       | id=8     | [NUMBER:1]      |
@@ -48,7 +48,7 @@ Feature: HTTP Request Senders
     And the HTTP response body must have the JSON properties
       | property | value             |
       | #        | <filtered_values> |
-    Examples:
+      Examples:
       | filters       | filtered_values |
       | id=8&userId=1 | [NUMBER:1]      |
 
