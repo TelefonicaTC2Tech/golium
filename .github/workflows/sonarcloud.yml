@@ -5,7 +5,7 @@ on:
       - master
   pull_request:
 permissions:
-  contents: read
+  contents: read # https://github.com/actions/setup-go#recommended-permissions
   # Optional: allow read access to pull request. Use with `only-new-issues` option.
   # pull-requests: read
 
@@ -17,14 +17,14 @@ jobs:
     name: lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.5.2
+      - uses: actions/checkout@v5
         with:
           # Disabling shallow clone is recommended for improving relevancy of reporting
           fetch-depth: 0
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v6
         with:
-          go-version: '1.25'
+          go-version-file: 'go.mod'
       - name: Test
         run: go test -v -coverprofile=coverage.txt -covermode=atomic `go list ./... | grep -v test/acceptance` -json > test-report.out
       - name: Coverage to Codecov
