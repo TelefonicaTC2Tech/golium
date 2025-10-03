@@ -5,7 +5,7 @@
 # and this can break some of our tests.
 # Also, some linters are not relevant for the project (e.g. linters related to SQL).
 
-version: 2
+version: "2"
 
 linters:
   # We intentionally use a limited set of linters.
@@ -13,7 +13,6 @@ linters:
   default: none
   enable:
     - bodyclose
-    - deadcode
     - depguard
     - dogsled
     - dupl
@@ -22,11 +21,9 @@ linters:
     - goconst
     - gocritic
     - gocyclo
-    - goimports
     - revive
     - goprintffuncname
     - gosec
-    - gosimple
     - govet
     - ineffassign
     - lll
@@ -34,15 +31,10 @@ linters:
     - nakedret
     - nolintlint
     - rowserrcheck
-    - exportloopref
     - staticcheck
-    - structcheck
-    - stylecheck
-    - typecheck
     - unconvert
     - unparam
     - unused
-    - varcheck
     - whitespace
 
   # don't enable:
@@ -52,7 +44,7 @@ linters:
   # - godot
   # - godox
   # - mnd
-  # - goerr113
+  # - err113
   # - nestif
   # - prealloc
   # - testpackage
@@ -67,8 +59,8 @@ linters:
           allow:
             - github.com/sirupsen/logrus
           deny:
-            pkg: log$
-            desc: "use logrus"
+            - pkg: log$
+              desc: use logrus
     dupl:
       threshold: 100
     funlen:
