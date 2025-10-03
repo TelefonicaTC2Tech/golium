@@ -3,7 +3,7 @@ GO_PATH:=$(shell go env GOPATH)
 
 LINTER_ARGS = run -c .golangci.yml --timeout 5m
 GODOG_FORMAT = pretty
-GOLANGCI_LINT_VERSION = v1.52.2
+GOLANGCI_LINT_VERSION = v2.5.0
 
 .PHONY: help
 help:	## Show a list of available commands
