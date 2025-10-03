@@ -8,14 +8,9 @@ on:
 
 jobs:
   build:
-    name: Build and Test (Golium Go ${{ matrix.go-version }})
+    name: Build and Test
 
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        go-version: ["1.24", "1.25"]
-
     env:
       AWS_ACCESS_KEY_ID: minioadmin
       AWS_SECRET_ACCESS_KEY: minioadmin
@@ -76,7 +71,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: ${{ matrix.go-version }}
+          go-version-file: 'go.mod'
 
       - name: Build
         run: go build -v ./...
