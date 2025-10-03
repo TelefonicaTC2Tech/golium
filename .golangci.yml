@@ -150,7 +150,7 @@ output:
       path: 'golangci-report.xml'
     text:
       path: stdout
-      color: true
+      colors: true
 
 run:
   timeout: 5m
