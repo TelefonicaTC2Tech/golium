@@ -2,6 +2,8 @@ module github.com/TelefonicaTC2Tech/golium
 
 go 1.25.1
 
+toolchain go1.25.3
+
 require (
 	bou.ke/monkey v1.0.2
 	github.com/AdguardTeam/dnsproxy v0.76.2
