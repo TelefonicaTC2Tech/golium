@@ -1,80 +1,18 @@
-linters-settings:
-  depguard:
-    list-type: blacklist
-    include-go-root: true
-    packages:
-      - log
-    packages-with-error-message:
-      - log: "use logrus"
-  dupl:
-    threshold: 100
-  funlen:
-    lines: 100
-    statements: 75
-  goconst:
-    min-len: 2
-    min-occurrences: 2
-  gocritic:
-    enabled-tags:
-      - diagnostic
-      - experimental
-      - opinionated
-      - performance
-      - style
-    disabled-checks:
-      - dupImport # https://github.com/go-critic/go-critic/issues/845
-      - ifElseChain
-      - octalLiteral
-      - wrapperFunc
-      - hugeParam
-  gocyclo:
-    min-complexity: 15
-  goimports:
-    local-prefixes: github.com/golangci/golangci-lint
-  golint:
-    min-confidence: 0
-  gomnd:
-    settings:
-      mnd:
-        # don't include the "operation" and "assign"
-        checks: 
-          - argument
-          - case
-          - condition
-          - return
-  govet:
-    check-shadowing: true
-    settings:
-      printf:
-        funcs:
-          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Infof
-          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
-          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
-          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
-  lll:
-    line-length: 100
-  maligned:
-    suggest-new: true
-  misspell:
-    locale: US
-    ignore-words:
-      - "marshalling"
-      - "unmarshalling"
-      - "marshalled"
-      - "unmarshalled"
-  nolintlint:
-    allow-leading-space: true # don't require machine-readable nolint directives (i.e. with no leading space)
-    allow-unused: false # report any unused nolint directives
-    require-explanation: false # don't require an explanation for nolint directives
-    require-specific: false # don't require nolint directives to be specific about which linter is being skipped
+# We intentionally use a limited set of linters.
+# This configuration file is used with different version of golangci-lint to avoid regressions:
+# the linters can change between version,
+# their configuration may be not compatible or their reports can be different,
+# and this can break some of our tests.
+# Also, some linters are not relevant for the project (e.g. linters related to SQL).
+
+version: "2"
 
 linters:
-  # please, do not use `enable-all`: it's deprecated and will be removed soon.
-  # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
-  disable-all: true
+  # We intentionally use a limited set of linters.
+  # See the comment on top of this file.
+  default: none
   enable:
     - bodyclose
-    - deadcode
     - depguard
     - dogsled
     - dupl
@@ -83,12 +21,9 @@ linters:
     - goconst
     - gocritic
     - gocyclo
-    - gofmt
-    - goimports
     - revive
     - goprintffuncname
     - gosec
-    - gosimple
     - govet
     - ineffassign
     - lll
@@ -96,15 +31,10 @@ linters:
     - nakedret
     - nolintlint
     - rowserrcheck
-    - exportloopref
     - staticcheck
-    - structcheck
-    - stylecheck
-    - typecheck
     - unconvert
     - unparam
     - unused
-    - varcheck
     - whitespace
 
   # don't enable:
@@ -113,38 +43,114 @@ linters:
   # - gocognit
   # - godot
   # - godox
-  # - gomnd
-  # - goerr113
-  # - maligned
+  # - mnd
+  # - err113
   # - nestif
   # - prealloc
   # - testpackage
   # - wsl
 
-issues:
-  # Excluding configuration per-path, per-linter, per-text and per-source
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - gomnd
-    - path: steps\.go
-      linters:
-        - funlen
-        - lll
-    # https://github.com/go-critic/go-critic/issues/926
-    - linters:
-        - gocritic
-      text: "unnecessaryDefer:"
+  settings:
+    depguard:
+      rules:
+        logger:
+          files:
+            - $all
+          allow:
+            - github.com/sirupsen/logrus
+          deny:
+            - pkg: log$
+              desc: use logrus
+    dupl:
+      threshold: 100
+    funlen:
+      lines: 100
+      statements: 75
+    goconst:
+      min-len: 2
+      min-occurrences: 2
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - experimental
+        - opinionated
+        - performance
+        - style
+      disabled-checks:
+        - dupImport # https://github.com/go-critic/go-critic/issues/845
+        - ifElseChain
+        - octalLiteral
+        - wrapperFunc
+        - hugeParam
+    gocyclo:
+      min-complexity: 15
+    mnd:
+      # don't include the "operation" and "assign"
+      checks: 
+        - argument
+        - case
+        - condition
+        - return
+    govet:
+      enable: 
+        - shadow
+      settings:
+        printf:
+          funcs:
+            - (github.com/golangci/golangci-lint/v2/pkg/logutils.Log).Infof
+            - (github.com/golangci/golangci-lint/v2/pkg/logutils.Log).Warnf
+            - (github.com/golangci/golangci-lint/v2/pkg/logutils.Log).Errorf
+            - (github.com/golangci/golangci-lint/v2/pkg/logutils.Log).Fatalf
+    lll:
+      line-length: 100
+    misspell:
+      locale: US
+      ignore-rules:
+        - "marshalling"
+        - "unmarshalling"
+        - "marshalled"
+        - "unmarshalled"
+    nolintlint:
+      allow-unused: false # report any unused nolint directives
+      require-explanation: false # don't require an explanation for nolint directives
+      require-specific: false # don't require nolint directives to be specific about which linter is being skipped
+
+  exclusions:
+    # Excluding configuration per-path, per-linter, per-text and per-source
+    rules:
+      - path: '_test\.go'
+        linters:
+          - mnd
+      - path: 'steps\.go'
+        linters:
+          - funlen
+          - lll
+      # https://github.com/go-critic/go-critic/issues/926
+      - text: 'unnecessaryDefer:'
+        linters:
+          - gocritic
+    paths:
+      - internal/cache
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/golangci/golangci-lint
+  exclusions: 
+      paths:
+      - internal/cache
+
+output:
+  formats: 
+    checkstyle:
+      path: 'golangci-report.xml'
+    text:
+      path: stdout
+      colors: true
 
 run:
-  skip-dirs:
-    - internal/cache
-output:
-  format: checkstyle:golangci-report.xml,colored-line-number,github-actions
-
-# golangci.com configuration
-# https://github.com/golangci/golangci/wiki/Configuration
-service:
-  golangci-lint-version: 1.44.x # use the fixed version to not introduce new linters unexpectedly
-  prepare:
-    - echo "here I can run custom commands, but no preparation needed for this repo"
+  timeout: 5m

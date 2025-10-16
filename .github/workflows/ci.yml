@@ -14,7 +14,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        go-version: ["1.22", "1.23"]
+        # TODO: In subsequent updates, compile for the current minor version defined in the go directive and the most recent minor version
+        # To avoid using unmaintained versions of Go, the Go directive should always use the minor version just before the most recent one, and the Toolchain directive should use the patch version just before the most recent one.
+        # Example: If last release version is 1.25.3, Go directive should be 1.24 and Toolchain directive, 1.25.2
+        go-version: ["1.25.1", "1.25.2"]
 
     env:
       AWS_ACCESS_KEY_ID: minioadmin
@@ -71,10 +74,10 @@ jobs:
           - 80:80
 
     steps:
-      - uses: actions/checkout@v3.5.2
+      - uses: actions/checkout@v5
 
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v6
         with:
           go-version: ${{ matrix.go-version }}
 

@@ -5,44 +5,46 @@ on:
       - master
   pull_request:
 permissions:
-  contents: read
+  contents: read # https://github.com/actions/setup-go#recommended-permissions
   # Optional: allow read access to pull request. Use with `only-new-issues` option.
   # pull-requests: read
 
 env:
-  GOLANGCI_LINT_VERSION: v1.52.2
+  GOLANGCI_LINT_VERSION: v2.5.0
 
 jobs:
   analysis:
     name: lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.5.2
+      - name: Checkout repo
+        uses: actions/checkout@v5
         with:
           # Disabling shallow clone is recommended for improving relevancy of reporting
           fetch-depth: 0
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v6
         with:
-          go-version: 1.23
+          go-version-file: 'go.mod'
       - name: Test
         run: go test -v -coverprofile=coverage.txt -covermode=atomic `go list ./... | grep -v test/acceptance` -json > test-report.out
       - name: Coverage to Codecov
         uses: codecov/codecov-action@v3.1.3
-
       - name: Golangci increment
-        if: "!contains(github.ref, 'master')"
-        run: |
-          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin $GOLANGCI_LINT_VERSION
-          golangci-lint run -c .golangci.yml --timeout 5m --new-from-rev origin/master
+        if: ${{ !contains(github.ref, 'master') }}
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: ${{ env.GOLANGCI_LINT_VERSION }}
+          args: --timeout=5m --new-from-rev=origin/master
       - name: Golangci main
         if: contains(github.ref, 'master')
-        run: |
-          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin $GOLANGCI_LINT_VERSION
-          golangci-lint run -c .golangci.yml --timeout 5m
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: ${{ env.GOLANGCI_LINT_VERSION }}
+          args: --timeout=5m
       - name: SonarQube Scan
         if: always()
-        uses: sonarsource/sonarqube-scan-action@v3
+        uses: sonarsource/sonarqube-scan-action@v6
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
